@@ -1,0 +1,56 @@
+{
+  "parser-directories": [
+    "/home/kendfss/github",
+    "/home/kendfss/src",
+    "/home/kendfss/source"
+  ],
+  "theme": {
+    "string.special": 30,
+    "module": 136,
+    "operator": {
+      "bold": true,
+      "color": 239
+    },
+    "attribute": {
+      "color": 124,
+      "italic": true
+    },
+    "type": 23,
+    "constant": 94,
+    "comment": {
+      "italic": true,
+      "color": 245
+    },
+    "constant.builtin": {
+      "color": 94,
+      "bold": true
+    },
+    "variable.builtin": {
+      "bold": true
+    },
+    "string": 28,
+    "tag": 18,
+    "function": 26,
+    "type.builtin": {
+      "bold": true,
+      "color": 23
+    },
+    "embedded": null,
+    "punctuation.bracket": 239,
+    "number": {
+      "bold": true,
+      "color": 94
+    },
+    "keyword": 56,
+    "constructor": 136,
+    "property": 124,
+    "punctuation.delimiter": 239,
+    "function.builtin": {
+      "bold": true,
+      "color": 26
+    },
+    "variable.parameter": {
+      "underline": true
+    }
+  }
+}

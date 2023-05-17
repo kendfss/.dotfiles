@@ -1,0 +1,24 @@
+pending/
+# *DS_Store
+# ._.*
+*.gz
+*.old
+test.*
+sketch.zsh
+*dump
+sizemap.txt
+.zsh_sessions/
+cache
+default
+default.zip
+.chpwd-recent-dirs
+pure/
+purer/
+purity/
+.ssh/
+fast-syntax-highlighting/
+zsh-*
+*.trash
+*.tst
+go.sum
+go.mod

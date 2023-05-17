@@ -1,0 +1,67 @@
+# ~/.clang-format
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+---
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 88
+# ---
+# Language: Cpp
+# Force pointers to the type for C++.
+DerivePointerAlignment: false
+PointerAlignment: Left
+IndentPPDirectives: BeforeHash
+AlignArrayOfStructures: Right
+AlignConsecutiveAssignments: true
+AlignConsecutiveBitFields: true
+AlignConsecutiveDeclarations: true
+AlignConsecutiveMacros: true
+AlignOperands: AlignAfterOperator
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: false
+BinPackArguments: false
+BitFieldColonSpacing: Both
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBraces: Attach
+BreakStringLiterals: false
+# AlignConsecutiveAssignments:
+#   Enabled: true
+#   AcrossEmptyLines: false
+#   AcrossComments: true
+#   AlignCompound: true
+#   PadOperators: true
+# AlignConsecutiveBitFields:
+#   Enabled: true
+#   AcrossEmptyLines: false
+#   AcrossComments: true
+#   AlignCompound: true
+#   PadOperators: true
+# AlignConsecutiveDeclarations:
+#   Enabled: true
+#   AcrossEmptyLines: false
+#   AcrossComments: true
+#   AlignCompound: true
+#   PadOperators: true
+# AlignConsecutiveMacros:
+#   Enabled: true
+#   AcrossEmptyLines: false
+#   AcrossComments: true
+#   AlignCompound: true
+#   PadOperators: true
+# AlignConsecutiveNewlines: true
+# AlwaysBreakTemplateDeclarations: Multiline
+# BinPackParameters: false
+# BraceWrapping:
+#   AfterEnum: true
+#   AfterStruct: true
+#   BreakBeforeConceptDeclarations: Never
+#   BreakBeforeTernaryOperators: true

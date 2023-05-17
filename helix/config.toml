@@ -1,0 +1,205 @@
+# needs
+#   minor modes
+#   passing args
+
+# cleaning macro => ]s=<ret><home>fct=<right>&<A-;>
+theme            = 'adwaita-dark'
+
+[editor]
+line-number       = 'relative'
+idle-timeout      = 3000
+auto-completion   = false
+auto-info         = false
+scroll-lines      = 1
+gutters           = [ "diff", "diagnostics", "spacer", "line-numbers", "spacer" ]
+color-modes       = true
+bufferline        = 'multiple'
+true-color        = true
+
+[editor.statusline] 
+left      = ['mode', 'spinner']
+center    = ['file-name']
+right     = ['diagnostics', 'selections', 'position', 'total-line-numbers']
+separator = '|'
+
+[editor.cursor-shape]
+insert = 'bar'
+normal = 'block'
+select = 'underline'
+
+[keys.normal.w]
+t     = 'transpose_view'
+w     = ':write'
+q     = { q = ':quit', a = ':quit-all' }
+up    = ':vsplit'
+right = ':hsplit'
+
+[keys.normal.r]
+r     = 'change_selection_noyank'
+c     = 'replace'
+'['   = 'surround_replace'
+# p   = { p = 'replace_with_yanked', c = ':clipboard-paste-replace'}
+l     = [ 'extend_line', 'change_selection_noyank' ]
+w     = [ 'move_next_word_end', 'move_prev_word_start', 'change_selection_noyank' ]
+
+[keys.normal.c]
+c = ':clipboard-yank'
+p = 'paste_clipboard_before'
+a = [ 'select_all', ':clipboard-yank']#'paste_clipboard_after'
+t = [ 'find_till_char', 'change_selection_noyank' ]
+T = [ 'till_prev_char', 'change_selection_noyank' ]
+l = [ 'extend_line', ':clipboard-yank' ]
+x = { x = [ ':clipboard-yank', "delete_selection_noyank" ], l = [ 'extend_line', ':clipboard-yank', 'delete_selection_noyank' ] }
+
+[keys.normal.p]
+P = ['save_selection', 'paste_before', 'jump_backward']
+p = 'paste_before'
+c = ':clipboard-paste-before'
+o = { l = [ 'extend_line', 'delete_selection_noyank', 'paste_before' ], w = [ 'move_prev_word_start', 'extend_next_word_end', 'delete_selection_noyank', 'paste_before' ], c = ':clipboard-paste-replace', o = 'replace_with_yanked'}
+
+[keys.normal.y]
+c = ':clipboard-yank'
+y = 'yank'
+w = ['save_selection', 'move_prev_word_start', 'move_next_word_end', 'yank', 'jump_backward']
+l = ['save_selection', 'extend_line', 'yank', 'jump_backward']
+a = ['save_selection', 'select_all', 'yank', 'jump_backward']
+s = ':clipboard-yank'
+z = ':sh echo hello world'
+
+[keys.normal.l]
+c   = 'completion'
+o   = ':lsp-workspace-command'
+h   = 'hover'
+'?' = 'signature_help'
+l   = [ ':lsp-restart', ':reload-all' ]
+r   = 'rename_symbol'
+
+[keys.normal.b]
+right = 'goto_next_buffer'
+left  = 'goto_previous_buffer'
+b     = 'rotate_view'
+space = 'buffer_picker'
+c     = { o = ':buffer-close-others', c = ':buffer-close' }
+h     = ":hsplit"
+v     = ":vsplit"
+
+[keys.normal.d]
+e     = ['extend_next_word_end', 'delete_selection_noyank']
+l     = ['extend_line', 'delete_selection_noyank']
+d     = 'delete_selection_noyank'
+'c'   = 'delete_char_forward' 
+'D'   = 'delete_char_backward'
+'w'   = [ 'move_next_word_end', 'move_prev_word_start', 'delete_selection_noyank' ]
+'W'   = [ 'move_next_long_word_end', 'move_prev_long_word_start', 'delete_selection_noyank']
+[keys.normal.d.x]
+w     = [ 'move_next_word_end', 'move_prev_word_start', 'yank', 'delete_selection_noyank' ]
+e     = ['extend_next_word_end', 'delete_selection']
+l     = ['extend_line', 'delete_selection', 'move_line_up', 'goto_line_end']
+d     = 'delete_selection'
+
+[keys.normal.s]
+r     = ['delete_selection_noyank', 'paste_before']
+right = 'extend_to_line_end'
+left  = 'extend_to_line_start'
+w     = ['move_prev_word_start', 'move_next_word_end']
+l     = 'extend_line'
+a     = 'select_all'
+s     = 'select_regex'
+c     = 'split_selection'
+d     = 'delete_selection_noyank'
+e     = { l = 'extend_to_line_end', w = 'extend_next_word_end' }
+k     = 'keep_primary_selection'
+t     = 'extend_till_char'
+p     = 'extend_till_prev_char'
+q          = [ 'collapse_selection', 'keep_primary_selection' ]
+
+[keys.normal]
+tab                 = 'no_op'
+z                   = [ 'delete_char_forward', 'move_next_word_end', 'move_prev_word_start', 'delete_selection_noyank' ]
+'%'                 = 'match_brackets'
+'A-/'               = 'toggle_comments'
+S-left              = 'goto_previous_buffer'
+S-right             = 'goto_next_buffer'
+A-w                 = [':w!', ':w!', 'normal_mode']
+A-c                 = ':clipboard-yank'
+A-r                 = ':config-reload'
+A-d                 = [ 'save_selection', 'extend_line', 'yank', 'paste_after', 'move_line_up', 'jump_backward', 'move_line_down' ]
+# u                 = ['save_selection', 'undo', 'jump_backward']
+# U                 = ['save_selection', 'redo', 'jump_backward']
+A-left              = 'move_prev_word_start'
+A-right             = 'move_next_word_end'
+A-S-left            = 'extend_to_line_start'
+A-S-right           = 'extend_to_line_end'
+A-up                = 'goto_prev_paragraph'
+A-down              = 'goto_next_paragraph'
+space               = { '%' = ':vsplit', '"' = ':hsplit', c = 'completion' }
+f                   = { c = 'find_next_char', t = 'find_till_char', C = 'find_prev_char', T = 'till_prev_char', f = 'file_picker', l = ':log-open', b = 'match_brackets' }
+C-up                = 'half_page_up'
+C-down              = 'half_page_down'
+C-l                 = 'split_selection_on_newline'
+Z                   = { Z =  ':q!' }
+0                   = 'goto_line_start'
+'$'                 = 'goto_line_end'
+# x                 = 'no_op'
+x                   = 'delete_char_forward'
+# X                 = 'no_op'
+X                   = 'delete_char_backward'
+A-n                 = ':new'
+# p                 = ['save_selection', 'paste_after', 'jump_backward']
+# o                 = 'add_newline_below'
+# O                 = 'add_newline_above'
+'ret'               = 'add_newline_below'
+O                   = ['add_newline_above', 'move_line_up']
+'+'                 = 'extend_search_next'
+'minus'             = 'extend_search_prev'
+'='                 = { '=' = [':w!', 'normal_mode']}
+# h                 = 'no_op'
+# h                 = ['goto_next_paragraph', 'select_regex', 'goto_line_start', 'find_till_char', 'move_char_right', 'align_selections', 'keep_primary_selection']
+# C-S-up            = [ 'push_register', 'extend_line', 'delete_selection', 'move_line_up', 'paste_before', 'pop_register' ]
+
+[keys.select]
+'='               = { '=' = [':w!', 'normal_mode']}
+'A-/'             = 'toggle_comments'
+# A-c             = 'no_op'
+A-w               = [':w!', ':w!', 'normal_mode']
+A-c               = ':clipboard-yank'
+A-r               = ':config-reload'
+space             = { '%' = ':vsplit', '"' = ':hsplit' }
+C-l               = 'split_selection_on_newline'
+d                 = 'delete_selection_noyank'
+c                 = 'change_selection_noyank'
+A-n               = ':new'
+'%'               = 'match_brackets'
+
+[keys.insert]
+A-q                    = 'record_macro'
+A-S-q                  = 'replay_macro'
+'A-/'                  = 'toggle_comments'
+# A-c                  = 'no_op'
+A-c                    = ':clipboard-yank'
+A-w                    = [':w!', ':w!', 'normal_mode']
+A-r                    = ':config-reload'
+A-backspace            = ['shrink_to_line_bounds', 'delete_selection_noyank']
+C-l                    = 'split_selection_on_newline'
+A-d                    = [ 'normal_mode', 'save_selection', 'extend_line', 'yank', 'paste_after', 'move_line_up', 'jump_backward', 'move_line_down', 'insert_mode' ]
+S-backspace            = { x = { l = ['extend_line', 'delete_selection', 'move_line_up', 'goto_line_end'], d = 'delete_selection' }, l = ['extend_line', 'delete_selection_noyank'], d = 'delete_selection_noyank', 'c' = 'delete_char_forward', 'D' = 'delete_char_backward', 'w' = 'delete_word_forward', 'W' = 'delete_word_backward' }
+S-left                 = 'extend_char_left'
+S-right                = 'extend_char_right'
+S-up                   = 'extend_line_up'
+S-down                 = 'extend_line_down'
+C-space                = 'completion'
+S-home                 = 'extend_to_line_start'
+S-end                  = 'extend_to_line_end'
+A-left                 = 'move_prev_word_start'
+A-right                = 'move_next_word_end'
+A-up                   = 'goto_prev_paragraph'
+A-down                 = 'goto_next_paragraph'
+A-m                    = { e = 'move_next_word_end', s = 'move_prev_word_end' }
+'A-;'                  = 'flip_selections'
+A-p                    = 'paste_before'
+A-n                    = ':new'
+A-y                    = { y = 'yank', l = ['extend_line', 'yank'], a = ['select_all', 'yank'] }
+A-l                    = { l = ':lsp-workspace-command', r = ':lsp-restart', c = 'completion', h = 'hover', s = 'signature_help' }
+A-a                    = 'select_all'
+A-S-c                  = 'command_palette'
+'A-%'                  = 'match_brackets'
