@@ -1,5 +1,6 @@
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
+export PATH="$PATH:$HOME/.local/bin"
 [[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
 
 dirof_() {

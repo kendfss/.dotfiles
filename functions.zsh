@@ -297,11 +297,12 @@ fork() {
 
     repo=$($(cv basename) "$repo")
     # echo "cloning $dev/$repo"
-    mcd "$HOME/gitclone/clones/$USER" && $(cv gh) repo fork "$dev/$repo" && cd "$repo" 2> /dev/null
+    user="$HOME/gitclone/clones/$USER" 
+    mkdir -p "$user" && cd "$user" && $(cv gh) repo fork "$dev/$repo" && cd "$repo" 2> /dev/null
   done
   # dev=$USER
   # repo=$($(cv basename) "$1")
-  # mcd "$HOME/gitclone/clones/$dev" && $(cv gh) repo fork "$1" && cd "$repo" 2> /dev/null
+  # take "$HOME/gitclone/clones/$dev" && $(cv gh) repo fork "$1" && cd "$repo" 2> /dev/null
 }
 
 padd() {
@@ -444,41 +445,6 @@ iexists() {
   return $match_found
 }
 
-create() {
-  if ! [[ -a $(find . -iname 'readme.md' -maxdepth 1) ]]; then
-    printf "%s\n---\n" "$(base)" >> README.md
-  fi
-  if [[ $1 == "go" ]] && ! [[ -a "$1.mod" ]]; then
-    $1 mod init "github.com/$USER/$($(cv basename) "$(pwd)")"
-    if ! [[ -a lib.$1 ]]; then
-      echo "package $($(cv basename) "$(pwd)")" > "lib.$1"
-    fi
-    cmd $1
-    api $1
-  fi
-  if [[ $1 == "v" ]] && ! [[ -a "$1.mod" ]]; then
-    $1 init .
-    if ! [[ -a lib.$1 ]]; then
-      echo "module $($(cv basename) "$(pwd)")" > "lib.$1"
-    fi
-    cmd $1
-    api $1
-  fi
-  if ! [[ -a ./.gitignore ]]; then
-    joe g "$1" > .gitignore
-  fi
-  if ! [[ -a ./license ]]; then
-    license bsd-3 > LICENSE
-  fi
-  if ! [[ -a ./.git ]]; then
-    $(cv git) init
-  fi
-  add .
-  commit "first"
-  $(cv gh) repo create "$($(cv basename) "$(pwd)")" --private --source=. --push
-  $EDITOR .
-}
-
 hide() {
   for arg in "$@"; do
     $(cv mv) "$arg" ".$arg"
@@ -493,8 +459,8 @@ startover() {
   name="$(pwd)"
   readme=$(cat readme.md)
   discontinue
-  mcd "$name" || return 1
-  echo "$readme" > readme.md
+  mkdir -p "$name" && cd "$name" || return 1
+  echo "$readme" > README.md
   create "$1"
   $EDITOR .
 }
@@ -559,14 +525,6 @@ dirof() {
   for name in "$@"; do
     $(cv dirname) "$(command -v "$name")"
   done
-}
-
-new() {
-  name=$(echo "$*" | $(cv sed) "s/ /_/g")
-  pth=$CLONEDIR/$USER/$name
-  [[ -d "$pth" ]] && cd "$pth" && return
-  cd "$pth" 2> /dev/null || mcd "$pth" && create && return 0
-  echo "\"$pth\" already exists" && return 1 
 }
 
 zdot() {
@@ -999,3 +957,79 @@ map(){
     $cmd $arg
   done
 }
+
+new() {
+    name=$(echo "$*" | sed "s/ /_/g")
+    pth="$CLONEDIR/$USER/$name"
+
+    if [ -d "$pth" ]; then
+        cd "$pth"
+    else
+        if cd "$pth" 2> /dev/null || take "$pth"; then
+            create
+            return 0
+        else
+            echo "\"$pth\" already exists"
+            return 1
+        fi
+    fi
+}
+
+create() {
+    if [[ -z `find . -maxdepth 1 -iname 'readme.md' -print -quit` ]]; then
+        printf "%s\n---\n" "$(base)" >> README.md
+    fi
+
+    if [ "$1" == "go" ] && [ ! -a "$1.mod" ]; then
+        $1 mod init "github.com/$USER/$(basename "$(pwd)")"
+        
+        if [ ! -a "lib.$1" ]; then
+            echo "package $(basename "$(pwd)")" > "lib.$1"
+        fi
+
+        cmd $1
+        api $1
+    fi
+
+    if [ "$1" == "v" ] && [ ! -a "$1.mod" ]; then
+        $1 init .
+
+        if [ ! -a "lib.$1" ]; then
+            echo "module $(basename "$(pwd)")" > "lib.$1"
+        fi
+
+        cmd $1
+        api $1
+    fi
+
+    if [ ! -a ./.gitignore ]; then
+        joe g "$1" > .gitignore
+    fi
+
+    if [ ! -a ./license ]; then
+        license bsd-3 > LICENSE
+    fi
+
+    if [ ! -a ./.git ]; then
+        git init
+    fi
+
+    add .
+    commit "first"
+    gh repo create "$(basename "$(pwd)")" --private --source=. --push
+    $EDITOR .
+}
+
+switch() {
+  cmd="$1"
+  shift
+  sudo `cv "$cmd"` $*
+}
+
+
+
+
+
+
+
+

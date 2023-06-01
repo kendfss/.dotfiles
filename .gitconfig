@@ -13,8 +13,8 @@
     excludesfile = ~/.gitignore
 [color "status"]
 	changed = yellow bold
-	added = green bold
-	untracked = red bold
+	added = green 
+	untracked = red 
 [http]
 	cookiefile = ~/.gitcookies
 [url "ssh://git@github.com/"]
