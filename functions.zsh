@@ -1,101 +1,152 @@
-cv() {
+# https://zsh.sourceforge.io/Doc/Release/Conditional-Expressions.html
+autoload -Uz add-zsh-hook
+
+exts() {
+  # print file extensions
+    dir=$1
+    shift 1 > /dev/null
+
+    if (( $# )); then
+        dir="$@"
+    else
+        dir=$(pwd)
+    fi
+
+    files=$(ls -1 $dir)
+    extensions=()
+
+    for file in $files; do
+        extension=${file##*.}
+        extensions+=($extension)
+    done
+
+    for extension in $extensions; do
+        echo "$extension"
+    done
+}
+
+tpb() {
+  tmux save-buffer -
+}
+
+tcb() {
+  tmux save-buffer - | xclip -i -selection clipboard
+}
+
+
+# Make a directory and cd into it
+take() {
+  mkdir -p $1
+	cd $1
+}
+
+cv2() {
+  cmd=$1
+  shift
+  $(command -v $cmd) $*
+}
+
+
+cv1() {
   for arg in "$@"; do
     command -v $arg
   done
 }
 
-# https://zsh.sourceforge.io/Doc/Release/Conditional-Expressions.html
-autoload -Uz add-zsh-hook
 
 # intellegently extract archives based on extension. 
-function extract {  
-   
-   file=$1
-   dir=$2
+function extract {
+  file=$1
+  shift
+  dir=$1
 
    if [[ -n $dir ]]; then
-      $(cv mkdir) -p "$dir"; 
-      echo Extracting "$1" into "$2" ...
+      mkdir -p "$dir"; 
+      echo Extracting "$file" into "$dir" ...
    else 
-      echo Extracting "$1" ...
+      echo Extracting "$file" ...
    fi
  
-   if [[ ! -f $1 ]] ; then
-      echo "'$1' is not a valid file"
+   if [[ ! -f $file ]] ; then
+      echo "'$file' is not a valid file"
    else
-      case $1 in
+      case $file in
          *.tar.bz2)   
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar xjvf "$1" $dc" 
+             cmd="tar xjvf \"$file\" $dc" 
              echo $cmd
              eval ${cmd}
              ;;   
+
          *.tar.gz)    
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar xzvf "$1" $dc"; 
+             cmd="tar xzvf \"$file\" $dc"; 
              echo $cmd;
              eval ${cmd}
              ;;
+
          *.tar)       
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar vxf "$1" $dc";
+             cmd="tar vxf \"$file\" $dc";
              echo $cmd;
              eval ${cmd}
              ;;
+
          *.tbz2)      
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar xjvf "$1" $dc";
+             cmd="tar xjvf \"$file\" $dc";
              echo $cmd; 
              eval ${cmd}
              ;;  
+
          *.tgz) 
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar xzf "$1" $dc"; 
+             cmd="tar xzf \"$file\" $dc"; 
              echo $cmd; 
              eval ${cmd} 
              ;;    
+
          *.bz2)       
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar jf "$1" $dc"; 
+             cmd="tar jf \"$file\" $dc"; 
              echo $cmd; 
              eval ${cmd} 
              ;;     
+
          *.zip)       
              if [[ -n $dir ]]; then dc="-d $dir"; fi
-             cmd="unzip "$1" $dc"; 
+             cmd="unzip \"$file\" $dc"; 
              echo $cmd; 
              eval ${cmd}
              ;;
+
          *.gz)
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar zf \"$1\" \"$dc\""; 
+             cmd="tar zf \"$file\" \"$dc\""; 
              echo $cmd; 
              eval ${cmd}
              ;;
+
          *.7z)        
              #TODO dir
-             cmd="7z x -o \"$dir\" \"$1\""; 
+             cmd="7z x -o \"$dir\" \"$file\""; 
              echo $cmd; 
              eval ${cmd} 
              ;;
+
          *.rar)       
              #TODO Dir
-             cmd="unrar x \"$1\" $dir";
+             cmd="unrar x \"$file\" \"$dir\"";
              echo $cmd;
              eval ${cmd}
              ;;
          *)           
-            echo "'$1' cannot be extracted via extract()" 
+            echo "'$file' cannot be extracted via extract()" 
             ;;
          esac
    fi
 }
  
-# Make a directory and cd into it
-function take {
-	$(cv mkdir) -p $1
-	cd $1
-}
  
 # web_search from terminal
 function web_search() {
@@ -204,8 +255,8 @@ bckp() {
   new="$old-$0"
   [[ -d $new ]] && echo "already exists" && return 1
   [[ -f $new ]] && echo "already exists" && return 1
-  [[ -d $old ]] && $(cv cp) -rf "$old/" "$new" && cd "$origin" && echo "backed up $old to $new"
-  [[ -f $old ]] && $(cv cp) -rf "$old/" "$new" && cd "$origin" && echo "backed up $old to $new"
+  [[ -d $old ]] && cp -rf "$old/" "$new" && cd "$origin" && echo "backed up $old to $new"
+  [[ -f $old ]] && cp -rf "$old/" "$new" && cd "$origin" && echo "backed up $old to $new"
 }
 
 blank() {
@@ -240,7 +291,7 @@ bar() {
 
 rename() {
   name=$(base)
-  cd .. && $(cv mv) "$name" "$1" && cd "$1" 
+  cd .. && mv "$name" "$1" && cd "$1" 
 }
 
 tst() {
@@ -262,7 +313,7 @@ tst() {
 
 surl() {
   for url in "$@"; do
-    ssh_url=$(echo "$url" | $(cv sed) 's/https:\/\/\([^/]*\)\(.*\)\.\(.*\)/git@\1:\2.git/')
+    ssh_url=$(echo "$url" | sed 's/https:\/\/\([^/]*\)\(.*\)\.\(.*\)/git@\1:\2.git/')
     echo "$ssh_url"
   done
 }
@@ -274,13 +325,13 @@ clone() {
   fi
   for repo in "$@"; do
     if [[ $repo == *"/"* ]]; then
-      dev=$($(cv basename) "$($(cv dirname) "$repo")")
+      dev=$(basename "$(dirname "$repo")")
     fi
-    repo=$($(cv basename) "$repo")
+    repo=$(basename "$repo")
 
-    # echo "cloning $dev/$repo"
-    take "$CLONEDIR/$dev" && $(cv git) clone --depth=1 "$REPO_HOST/$dev/$repo" "$repo"
-    cd "$repo"
+    echo "cloning $dev/$repo"
+    take "$CLONEDIR/$dev" && git clone --depth=1 "$REPO_HOST/$dev/$repo" "$repo" && cd "$repo" && 
+    # take "$CLONEDIR/$dev" && sudo git clone --depth=1 "$REPO_HOST/$dev/$repo" "$repo" && cd "$repo" && 
   done
 }
 
@@ -292,17 +343,17 @@ fork() {
 
   for repo in "$@"; do
     if [[ $repo == *"/"* ]]; then
-      dev=$($(cv basename) "$($(cv dirname) "$repo")")
+      dev=$(basename "$(dirname "$repo")")
     fi
 
-    repo=$($(cv basename) "$repo")
+    repo=$(basename "$repo")
     # echo "cloning $dev/$repo"
     user="$HOME/gitclone/clones/$USER" 
-    mkdir -p "$user" && cd "$user" && $(cv gh) repo fork "$dev/$repo" && cd "$repo" 2> /dev/null
+    mkdir -p "$user" && cd "$user" && gh repo fork "$dev/$repo" && cd "$repo" 2> /dev/null
   done
   # dev=$USER
-  # repo=$($(cv basename) "$1")
-  # take "$HOME/gitclone/clones/$dev" && $(cv gh) repo fork "$1" && cd "$repo" 2> /dev/null
+  # repo=$(basename "$1")
+  # take "$HOME/gitclone/clones/$dev" && gh repo fork "$1" && cd "$repo" 2> /dev/null
 }
 
 padd() {
@@ -317,7 +368,7 @@ def() {
   fname=~/self.notes/definitions
   term=$1
   shift 1
-  [[ -f "$fname" ]] && former=$(cat "$fname") && $(cv rm) "$fname"
+  [[ -f "$fname" ]] && former=$(cat "$fname") && rm "$fname"
   extended=$(printf "%s\n\t%s\n%s" "$term" "$*" "$former")
   echo "$extended" > "$fname"
 }
@@ -327,34 +378,34 @@ defs() {
 }
 
 cdefs() {
-  $(cv cat) ~/self.notes/definitions
+  cat ~/self.notes/definitions
 }
 
 amend() {
-  $(cv git) add . && $(cv git) commit --amend && $(cv git) push -f origin
+  git add . && git commit --amend && git push -f origin
 }
 
 issues() {
-  $(cv gh) repo issue "$@"
+  gh repo issue "$@"
 }
 
 pm() {
   if [[ ! -a .git ]]; then
-    $(cv git) init
+    git init
   fi
   if [[ ! -a go.mod ]]; then
-    /usr/local/go/bin/go mod init "github.com/$($(cv basename) $($(cv dirname) $(pwd)))/$(base)"
+    go mod init "github.com/$USER/$(base)" &> /dev/null
   fi
-  /usr/local/go/bin/go mod tidy
+  go mod tidy
 }
 
 cmd() {
-  $(cv mkdir) -p cmd 
+  mkdir -p cmd 
   [[ ${#argv[@]} -eq 0 ]] && echo "no extension. created dir but exiting with 1" && return 1
   [[ $1 == "go" ]] && printf "package main\n" >> "cmd/main.$1" && return 0
   [[ $1 == "v"  ]] && printf "module main\n" >> "cmd/main.$1" && return 0
-  [[ ${#argv[@]} -eq 1 ]] && $(cv touch) "cmd/main.$1" && return 0
-  [[ ${#argv[@]} -gt 0 ]] && echo "using \"$1\" extension. will exit with 1" && $(cv touch) "cmd/main.$1" && return 1
+  [[ ${#argv[@]} -eq 1 ]] && touch "cmd/main.$1" && return 0
+  [[ ${#argv[@]} -gt 0 ]] && echo "using \"$1\" extension. will exit with 1" && touch "cmd/main.$1" && return 1
 }
 
 function argstudy() {
@@ -390,28 +441,28 @@ function argstudy() {
 }
 
 api() {
-  $(cv mkdir) -p api 
+  mkdir -p api 
   [[ ${#argv[@]} -eq 0 ]] && echo "no extension. created dir but exiting with 1" && return 1
   [[ $1 == "go" ]] && printf "package %s\n" "api" >> "api/core.$1" && return 0
   [[ $1 == "v"  ]] && printf "module %s\n" "api" >> "api/core.$1" && return 0
-  [[ $1 == "kurt"  ]] || [[ $1 == "kt" ]] && $(cv touch) "api/core.kt" && return 0
-  [[ $1 == "marco"  ]] || [[ $1 == "mc" ]] && $(cv touch) "api/core.mc" && return 0
-  [[ $1 == "fork"  ]] || [[ $1 == "fk" ]] && $(cv touch) "api/core.fk" && return 0
-  [[ ${#argv[@]} -eq 1 ]] && $(cv touch) "api/core.$1" && return 0
-  # [[ ${#argv[@]} -gt 0 ]] && echo "using \"$1\" extension. will exit with 1" && $(cv touch) "api/core.$1" && return 1
-  echo "using \"$1\" extension. will exit with 1" && $(cv touch) "api/core.$1" && return 1
+  [[ $1 == "kurt" ]] || [[ $1 == "kt" ]] && touch "api/core.kt" && return 0
+  [[ $1 == "marco" ]] || [[ $1 == "mc" ]] && touch "api/core.mc" && return 0
+  [[ $1 == "fork" ]] || [[ $1 == "fk" ]] && touch "api/core.fk" && return 0
+  [[ ${#argv[@]} -eq 1 ]] && touch "api/core.$1" && return 0
+  # [[ ${#argv[@]} -gt 0 ]] && echo "using \"$1\" extension. will exit with 1" && touch "api/core.$1" && return 1
+  echo "using \"$1\" extension. will exit with 1" && touch "api/core.$1" && return 1
 }
 
 add() {
-  $(cv git) add "$@"
+  git add "$@"
 }
 
 commit() {
-  $(cv git) commit -m "$@"
+  git commit -m "$@"
 }
 
 push() {
-  $(cv git) push origin
+  git push origin
 }
 
 acp() {
@@ -428,7 +479,7 @@ acp() {
 }
 
 base() {
-  $(cv basename) "$(pwd)"
+  basename "$(pwd)"
 }
 
 iexists() {
@@ -447,7 +498,7 @@ iexists() {
 
 hide() {
   for arg in "$@"; do
-    $(cv mv) "$arg" ".$arg"
+    mv "$arg" ".$arg"
   done
 }
 
@@ -468,22 +519,22 @@ startover() {
 discontinue() {
   if [[ -z "$@" ]]; then
     name="$(basename $PWD)"
-    $(cv gh) repo delete "$USER/$name" --yes && cd .. && $(cv rm) -rf "$name"
+    gh repo delete "$USER/$name" --yes && cd .. && rm -rf "$name"
   else
     for arg in "$@"; do
       name="$(basename $arg)"
-      $(cv gh) repo delete "$USER/$name" --yes && $(cv rm) -rf "$name"
+      gh repo delete "$USER/$name" --yes && rm -rf "$name"
     done
   fi
 }
 
 clobber() {
-  $(cv rm) "$1"
+  rm "$1"
   echo "$2" > "$1"
 }
 
 clobberp() {
-  $(cv rm) "$1"
+  rm "$1"
   p > "$1"
 }
 
@@ -491,8 +542,8 @@ relocate() {
   here=$(pwd)
   name=$(base)
   dest=$1/$name
-  $(cv mkdir) -p "$dest"
-  $(cv mv) "$here" "$1" && cd "$dest" || return 1
+  mkdir -p "$dest"
+  mv "$here" "$1" && cd "$dest" || return 1
 }
 
 cds () {
@@ -500,7 +551,7 @@ cds () {
 }
 
 co() {
-  $(cv git) checkout $*
+  git checkout $*
 }
 
 sha256() {
@@ -517,13 +568,13 @@ rl() {
 
 # md() {
 #   for name in "$@"; do
-#     $(cv mkdir) -p "$name"
+#     mkdir -p "$name"
 #   done
 # }
 
 dirof() {
   for name in "$@"; do
-    $(cv dirname) "$(command -v "$name")"
+    dirname "$(command -v "$name")"
   done
 }
 
@@ -533,19 +584,19 @@ zdot() {
 
 here() {
   # $EDITOR "$(pwd)"
-  $(cv dirname) `readlink -f $0`
+  dirname `readlink -f $0`
 }
 
 titles() {
   fname=~/self.notes/track_titles
-  [[ -f "$fname" ]] && former=$(cat "$fname") && $(cv rm) "$fname"
+  [[ -f "$fname" ]] && former=$(cat "$fname") && rm "$fname"
   extended=$*"\n"$former
   echo "$extended" > "$fname"
 }
 
 keep() {
   fname=$(pwd)/keeps.md
-  [[ -f "$fname" ]] && former=$(cat "$fname") && $(cv rm) "$fname"
+  [[ -f "$fname" ]] && former=$(cat "$fname") && rm "$fname"
   extended=$*"\n"$former
   echo "$extended" > "$fname"
 }
@@ -589,7 +640,7 @@ stdout() {
 
 note() {
   fname=~/self.notes/notes
-  [[ -f "$fname" ]] && former=$(cat "$fname") && $(cv rm) "$fname"
+  [[ -f "$fname" ]] && former=$(cat "$fname") && rm "$fname"
   extended=$*"\n"$former
   echo "$extended" > "$fname"
 }
@@ -604,7 +655,7 @@ cnotes() {
 
 etch() {
   fname="$HOME/self.notes/$*.md"
-  name=$(echo "$fname" | $(cv sed) "s/ /_/g")
+  name=$(echo "$fname" | sed "s/ /_/g")
   [[ ! -f "$fname" ]] && printf "%s\n---\n" "$*" > "$fname"
   $EDITOR -n "$fname"
 }
@@ -616,7 +667,7 @@ yd() {
   origin=$(pwd)
 
   # echo "yt-dlp $rgs $url"
-  [[ ! -d "$folder" ]] && $(cv mkdir) -p "$folder" 
+  [[ ! -d "$folder" ]] && mkdir -p "$folder" 
   cd "$folder" || (echo "couldn't get into $folder" && return 1)
 
   yt-dlp $rgs $url && cd "$origin" && return
@@ -626,7 +677,7 @@ yd() {
 }
 
 y22() {
-  rgs="-f 22"
+  rgs="-f22  --no-check-certificates"
   d=$VIDEOS/ytdls
   for url in "$@"; do
     echo "$url"
@@ -666,9 +717,9 @@ post() {
   [[ -d $dname ]] && cd $dname && $EDITOR $dname && return
   take $dname
   fname="$dname/$name.md"
-  [[ ! -d $dname ]] && $(cv mkdir) -p "$dname"
+  [[ ! -d $dname ]] && mkdir -p "$dname"
   $EDITOR "$dname"
-  [[ -f "$fname" ]] && former=$(cat "$fname") && $(cv rm) "$fname"
+  [[ -f "$fname" ]] && former=$(cat "$fname") && rm "$fname"
   extended=$*"\n===\n"$former
   echo "$extended" > "$fname"
   $EDITOR "$fname"
@@ -679,11 +730,11 @@ posts() {
 }
 
 cposts() {
-  $(cv cat) ~/self.notes/notes
+  cat ~/self.notes/notes
 }
 
 stars() {
-  $(cv gh) api user/starred --template '{{range .}}{{.full_name|color "yellow"}}{{"\n"}}{{end}}'
+  gh api user/starred --template '{{range .}}{{.full_name|color "yellow"}}{{"\n"}}{{end}}'
 }
 
 processing-java() {
@@ -789,12 +840,12 @@ linkhere() {
 
 # printf "%s\n" "0x4f4c4c" >> colors.txt
 
-function initpyenv () { 
-  export PYENV_ROOT="$HOME/.pyenv"
-  command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-  eval "$(pyenv init -)"
-  pyenv global 3.11-dev
-}
+# function initpyenv () { 
+#   export PYENV_ROOT="$HOME/.pyenv"
+#   command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+#   eval "$(pyenv init -)"
+#   pyenv global 3.11-dev
+# }
 
 east() {
   for arg in "$@"; do

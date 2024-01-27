@@ -1,6 +1,7 @@
+export HARDWARECLOCK=localtime
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
-export PATH="$PATH:$HOME/.local/bin"
+export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.cache/dart-sdk/bin:$HOME/.cache/vscode/bin"
 [[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
 
 dirof_() {
@@ -10,8 +11,7 @@ dirof_() {
   done
 }
 
-# export GOPROXY=mod
-# export HELIX_RUNTIME=$ZDOTDIR/helix/runtime
+export HELIX_RUNTIME=$CLONEDIR/helix/runtime
 # export NVIM=$HOME/.config/nvim
 export CMAKE_ROOT=/usr/local/share/cmake-3.24
 export IPDATAKEY=22c8e4ddd882816537eb93039043f10c552da195d7f4625928cf51bb
@@ -26,14 +26,17 @@ export IPDATAKEY=22c8e4ddd882816537eb93039043f10c552da195d7f4625928cf51bb
 #   pyenv shell 3.11-dev
 # fi
 export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-`eval "$(pyenv init -)"`
-pyenv global 3.11-dev
+  # command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+# `eval "$(pyenv init -)"`
+ 
+# 
+  
+# 
 
 # export VIMRUNTIME=/usr/share/vim/vim81
 export SUBLIME_CONFIG=$HOME/.config/sublime-text
 export RUST_BACKTRACE=1
-export GOEXPERIMENT=unified
+# export GOEXPERIMENT=unified
 
 PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
 [[ -x "$(command -v manpath)" ]] && PATH="$PATH:$(manpath -q)"

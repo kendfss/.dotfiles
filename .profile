@@ -60,3 +60,5 @@ command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 `eval "$(pyenv init -)"`
 pyenv global 3.11-dev
 
+
+export PATH="$HOME/.elan/bin:$PATH"

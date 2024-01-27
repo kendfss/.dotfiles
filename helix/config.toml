@@ -3,7 +3,7 @@
 #   passing args
 
 # cleaning macro => ]s=<ret><home>fct=<right>&<A-;>
-theme            = 'adwaita-dark'
+# theme            = 'adwaita-dark'
 
 [editor]
 shell = ["zsh", "-c"]
@@ -69,6 +69,7 @@ o = { l = [ 'extend_line', 'delete_selection_noyank', 'paste_before' ], w = [ 'm
 [keys.normal.y]
 c = ':clipboard-yank'
 y = 'yank'
+x = ['yank', 'delete_selection']
 w = ['save_selection', 'move_prev_word_start', 'move_next_word_end', 'yank', 'jump_backward']
 l = ['save_selection', 'extend_line', 'yank', 'jump_backward']
 a = ['save_selection', 'select_all', 'yank', 'jump_backward']

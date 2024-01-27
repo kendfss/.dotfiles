@@ -1,21 +1,23 @@
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
+export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin"
+
 [[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
 
 
 [[ -z "$(command -v which)" ]] && alias which="command -v"
 [[ -z "$(command -v mkdir)" ]] && alias mkdir="/usr/bin/mkdir"
-[[ -z "$(command -v manpath)" ]] && alias mkdir="/usr/bin/manpath"
+[[ -z "$(command -v manpath)" ]] && alias manpatHmkdir="/usr/bin/manpath"
 
 PATH="$PATH:/usr/local/bin:/usr/bin"
-PATH="$PATH:/usr/local/lib/nodejs/node-v16.15.0-linux-x64/bin"
+PATH="$PATH:/usr/local/lib/nodejs/node-v16.15.0-linux-x64/bin:$HOME/.elan/bin"
 
 export PATH
 
 export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-`eval "$(pyenv init -)"`
-pyenv global 3.11-dev
+IGNORE__='command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"'
+IGNORE__='`eval "$(pyenv init -)"`'
+IGNORE__="pyenv global 3.11-dev"
 
 export WORDCHARS=${WORDCHARS//[&+;\-_\/=.]}
 bindkey "^H" kill-word
@@ -44,6 +46,7 @@ local LOCAL_ZSHRC=$HOME/.zshlocal/.zshrc       # Allow the local machine to have
     export GOFMT=gofumpt
     # export MANPATH="/usr/local/share/man/man1"
     export CLONEDIR=$HOME/gitclone/clones
+    export CLONES=$HOME/gitclone/clones
     export REPO_HOST=https://github.com
     export DEVELOPER=$USER
     # export GOPATH="$HOME/go:$CLONEDIR/$USER"
@@ -163,4 +166,4 @@ zstyle ':chpwd:*' recent-dirs-max 5
 
 [[ -d $ZSH_CONF/zsh-autosuggestions ]] && source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 [[ -d $ZSH_CONF/zsh-syntax-highlighting ]] && source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-
+source $HOME/.elan/env
