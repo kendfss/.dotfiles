@@ -20,5 +20,6 @@ fast-syntax-highlighting/
 zsh-*
 *.trash
 *.tst
-go.sum
-go.mod
+# go.sum
+# go.mod
+.mk

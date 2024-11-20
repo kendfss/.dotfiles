@@ -11,27 +11,11 @@ dirof_() {
   done
 }
 
-export HELIX_RUNTIME=$CLONEDIR/helix/runtime
+# export HELIX_RUNTIME=$CLONES/helix-editor/helix/runtime
+
 # export NVIM=$HOME/.config/nvim
 export CMAKE_ROOT=/usr/local/share/cmake-3.24
 export IPDATAKEY=22c8e4ddd882816537eb93039043f10c552da195d7f4625928cf51bb
-
-# # export PYTHONHOME=/home/kendfss/gitclone/clones/python/cpython
-# # set PYTHONHOME
-# # set PYTHONPATH
-# export PYENV_ROOT="$HOME/.pyenv"
-# if [[ -d $PYENV_ROOT ]]; then
-#   export PATH="$PATH:$PYENV_ROOT/bin"
-#   eval "$(pyenv init -)"
-#   pyenv shell 3.11-dev
-# fi
-export PYENV_ROOT="$HOME/.pyenv"
-  # command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-# `eval "$(pyenv init -)"`
- 
-# 
-  
-# 
 
 # export VIMRUNTIME=/usr/share/vim/vim81
 export SUBLIME_CONFIG=$HOME/.config/sublime-text

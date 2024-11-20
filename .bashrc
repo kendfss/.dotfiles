@@ -1,3 +1,4 @@
+echo running $0
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
 [[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
@@ -6,6 +7,4 @@ export ZDOTDIR=$HOME/.zsh
 
 export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-`eval "$(pyenv init -)"`
-pyenv global 3.11-dev
-
+eval "$(pyenv init -)"

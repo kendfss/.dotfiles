@@ -12,8 +12,6 @@ export ZDOTDIR=$HOME/.zsh
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
-export SHELL=/bin/zsh
-
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
     # include .bashrc if it exists
@@ -25,11 +23,6 @@ fi
 # set PATH so it includes user's private bin if it exists
 if [ -d "$HOME/bin" ] ; then
     PATH="$HOME/bin:$PATH"
-fi
-
-if [ -d "$HOME/.pyenv" ]; then
-    PATH="$HOME/.pyenv/bin:$PATH"
-    export PYENV_ROOT="$HOME/.pyenv"
 fi
 
 # set PATH so it includes user's private bin if it exists
@@ -55,10 +48,8 @@ export ENV=$ZDOTDIR/.zshenv
 #eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 [[ -x $(command -v gcc) ]] && export CC=gcc
 
+export PATH="$HOME/.elan/bin:$PATH"
+
 export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-`eval "$(pyenv init -)"`
-pyenv global 3.11-dev
-
-
-export PATH="$HOME/.elan/bin:$PATH"
+eval "$(pyenv init -)"

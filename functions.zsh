@@ -1,6 +1,12 @@
 # https://zsh.sourceforge.io/Doc/Release/Conditional-Expressions.html
 autoload -Uz add-zsh-hook
 
+goc() {
+  for arg in "$@"; do
+    go doc $arg | bat -l go -p
+  done
+}
+
 exts() {
   # print file extensions
     dir=$1
@@ -39,6 +45,7 @@ take() {
   mkdir -p $1
 	cd $1
 }
+alias mcd=take
 
 cv2() {
   cmd=$1
@@ -243,7 +250,12 @@ urlencode() {
 }
 
 reload() {
-  exec $SHELL
+  # exec $SHELL
+  exec $SHELL -l
+  # source $DOTFILES/.zshrc
+  # . $DOTFILES/aliases.zsh
+  # echo done
+  # fuck
 }
 
 bckp() {
@@ -840,13 +852,6 @@ linkhere() {
 
 # printf "%s\n" "0x4f4c4c" >> colors.txt
 
-# function initpyenv () { 
-#   export PYENV_ROOT="$HOME/.pyenv"
-#   command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-#   eval "$(pyenv init -)"
-#   pyenv global 3.11-dev
-# }
-
 east() {
   for arg in "$@"; do
     [[ -f "$arg" ]] && bat "$arg" && printf "end of \"%s\"\n" "$arg"
@@ -1078,7 +1083,10 @@ switch() {
 }
 
 
-
+reload-pa() {
+  # reload PulseAudio
+  pacmd unload-module module-udev-detect && pacmd load-module module-udev-detect
+}
 
 
 

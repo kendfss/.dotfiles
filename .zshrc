@@ -7,23 +7,20 @@ export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin"
 
 [[ -z "$(command -v which)" ]] && alias which="command -v"
 [[ -z "$(command -v mkdir)" ]] && alias mkdir="/usr/bin/mkdir"
-[[ -z "$(command -v manpath)" ]] && alias manpatHmkdir="/usr/bin/manpath"
+[[ -z "$(command -v manpath)" ]] && alias manpath="/usr/bin/manpath"
 
 PATH="$PATH:/usr/local/bin:/usr/bin"
 PATH="$PATH:/usr/local/lib/nodejs/node-v16.15.0-linux-x64/bin:$HOME/.elan/bin"
 
 export PATH
 
-export PYENV_ROOT="$HOME/.pyenv"
-IGNORE__='command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"'
-IGNORE__='`eval "$(pyenv init -)"`'
-IGNORE__="pyenv global 3.11-dev"
-
 export WORDCHARS=${WORDCHARS//[&+;\-_\/=.]}
 bindkey "^H" kill-word
 bindkey "^[[1;3C" forward-word
 bindkey "^[[1;3D" backward-word
-
+bindkey "^[[1~" beginning-of-line
+bindkey "^[[4~" end-of-line
+bindkey "^[[3~" delete-char
 
 local ZSH_CONF=$HOME/.zsh                      # Define the place I store all my zsh config stuff
 local ZSH_CACHE=$ZSH_CONF/cache                # for storing files like history and zcompdump 
@@ -163,7 +160,16 @@ autoload -Uz chpwd_recent_dirs cdr add-zsh-hook
 add-zsh-hook chpwd chpwd_recent_dirs
 zstyle ':chpwd:*' recent-dirs-max 5
 
-
-[[ -d $ZSH_CONF/zsh-autosuggestions ]] && source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
-[[ -d $ZSH_CONF/zsh-syntax-highlighting ]] && source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+export PLUGINS=/usr/share/zsh/plugins
+# [[ -d $ZSH_CONF/zsh-autosuggestions ]] && source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+source $PLUGINS/zsh-autosuggestions/zsh-autosuggestions.zsh
+# [[ -d $ZSH_CONF/zsh-syntax-highlighting ]] && source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source $PLUGINS/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# sudo ln -s /usr/share/zsh/plugins/zsh-syntax-highlighting /usr/local/share/zsh-syntax-highlighting
 source $HOME/.elan/env
+
+[[ -x "$(command -v direnv)" ]] && eval "$(direnv hook zsh)"
+
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"

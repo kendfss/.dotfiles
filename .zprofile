@@ -43,6 +43,5 @@ if [[ -z $(command -v set_title) ]]; then
 fi
 
 # set_title
-# initpyenv
 
 export PATH="$HOME/.elan/bin:$PATH"

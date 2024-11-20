@@ -38,7 +38,7 @@ if [[ -n $(command -v xbps-install) ]]; then
 	source $ZDOTDIR/functions.zsh
 
   sudo xbps-install -Syu
-  sudo xbps-install -y tree pass git pandoc && cd $HOME && sudo git clone https://github.com/kendfss/.password-store
+  sudo xbps-install -y tree pass git pandoc psmisc && cd $HOME && sudo git clone https://github.com/kendfss/.password-store
   
   type -p curl >/dev/null || (sudo xbps-install -y curl)
 
