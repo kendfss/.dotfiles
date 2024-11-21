@@ -1,4 +1,5 @@
 pending/
+languages.toml
 # *DS_Store
 # ._.*
 *.gz

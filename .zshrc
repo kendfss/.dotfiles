@@ -1,6 +1,7 @@
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
-export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin"
+export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin:$HOME/.deno/bin"
+export deno="$HOME/.deno/bin/deno"
 
 [[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
 

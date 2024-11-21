@@ -3,7 +3,7 @@
 #   passing args
 
 # cleaning macro => ]s=<ret><home>fct=<right>&<A-;>
-# theme            = 'adwaita-dark'
+theme            = 'adwaita-dark'
 
 [editor]
 shell = ["zsh", "-c"]
@@ -40,8 +40,10 @@ enable = true
 t     = 'transpose_view'
 w     = ':write'
 q     = { q = ':quit', a = ':quit-all' }
-up    = ':vsplit'
-right = ':hsplit'
+up    = 'jump_view_up'
+down  = 'jump_view_down'
+left  = 'jump_view_left'
+right = 'jump_view_right'
 
 [keys.normal.r]
 r     = 'change_selection_noyank'
@@ -168,18 +170,20 @@ O                   = ['add_newline_above', 'move_line_up']
 # C-S-up            = [ 'push_register', 'extend_line', 'delete_selection', 'move_line_up', 'paste_before', 'pop_register' ]
 
 [keys.select]
-'='               = { '=' = [':w!', 'normal_mode']}
-'A-/'             = 'toggle_comments'
-# A-c             = 'no_op'
-A-w               = [':w!', ':w!', 'normal_mode']
-A-c               = ':clipboard-yank'
-A-r               = ':config-reload'
-space             = { '%' = ':vsplit', '"' = ':hsplit' }
-C-l               = 'split_selection_on_newline'
-d                 = 'delete_selection_noyank'
-c                 = 'change_selection_noyank'
-A-n               = ':new'
-'%'               = 'match_brackets'
+'='    = { '=' = [':w!', 'normal_mode']}
+'A-/'  = 'toggle_comments'
+# A-c  = 'no_op'
+A-w    = [':w!', ':w!', 'normal_mode']
+A-c    = ':clipboard-yank'
+A-r    = ':config-reload'
+space  = { '%' = ':vsplit', '"' = ':hsplit' }
+C-l    = 'split_selection_on_newline'
+d      = 'delete_selection_noyank'
+c      = 'change_selection_noyank'
+A-n    = ':new'
+'%'    = 'match_brackets'
+A-up   = 'goto_prev_paragraph'
+A-down = 'goto_next_paragraph'
 
 [keys.insert]
 A-q                    = 'record_macro'
