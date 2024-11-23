@@ -1,10 +1,8 @@
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
-export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin:$HOME/.deno/bin"
-export deno="$HOME/.deno/bin/deno"
+export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin"
 
 [[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
-
 
 [[ -z "$(command -v which)" ]] && alias which="command -v"
 [[ -z "$(command -v mkdir)" ]] && alias mkdir="/usr/bin/mkdir"
@@ -174,3 +172,4 @@ source $HOME/.elan/env
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
+

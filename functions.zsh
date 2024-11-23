@@ -2,7 +2,8 @@
 autoload -Uz add-zsh-hook
 
 goc() {
-  for arg in "$@"; do
+  [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
+  for arg in $args; do
     go doc $arg | bat -l go -p
   done
 }

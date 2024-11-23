@@ -46,7 +46,7 @@ export ENV=$ZDOTDIR/.zshenv
 
 [[ -d $HOME/.cargo ]] && . "$HOME/.cargo/env"
 #eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-[[ -x $(command -v gcc) ]] && export CC=gcc
+# [[ -x $(command -v gcc) ]] && export CC=gcc
 
 export PATH="$HOME/.elan/bin:$PATH"
 
