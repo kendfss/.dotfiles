@@ -4,20 +4,27 @@ autoload -Uz add-zsh-hook
 goc() {
   [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
   for arg in $args; do
-    go doc $arg | bat -l go -p
+    go doc $arg | bat -l go -Pp
+  done
+}
+
+recover() {
+  for arg in $@; do 
+    git checkout "$(git rev-list -1 HEAD -- '$arg')^" -- '$arg'
   done
 }
 
 exts() {
   # print file extensions
+    [[ -z $1 ]] && argv[1]="$(pwd)"
     dir=$1
-    shift 1 > /dev/null
+    shift 1 > /dev/null || return 1
 
-    if (( $# )); then
-        dir="$@"
-    else
-        dir=$(pwd)
-    fi
+    # if (( $# )); then
+    #     dir="$@"
+    # else
+    #     dir=$(pwd)
+    # fi
 
     files=$(ls -1 $dir)
     extensions=()
@@ -269,7 +276,7 @@ bckp() {
   [[ -d $new ]] && echo "already exists" && return 1
   [[ -f $new ]] && echo "already exists" && return 1
   [[ -d $old ]] && cp -rf "$old/" "$new" && cd "$origin" && echo "backed up $old to $new"
-  [[ -f $old ]] && cp -rf "$old/" "$new" && cd "$origin" && echo "backed up $old to $new"
+  [[ -f $old ]] && cp "$old" "$new" && cd "$origin" && echo "backed up $old to $new"
 }
 
 blank() {
@@ -1010,7 +1017,7 @@ errc() {
 map(){
   cmd=$1
   shift
-  for arg in "$@0"; do 
+  for arg in "$@"; do 
     $cmd $arg
   done
 }
@@ -1084,11 +1091,15 @@ switch() {
 }
 
 
-reload-pa() {
-  # reload PulseAudio
-  pacmd unload-module module-udev-detect && pacmd load-module module-udev-detect
-}
+# reload-pa() {
+#   # reload PulseAudio
+#   pacmd unload-module module-udev-detect && pacmd load-module module-udev-detect
+# }
 
+
+gofiles() {
+  find . -name "*.go" ! -name "*_string.go"
+}
 
 
 

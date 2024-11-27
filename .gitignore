@@ -1,4 +1,6 @@
 pending/
+*-bckp
+*.bckp
 languages.toml
 # *DS_Store
 # ._.*
@@ -12,6 +14,7 @@ sizemap.txt
 cache
 default
 default.zip
+.envrc
 .chpwd-recent-dirs
 pure/
 purer/
@@ -24,3 +27,6 @@ zsh-*
 # go.sum
 # go.mod
 .mk
+go.work
+*.key
+*.keys

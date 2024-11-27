@@ -14,12 +14,14 @@ PATH="$PATH:/usr/local/lib/nodejs/node-v16.15.0-linux-x64/bin:$HOME/.elan/bin"
 export PATH
 
 export WORDCHARS=${WORDCHARS//[&+;\-_\/=.]}
-bindkey "^H" kill-word
+# bindkey "^H" kill-word
 bindkey "^[[1;3C" forward-word
 bindkey "^[[1;3D" backward-word
 bindkey "^[[1~" beginning-of-line
 bindkey "^[[4~" end-of-line
 bindkey "^[[3~" delete-char
+# bindkey '^[[3;3~' backward-kill-word
+bindkey '^[[3;3~' kill-word
 
 local ZSH_CONF=$HOME/.zsh                      # Define the place I store all my zsh config stuff
 local ZSH_CACHE=$ZSH_CONF/cache                # for storing files like history and zcompdump 

@@ -59,3 +59,10 @@ export RC=$ZDOTDIR/.zshrc
 export ENV=$ZDOTDIR/.zshenv
 [[ -d $HOME/.cargo ]] && . "$HOME/.cargo/env"
 
+export UNSPLASH_ID="680402"
+export UNSPLASH_ACCESS="vmApm7_xcObRGvWsE5dig7r-vcjEaTnOq4q8eHzpDzA"
+export UNSPLASH_SECRET="Lzda_dUBd7aNZC9Dl2HPPSs6dGypNT47IwSQrrg2gqY"
+
+export YOUTUBE_DATA_KEY="AIzaSyBi80e78ZssZs3YohJcTwLMBU7YenAoITg"
+
+

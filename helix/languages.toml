@@ -1,17 +1,12 @@
-[[conf]]
-name = "conf"
-scope = "source.conf"
-file-types = [".tmux.conf"]
-comment-token = "#"
-indent = { tab-width = 4, unit = " " }
-# language-server = { command = "mylang-lsp", args = ["--stdio"], environment = { "ENV1" = "value1", "ENV2" = "value2" } }
-# formatter = { command = "mylang-formatter" , args = ["--stdin"] }
-grammar = 'bash'
+[[language]]
+name = "elvish"
+file-types = ["conf"]
 
 [[language]]
 name = "go"
 auto-format = true
-formatter = { command = "goimports -e -w . && gofumpt -e -w ." }
+# formatter = { command = "goimports", args = ["-local", "github.com/kendfss"] }
+formatter = { command = "zsh", args = ["-c", "goimports -local github.com/kendfss | gofumpt"] }
 
 
 
