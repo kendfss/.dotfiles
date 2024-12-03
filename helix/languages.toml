@@ -6,7 +6,7 @@ file-types = ["conf"]
 name = "go"
 auto-format = true
 # formatter = { command = "goimports", args = ["-local", "github.com/kendfss"] }
-formatter = { command = "zsh", args = ["-c", "goimports -local github.com/kendfss | gofumpt"] }
+formatter = { command = "zsh", args = ["-c", 'goimports -local "github.com/kendfss/$(basename $PWD)" | gofumpt'] }
 
 
 

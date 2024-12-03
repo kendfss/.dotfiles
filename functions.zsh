@@ -4,7 +4,7 @@ autoload -Uz add-zsh-hook
 goc() {
   [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
   for arg in $args; do
-    go doc $arg | bat -l go -Pp
+    go doc $arg | bat -l go -Pp --theme ansi
   done
 }
 
