@@ -384,7 +384,7 @@ padd() {
   done
 }
 
-def() {
+idef() {
   fname=~/self.notes/definitions
   term=$1
   shift 1
@@ -1100,7 +1100,6 @@ switch() {
 gofiles() {
   find . -name "*.go" ! -name "*_string.go"
 }
-
 
 
 

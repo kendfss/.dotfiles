@@ -1,12 +1,22 @@
 [[language]]
-name = "elvish"
+name       = "elvish"
 file-types = ["conf"]
 
 [[language]]
-name = "go"
+name        = "go"
 auto-format = true
-# formatter = { command = "goimports", args = ["-local", "github.com/kendfss"] }
-formatter = { command = "zsh", args = ["-c", 'goimports -local "github.com/kendfss/$(basename $PWD)" | gofumpt'] }
+formatter   = { command = "zsh", args = ["-c", 'goimports -local "github.com/kendfss/$(basename $PWD)" | gofumpt'] }
 
+[language-server.gopls.config]
+diagnosticsTrigger             = "Save"
+vulncheck                      = "Imports"
+gofumpt                        = true
+"ui.diagnostic.staticchek"     = true
+"ui.diagnostic.unusedvariable" = true
+"ui.diagnostic.fieldalignment" = true
+"ui.diagnostic.useany"         = true
+
+[language-server-gopls.config.hints]
+compositeLiteralTypes = true
 
 
