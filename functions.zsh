@@ -384,7 +384,7 @@ padd() {
   done
 }
 
-idef() {
+def() {
   fname=~/self.notes/definitions
   term=$1
   shift 1
