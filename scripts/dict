@@ -1,13 +1,15 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
 fn() {
   local word
   local echo
-  if [ ! -z "$1" ]; then
+  if [ -n "$1" ]; then
     word="$1"
     echo=true
   else
     word="$(xclip -o -selection primary 2> /dev/null || xclip -o -selection clipboard || exit)"
   fi
+  word="$(echo "$word" | xargs)"
   query="https://api.dictionaryapi.dev/api/v2/entries/en_US/$word"
   result="$(curl -s "$query")"
   if [ -z "$result" ]; then 
@@ -19,7 +21,8 @@ fn() {
   # echo here
   # echo here
   local pipeline='.[0].meanings[] | "\(.partOfSpeech). \(.definitions[0].definition)\n"'
-  local def="$(echo "$result" | jq -r "$pipeline" 2> /dev/null || echo "$result" | jq -r '.message' 2> /dev/null || exit)"
+  local def
+  def="$(echo "$result" | jq -r "$pipeline" 2> /dev/null || echo "$result" | jq -r '.message' 2> /dev/null || exit)"
   # local def="${def// \\n}"
   [ -z $echo ] && notify-send -t 60000 "$word -" "$def" && return
   echo "$def"

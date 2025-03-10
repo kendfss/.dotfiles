@@ -1,6 +1,9 @@
 pending/
+tst/
+tst
 *-bckp
 *.bckp
+*.bk
 languages.toml
 # *DS_Store
 # ._.*
@@ -30,3 +33,10 @@ zsh-*
 go.work
 *.key
 *.keys
+.note
+*.og
+main[0-9]
+settings
+*_go
+bin/
+keeps.md

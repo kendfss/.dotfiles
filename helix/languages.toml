@@ -5,18 +5,24 @@ file-types = ["conf"]
 [[language]]
 name        = "go"
 auto-format = true
-formatter   = { command = "zsh", args = ["-c", 'goimports -local "github.com/kendfss/$(basename $PWD)" | gofumpt'] }
+formatter   = { command = "zsh", args = ["-c", 'gofumpt | goimports -local "github.com/kendfss/$(basename $PWD)"'] }
 
 [language-server.gopls.config]
 diagnosticsTrigger             = "Save"
 vulncheck                      = "Imports"
 gofumpt                        = true
-"ui.diagnostic.staticchek"     = true
-"ui.diagnostic.unusedvariable" = true
-"ui.diagnostic.fieldalignment" = true
-"ui.diagnostic.useany"         = true
+"ui.diagnostic.staticcheck"     = true
 
-[language-server-gopls.config.hints]
+[language-server.gopls.config.hints]
 compositeLiteralTypes = true
 
+[[language]]
+name        = "v"
+auto-format = true
 
+[[language]]
+name        = "python"
+auto-format = true
+
+[language-server.lsp-ai]
+command = "lsp-ai"

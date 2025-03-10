@@ -8,6 +8,13 @@ goc() {
   done
 }
 
+poc() {
+  [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
+  for arg in $args; do
+    pydoc $arg | bat -l python -p --theme ansi
+  done
+}
+
 recover() {
   for arg in $@; do 
     git checkout "$(git rev-list -1 HEAD -- '$arg')^" -- '$arg'
@@ -575,8 +582,13 @@ co() {
 }
 
 sha256() {
+  # compute sha256 sum of a file or string if file is not found
+  local cmd;
+  local cut;
+  cmd='openssl dgst -sha256 -r'
+  cut='cut -d " " -f 1'
   for name in "$@"; do
-    openssl dgst -sha256 "$name" | cut -d " " -f2
+    ([ -f "$name" ] && openssl dgst -sha256 -r "$name" | cut -d" " -f1) || echo "$name" |  openssl dgst -sha256 -r | cut -d" " -f1
   done
 }
 
@@ -652,11 +664,11 @@ quietly() {
   $cmd $* &> /dev/null &
 }
 
-stdout() {
-  cmd=$1
-  shift 1
-  $cmd $* &> /dev/stdout | less
-}
+# stdout() {
+#   cmd=$1
+#   shift 1
+#   $cmd $* &> /dev/stdout | less
+# }
 
 note() {
   fname=~/self.notes/notes
@@ -1084,10 +1096,11 @@ create() {
     $EDITOR .
 }
 
+
 switch() {
   cmd="$1"
   shift
-  sudo `cv "$cmd"` $*
+  sudo `cv2 "$cmd"` $*
 }
 
 
@@ -1098,8 +1111,58 @@ switch() {
 
 
 gofiles() {
-  find . -name "*.go" ! -name "*_string.go"
+  find . -name "*.go" ! -name "*_string.go" ! -name "*_templ.go"
 }
 
 
+cheat() {
+  local cmd;
+  cmd=$(echo $HOME/(.local|go)/bin/cheat)
+  
+  case $1 in
+  '-s'|'-v'|'-e')
+    $cmd $*;;
+  '--conf')
+    bat -p $($cmd $*) && $cmd $*;;
+  *)
+    $cmd $* | bat -plmd;;
+  esac
+}
 
+
+hostip() {
+  # return the IP of the host of the given urls
+  for arg in "$@"; do
+    ping -q -c1 -t1 $arg | tr -d '()' | awk '/^PING/{print $3}'
+  done
+}
+
+
+gouch() {
+  for arg in "$@"; do
+    mkdir "$arg"
+    echo "package $arg\n" > "$arg/$arg.go"
+  done
+}
+
+flatline() {
+  p | sed ':a;N;$!ba;s/\n/\\n/g' | c
+}
+
+nuke() {
+  local pth
+  pth="`pwd`"
+  cd .. && cv1 rm -r "$path"
+}
+
+nukef() {
+  local pth
+  pth="`pwd`"
+  cd .. && /urs/bin/rm -rf "$path"
+}
+
+weigh() {
+  for arg in "$@"; do
+    find "$arg" -mindepth 1 -maxdepth 1 -type d -print0 # | xargs -I{} du -sh "{}" | sort -h
+  done | xargs -0 -I{} du -sh '{}' | sort -h
+}

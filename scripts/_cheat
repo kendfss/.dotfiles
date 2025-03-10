@@ -1,0 +1,5 @@
+#!/usr/bin/env -S sh
+for arg in "$@"; do
+  link="https://github.com/rstacruz/cheatsheets/raw/refs/heads/master/$arg.md"
+  wget "$link" -O /dev/stdout 2> /dev/null
+done

@@ -8,13 +8,13 @@ fi
 # alias python=python3
 alias lst="ls --time=ctime"
 # alias pip=pip3
-alias treec="tree | c"
+alias treec="tree | c && p"
 # alias py39="/usr/local/opt/python@3.9/libexec/bin/python"
 # alias pip39="/usr/local/opt/python@3.9/libexec/bin/pip"
 # alias python39="/usr/local/opt/python@3.9/libexec/bin/python"
 alias cl="clear; ls"
 # alias st="open -a \"/Applications/Sublime Text.app/Contents/MacOS/sublime_text\""
-alias editor=st
+alias editor="$EDITOR"
 alias glone="cd $HOME/gitclone; python main.py"
 # alias glone="$HOME/gitclone/main.py"
 alias sqin="mysql -u root -p"

@@ -55,11 +55,11 @@ if [[ -n $(command -v apt) ]]; then
   _rm $HOME/.tmux/plugins && git clone --depth=1 https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
   sudo apt install -y coreutils build-essential g++ bat git tmux
-  sudo apt install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm git libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
-  [[ ! -d $HOME/.pyenv ]] && curl https://pyenv.run | bash 
-  pyenv install 3.11-dev > /dev/stdout
-  `eval "$(pyenv init -)"`
-  pyenv global 3.11-dev && pip install "python-lsp-server[all]"
+  sudo apt install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm git libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev uv
+  # [[ ! -d $HOME/.pyenv ]] && curl https://pyenv.run | bash 
+  # pyenv install 3.11-dev > /dev/stdout
+  # `eval "$(pyenv init -)"`
+  # pyenv global 3.11-dev && pip install "python-lsp-server[all]"
 
   [[ ! -x $(command -v bat) ]] && sudo ln `command -v batcat` /usr/local/bin/bat &> /dev/null
   [[ ! -x $(command -v node) ]] && take $CLONEDIR/nodejs && git clone --depth=1 https://github.com/nodejs/node && cd node && ./configure && make -j4 && sudo make install && make test-only && make doc && ./node -e "console.log('Hello from Node.js ' + process.version)"

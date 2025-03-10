@@ -134,7 +134,7 @@ z         = [ 'delete_char_forward', 'move_next_word_end', 'move_prev_word_start
 S-left    = 'goto_previous_buffer'
 S-right   = 'goto_next_buffer'
 # 'S-,'   = 'remove_primary_selection'
-A-w       = [':w!', ':w!', 'normal_mode']
+A-w       = [':w!', ':w!', ':fmt', 'normal_mode']
 A-S-w     = [':write-all!', ':write-all!', 'normal_mode']
 A-c       = ':clipboard-yank'
 A-r       = ':config-reload'
@@ -146,7 +146,7 @@ A-S-right = 'extend_to_line_end'
 A-up      = 'goto_prev_paragraph'
 A-down    = 'goto_next_paragraph'
 space     = { '%' = ':vsplit', '"' = ':hsplit', c = 'completion' }
-f         = { c = 'find_next_char', t = 'find_till_char', C = 'find_prev_char', T = 'till_prev_char', f = 'file_picker', l = ':log-open', b = 'match_brackets' }
+f         = { c = 'find_next_char', t = 'find_till_char', C = 'find_prev_char', T = 'till_prev_char', f = 'file_picker', l = ':log-open', b = 'match_brackets', d = 'file_picker_in_current_buffer_directory' }
 C-up      = 'half_page_up'
 C-down    = 'half_page_down'
 C-l       = 'split_selection_on_newline'

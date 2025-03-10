@@ -1,6 +1,9 @@
 export HARDWARECLOCK=localtime
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
+export CONFIG=$HOME/.config
+export VIRTUAL_ENV=$HOME/.venv
+source $VIRTUAL_ENV/bin/activate
 export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.cache/dart-sdk/bin:$HOME/.cache/vscode/bin:$DOTFILES/scripts"
 [[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
 
