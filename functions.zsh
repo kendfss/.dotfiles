@@ -3,16 +3,21 @@ autoload -Uz add-zsh-hook
 
 goc() {
   # [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
-  # for arg in $args; do
-  #   go doc $arg | bat -l go -Pp --theme ansi
-  # done
   case $1 in
   '')
     go doc -u | bat -l go -Pp --theme ansi;;
-  '-u'|'-all')
-    go doc $* | bat -l go -Pp --theme ansi;;
+  '-u')
+    shift
+    for arg in "$@"; do
+      go doc -u $arg | bat -l go -Pp --theme ansi
+    done;;
+  '-all')
+    shift
+    for arg in "$@"; do
+      go doc -all $arg | bat -l go -Pp --theme ansi
+    done;;
   *)
-    for arg in $args; do
+    for arg in "$@"; do
       go doc $arg | bat -l go -Pp --theme ansi
     done;;
   esac
