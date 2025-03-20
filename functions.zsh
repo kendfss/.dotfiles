@@ -2,10 +2,20 @@
 autoload -Uz add-zsh-hook
 
 goc() {
-  [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
-  for arg in $args; do
-    go doc $arg | bat -l go -Pp --theme ansi
-  done
+  # [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
+  # for arg in $args; do
+  #   go doc $arg | bat -l go -Pp --theme ansi
+  # done
+  case $1 in
+  '')
+    go doc -u | bat -l go -Pp --theme ansi;;
+  '-u'|'-all')
+    go doc $* | bat -l go -Pp --theme ansi;;
+  *)
+    for arg in $args; do
+      go doc $arg | bat -l go -Pp --theme ansi
+    done;;
+  esac
 }
 
 poc() {
@@ -57,8 +67,7 @@ tcb() {
 
 # Make a directory and cd into it
 take() {
-  mkdir -p $1
-	cd $1
+  mkdir -p $1 && cd $1
 }
 alias mcd=take
 
@@ -1165,4 +1174,10 @@ weigh() {
   for arg in "$@"; do
     find "$arg" -mindepth 1 -maxdepth 1 -type d -print0 # | xargs -I{} du -sh "{}" | sort -h
   done | xargs -0 -I{} du -sh '{}' | sort -h
+}
+
+gcd() {
+  local name
+  name="$(basename $1)"
+  git clone "$1" && cd "$name"
 }

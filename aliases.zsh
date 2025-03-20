@@ -5,7 +5,7 @@ if [[ $(uname) -eq Linux ]]; then
   [[ -d "$ANDROID_SDK_ROOT" ]] && PATH="$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools"
 fi
 
-# alias python=python3
+alias pt=ptpython
 alias lst="ls --time=ctime"
 # alias pip=pip3
 alias treec="tree | c && p"
