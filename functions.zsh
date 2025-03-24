@@ -5,20 +5,20 @@ goc() {
   # [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
   case $1 in
   '')
-    go doc -u | bat -l go -Pp --theme ansi;;
+    go doc -u | bat -Pplgo --theme ansi;;
   '-u')
     shift
     for arg in "$@"; do
-      go doc -u $arg | bat -l go -Pp --theme ansi
+      go doc -u $arg | bat -Pplgo --theme ansi
     done;;
   '-all')
     shift
     for arg in "$@"; do
-      go doc -all $arg | bat -l go -Pp --theme ansi
+      go doc -all $arg | bat -Pplgo --theme ansi
     done;;
   *)
     for arg in "$@"; do
-      go doc $arg | bat -l go -Pp --theme ansi
+      go doc "$arg" | bat -Pplgo --theme ansi
     done;;
   esac
 }
@@ -26,7 +26,7 @@ goc() {
 poc() {
   [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
   for arg in $args; do
-    pydoc $arg | bat -l python -p --theme ansi
+    pydoc $arg | bat -Pplpython --theme ansi
   done
 }
 
