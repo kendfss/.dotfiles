@@ -1186,3 +1186,24 @@ gcd() {
   name="$(basename $1)"
   git clone "$1" && cd "$name"
 }
+
+project() {
+  local comment
+  local command 
+  case $1 in
+    'go')
+      echo // go.mod && cat go.mod
+      comment='//'
+      command='gofiles';;
+    'py')
+      comment='#'
+      command='pyfiles';;
+    *)
+    echo unsupported language \"$1\" && return 1;;
+  esac
+  echo command $command
+  echo comment $comment
+  for name in `$command`; do
+    echo $comment $name && cat $name
+  done
+}
