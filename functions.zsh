@@ -1201,8 +1201,6 @@ project() {
     *)
     echo unsupported language \"$1\" && return 1;;
   esac
-  echo command $command
-  echo comment $comment
   for name in `$command`; do
     echo $comment $name && cat $name
   done

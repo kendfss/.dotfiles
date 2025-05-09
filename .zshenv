@@ -49,7 +49,6 @@ if [[ -d /usr/local/go ]]; then
     PATH="$PATH:/usr/local/go/bin"
 fi
 
-export NDK_PATH="~/Android/Sdk/ndk/24.0.8215888"
 
 PATH="$PATH:$HOME/programs/scripts:$HOME/go/bin"
 export PATH
