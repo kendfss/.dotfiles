@@ -53,7 +53,7 @@ fi
 PATH="$PATH:$HOME/programs/scripts:$HOME/go/bin"
 export PATH
 
-export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR=/usr/local/share/zsh-syntax-highlighting/highlighters
+export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR=/usr/share/zsh/plugins/zsh-syntax-highlighting/highlighters
 
 export ZDOTDIR=$HOME/.zsh
 export PROFILE=$ZDOTDIR/.zprofile

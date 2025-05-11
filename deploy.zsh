@@ -51,9 +51,9 @@ if [[ -n $(command -v apt) ]]; then
   sudo apt install -y zsh zsh-doc wget htop tmux zsh-syntax-highlighting zsh-autosuggestions rlwrap project func
   
   chsh -s `command -v zsh`
-  _rm $ZDOTDIR/fast-syntax-highlighting && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting  $ZDOTDIR/zsh-syntax-highlighting 
-  _rm $ZDOTDIR/zsh-autosuggestions && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions  $ZDOTDIR/zsh-autosuggestions 
-  _rm $HOME/.tmux/plugins && git clone --depth=1 https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+  # _rm $ZDOTDIR/fast-syntax-highlighting && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting  $ZDOTDIR/zsh-syntax-highlighting 
+  # _rm $ZDOTDIR/zsh-autosuggestions && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions  $ZDOTDIR/zsh-autosuggestions 
+  # _rm $HOME/.tmux/plugins && git clone --depth=1 https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
   sudo apt install -y coreutils build-essential g++ bat git tmux
   sudo apt install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm git libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev uv

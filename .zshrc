@@ -167,7 +167,7 @@ source $PLUGINS/zsh-autosuggestions/zsh-autosuggestions.zsh
 # [[ -d $ZSH_CONF/zsh-syntax-highlighting ]] && source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source $PLUGINS/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # sudo ln -s /usr/share/zsh/plugins/zsh-syntax-highlighting /usr/local/share/zsh-syntax-highlighting
-source $HOME/.elan/env
+# source $HOME/.elan/env
 
 [[ -x "$(command -v direnv)" ]] && eval "$(direnv hook zsh)"
 

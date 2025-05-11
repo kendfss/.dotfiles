@@ -525,9 +525,9 @@ base() {
 
 iexists() {
   local match_found=1
-  for path in "$@"; do
+  for pth in "$@"; do
     shopt -s nullglob nocaseglob
-    files=("$path"*)
+    files=("$pth"*)
     if [[ ${#files[@]} -gt 0 ]]; then
       printf "%s\n" "${files[@]}"
       match_found=0
@@ -1131,8 +1131,8 @@ gofiles() {
 
 cheat() {
   local cmd;
-  cmd=$(echo $HOME/(.local|go)/bin/cheat)
-  
+  for pth in {$HOME/{.local,go}/,/{usr/,}{s,}}bin/cheat; do [[ -x "$pth" ]] && cmd=$pth && break; done
+  [[ -z "$cmd" ]] && echo cannot find executable > /dev/stderr && return
   case $1 in
   '-s'|'-v'|'-e')
     $cmd $*;;
@@ -1166,13 +1166,13 @@ flatline() {
 nuke() {
   local pth
   pth="`pwd`"
-  cd .. && cv1 rm -r "$path"
+  cd .. && cv1 rm -r "$pth"
 }
 
 nukef() {
   local pth
   pth="`pwd`"
-  cd .. && /urs/bin/rm -rf "$path"
+  cd .. && $(command -v rm) -rf "$pth"
 }
 
 weigh() {
