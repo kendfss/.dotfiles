@@ -10,7 +10,7 @@ fn() {
     word="$(xclip -o -selection primary 2> /dev/null || xclip -o -selection clipboard || exit)"
   fi
   word="$(echo "$word" | xargs)"
-  query="https://api.dictionaryapi.dev/api/v2/entries/en_US/$word"
+  query="$DICTAPI/$word"
   result="$(curl -s "$query")"
   if [ -z "$result" ]; then 
     local msg="Invalid word: $word"

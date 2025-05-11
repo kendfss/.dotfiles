@@ -6,6 +6,7 @@ export VIRTUAL_ENV=$HOME/.venv
 source $VIRTUAL_ENV/bin/activate
 export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.cache/dart-sdk/bin:$HOME/.cache/vscode/bin:$DOTFILES/scripts"
 [[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
+export DICTAPI="https://api.dictionaryapi.dev/api/v2/entries/en_GB"
 
 dirof_() {
   for name in "$@"; do

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+fn() {
+  local word
+  local echo
+  if [ -n "$1" ]; then
+    word="$1"
+    echo=true
+  else
+    word="$(xclip -o -selection primary 2> /dev/null || xclip -o -selection clipboard || exit)"
+  fi
+  word="$(echo "$word" | xargs)"
+  query="$DICTAPI/$word"
+  result="$(curl -s "$query")"
+  if [ -z "$result" ]; then 
+    local msg="Invalid word: $word"
+    [ -z $echo ] && notify-send -h string:bgcolor:#bf616a -t 3000 "$msg" && return
+    echo "$msg" && return
+  fi
+  local pipeline='.[].meanings[] | select(.partOfSpeech == %s) | .synonyms[]'
+  local def;
+  for pos in $(echo "$result" | jq -r '.[].meanings[] | "\(.partOfSpeech)"' | sort | uniq); do
+    local part=$(echo "$result" | jq -r "$(printf "$pipeline" \"$pos\")")
+    local entry=''
+    if [ -n "$part" ]; then
+      local part=$(echo "$part" | tr ' ' '-' | tr '\n' ' ')
+      local part="${part// \\n}"
+      local entry="$pos" && for term in $part; do entry="$(printf "%s\n\t%s" "$entry" "$term")"; done
+    fi
+    if [ -n "$entry" ]; then
+      [ -n "$def" ] && def="$(printf "%s\n%s" "$def" "$entry")"
+      [ -z "$def" ] && def="$entry"
+    fi
+  done
+  [ -z "$def" ] && def="no results"
+  [ -z $echo ] && notify-send -t 60000 "$word -" "$def" && return
+  echo "$def"
+}
+
+fn "$@"
+
+
+
