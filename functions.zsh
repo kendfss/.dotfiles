@@ -1228,7 +1228,12 @@ trans() {
   esac
   
   for name in "$@"; do
-    local new="$(namespacer "$name")"
+    local ext="${name##*.}"
+    local base="$(echo "$(basename "$name")" | sed "s/$ext$//g")"
+    local new="$(namespacer "$base")mp4"
+    # echo "$new"
+    # return
+    # echo "$ext" "$base" "$new"
     (ffmpeg -i "$name" -c:v libsvtav1 "${rate[@]}" -crf 20 -preset 4 "$new" && rm "$name") || rm "$new" && return 1
     ([ "$(du -b "$new" | cut -d' ' -f1)" -lt "$(du -b "$name" | cut -d' ' -f1)" ] && rm "$name") || rm "$new"
   done
