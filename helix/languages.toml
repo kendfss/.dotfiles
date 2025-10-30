@@ -5,13 +5,14 @@ file-types = ["conf"]
 [[language]]
 name        = "go"
 auto-format = true
+file-types  = ["go", "kage"]
 formatter   = { command = "zsh", args = ["-c", 'gofumpt | goimports -local "github.com/kendfss/$(basename $PWD)"'] }
 
 [language-server.gopls.config]
-diagnosticsTrigger             = "Save"
-vulncheck                      = "Imports"
-gofumpt                        = true
-"ui.diagnostic.staticcheck"     = true
+diagnosticsTrigger          = "Save"
+vulncheck                   = "Imports"
+gofumpt                     = true
+"ui.diagnostic.staticcheck" = true
 
 [language-server.gopls.config.hints]
 compositeLiteralTypes = true
@@ -24,5 +25,16 @@ auto-format = true
 name        = "python"
 auto-format = true
 
-[language-server.lsp-ai]
-command = "lsp-ai"
+# [[language]]
+# name                 = "kage"
+# file-types           = ["kage"]
+# injection-regex      = "kage"
+# auto-format          = true
+# scope                = "source.kage"
+# comment-token        = "//"
+# block-comment-tokens = { start     = "/*", end  = "*/" }
+# indent               = { tab-width = 4   , unit = "\t" }
+
+# [[grammar]]
+# name = "kage"
+# source = { git = "https://github.com/tree-sitter/tree-sitter-go", rev = "64457ea6b73ef5422ed1687178d4545c3e91334a" }

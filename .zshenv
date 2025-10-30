@@ -3,6 +3,7 @@ export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
 export CONFIG=$HOME/.config
 export VIRTUAL_ENV=$HOME/.venv
+export CC="$(which gcc)"
 source $VIRTUAL_ENV/bin/activate
 export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.cache/dart-sdk/bin:$HOME/.cache/vscode/bin:$DOTFILES/scripts"
 [[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
@@ -68,4 +69,4 @@ export UNSPLASH_SECRET="Lzda_dUBd7aNZC9Dl2HPPSs6dGypNT47IwSQrrg2gqY"
 
 export YOUTUBE_DATA_KEY="AIzaSyBi80e78ZssZs3YohJcTwLMBU7YenAoITg"
 
-
+export XDG_DATA_DIRS="$XDG_DATA_DIRS:/var/lib/flatpak/exports/share:/home/kendfss/.local/share/flatpak/exports/share"

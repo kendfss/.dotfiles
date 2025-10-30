@@ -6,6 +6,8 @@ goc() {
   case $1 in
   '')
     go doc -u | bat -Pplgo --theme ansi;;
+  '-ua')
+    go doc -u -all | bat -Pplgo --theme ansi;;
   '-u')
     shift
     for arg in "$@"; do
@@ -48,11 +50,11 @@ exts() {
     #     dir=$(pwd)
     # fi
 
-    files=$(ls -1 $dir)
-    extensions=()
+    local files=$(ls -1 $dir)
+    local extensions=()
 
     for file in $files; do
-        extension=${file##*.}
+        local extension=${file##*.}
         extensions+=($extension)
     done
 
@@ -77,7 +79,7 @@ take() {
 alias mcd=take
 
 cv2() {
-  cmd=$1
+  local cmd=$1
   shift
   $(command -v $cmd) $*
 }
@@ -92,9 +94,9 @@ cv1() {
 
 # intellegently extract archives based on extension. 
 function extract {
-  file=$1
+  local file=$1
   shift
-  dir=$1
+  local dir=$1
 
    if [[ -n $dir ]]; then
       mkdir -p "$dir"; 
@@ -109,70 +111,70 @@ function extract {
       case $file in
          *.tar.bz2)   
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar xjvf \"$file\" $dc" 
+             local cmd="tar xjvf \"$file\" $dc" 
              echo $cmd
              eval ${cmd}
              ;;   
 
          *.tar.gz)    
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar xzvf \"$file\" $dc"; 
+             local cmd="tar xzvf \"$file\" $dc"; 
              echo $cmd;
              eval ${cmd}
              ;;
 
          *.tar)       
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar vxf \"$file\" $dc";
+             local cmd="tar vxf \"$file\" $dc";
              echo $cmd;
              eval ${cmd}
              ;;
 
          *.tbz2)      
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar xjvf \"$file\" $dc";
+             local cmd="tar xjvf \"$file\" $dc";
              echo $cmd; 
              eval ${cmd}
              ;;  
 
          *.tgz) 
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar xzf \"$file\" $dc"; 
+             local cmd="tar xzf \"$file\" $dc"; 
              echo $cmd; 
              eval ${cmd} 
              ;;    
 
          *.bz2)       
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar jf \"$file\" $dc"; 
+             local cmd="tar jf \"$file\" $dc"; 
              echo $cmd; 
              eval ${cmd} 
              ;;     
 
          *.zip)       
              if [[ -n $dir ]]; then dc="-d $dir"; fi
-             cmd="unzip \"$file\" $dc"; 
+             local cmd="unzip \"$file\" $dc"; 
              echo $cmd; 
              eval ${cmd}
              ;;
 
          *.gz)
              if [[ -n $dir ]]; then dc="-C $dir"; fi
-             cmd="tar zf \"$file\" \"$dc\""; 
+             local cmd="tar zf \"$file\" \"$dc\""; 
              echo $cmd; 
              eval ${cmd}
              ;;
 
          *.7z)        
              #TODO dir
-             cmd="7z x -o \"$dir\" \"$file\""; 
+             local cmd="7z x -o \"$dir\" \"$file\""; 
              echo $cmd; 
              eval ${cmd} 
              ;;
 
          *.rar)       
              #TODO Dir
-             cmd="unrar x \"$file\" \"$dir\"";
+             local cmd="unrar x \"$file\" \"$dir\"";
              echo $cmd;
              eval ${cmd}
              ;;
@@ -190,7 +192,7 @@ function web_search() {
  
   # define search engine URLS
   typeset -A urls
-  urls=(
+  local urls=(
     google      "https://www.google.com/search?q="
     ddg         "https://www.duckduckgo.com/?q="
     github      "https://github.com/search?q="
@@ -206,11 +208,11 @@ function web_search() {
   if [[ $# -gt 1 ]]; then
     # build search url:
     # join arguments passed with '+', then append to search engine URL
-    url="${urls[$1]}${(j:+:)@[2,-1]}"
+    local url="${urls[$1]}${(j:+:)@[2,-1]}"
   else
     # build main page url:
     # split by '/', then rejoin protocol (1) and domain (2) parts with '//'
-    url="${(j://:)${(s:/:)urls[$1]}[1,2]}"
+    local url="${(j://:)${(s:/:)urls[$1]}[1,2]}"
   fi
  
   open_command "$url"
@@ -259,10 +261,10 @@ bindkey "^I" expand-or-complete-with-dots
 urlencode() {
     # urlencode <string>
 
-    old_lang=$LANG
+    local old_lang=$LANG
     LANG=C
     
-    old_lc_collate=$LC_COLLATE
+    local old_lc_collate=$LC_COLLATE
     LC_COLLATE=C
 
     local length="${#1}"
@@ -288,12 +290,12 @@ reload() {
 }
 
 bckp() {
-  origin=$(pwd)
-  old=$1
+  local origin=$(pwd)
+  local old=$1
   if [[ -z "$old" ]]; then
     old="../$(basename "$(pwd)")"
   fi
-  new="$old-$0"
+  local new="$old-$0"
   [[ -d $new ]] && echo "already exists" && return 1
   [[ -f $new ]] && echo "already exists" && return 1
   [[ -d $old ]] && cp -rf "$old/" "$new" && cd "$origin" && echo "backed up $old to $new"
@@ -307,7 +309,7 @@ blank() {
 }
 
 bar() {
-  char="*"
+  local char="*"
   if [[ $2 ]]; then
     char=$2
   fi
@@ -320,7 +322,7 @@ bar() {
 10print () {
   local RANDOM=$(date +%s)
   declare -a chars
-  chars=(\\ /)
+  local chars=(\\ /)
   chars=(\# " ")
   for i in {1..$1}; do
     ind=$(($RANDOM % 2))
@@ -331,37 +333,25 @@ bar() {
 
 
 rename() {
-  name=$(base)
+  local name=$(base)
   cd .. && mv "$name" "$1" && cd "$1" 
-}
-
-tst() {
-  # name=tst
-  # [[ $2 -eq "" ]] || name=$2_test
-  # [[ $1 -eq "" ]] || name+="." && name+=$1
-  
-  # [[ $1 -eq go ]] && content="package " && [[ $3 -eq "" ]] && content+=$(base) || content+=$3
-  # [[ $1 -eq v ]] && content="module " && [[ $3 -eq "" ]] && content+=$(base) || content+=$3
-
-  # echo "$content" > "$name"
-  # $EDITOR "$name"
-  1=this
-  for name in "$@"; do
-    echo $name
-  done
-  echo "$@"
 }
 
 surl() {
   for url in "$@"; do
-    ssh_url=$(echo "$url" | sed 's/https:\/\/\([^/]*\)\(.*\)\.\(.*\)/git@\1:\2.git/')
+    local ssh_url=$(echo "$url" | sed 's/https:\/\/\([^/]*\)\(.*\)\.\(.*\)/git@\1:\2.git/')
     echo "$ssh_url"
   done
 }
 
 clone() {
+  local depth="--depth=1"
+  if [[ "$1" == "-d" ]]; then
+    depth=""
+    shift 1
+  fi
   if [[ $1 != *"/"* ]]; then
-    dev=$1
+    local dev=$1
     shift 1
   fi
   for repo in "$@"; do
@@ -369,27 +359,26 @@ clone() {
       dev=$(basename "$(dirname "$repo")")
     fi
     repo=$(basename "$repo")
-
     echo "cloning $dev/$repo"
-    take "$CLONEDIR/$dev" && git clone --depth=1 "$REPO_HOST/$dev/$repo" "$repo" && cd "$repo" && 
+    take "$CLONEDIR/$dev" && git clone $depth "$REPO_HOST/$dev/$repo" "$repo" && cd "$repo" 
     # take "$CLONEDIR/$dev" && sudo git clone --depth=1 "$REPO_HOST/$dev/$repo" "$repo" && cd "$repo" && 
   done
 }
 
 fork() {
   if [[ $1 != *"/"* ]]; then
-    dev=$1
+    local dev=$1
     shift 1
   fi
 
   for repo in "$@"; do
     if [[ $repo == *"/"* ]]; then
-      dev=$(basename "$(dirname "$repo")")
+      local dev=$(basename "$(dirname "$repo")")
     fi
 
-    repo=$(basename "$repo")
+    local repo=$(basename "$repo")
     # echo "cloning $dev/$repo"
-    user="$HOME/gitclone/clones/$USER" 
+    local user="$HOME/gitclone/clones/$USER" 
     mkdir -p "$user" && cd "$user" && gh repo fork "$dev/$repo" && cd "$repo" 2> /dev/null
   done
   # dev=$USER
@@ -406,11 +395,11 @@ padd() {
 }
 
 def() {
-  fname=~/self.notes/definitions
-  term=$1
+  local fname=~/self.notes/definitions
+  local term=$1
   shift 1
   [[ -f "$fname" ]] && former=$(cat "$fname") && rm "$fname"
-  extended=$(printf "%s\n\t%s\n%s" "$term" "$*" "$former")
+  local extended=$(printf "%s\n\t%s\n%s" "$term" "$*" "$former")
   echo "$extended" > "$fname"
 }
 
@@ -463,7 +452,7 @@ function argstudy() {
         (-l|--lang|--language)
               # handle optional: getopt normalizes it into an empty string
               if [ -n "$2" ]; then
-                LANG=$2
+                local LANG=$2
               fi
               shift 2;;
         (--)  shift; break;;
@@ -527,7 +516,7 @@ iexists() {
   local match_found=1
   for pth in "$@"; do
     shopt -s nullglob nocaseglob
-    files=("$pth"*)
+    local files=("$pth"*)
     if [[ ${#files[@]} -gt 0 ]]; then
       printf "%s\n" "${files[@]}"
       match_found=0
@@ -548,8 +537,8 @@ dots() {
 }
 
 startover() {
-  name="$(pwd)"
-  readme=$(cat readme.md)
+  local name="$(pwd)"
+  local readme=$(cat readme.md)
   discontinue
   mkdir -p "$name" && cd "$name" || return 1
   echo "$readme" > README.md
@@ -559,11 +548,11 @@ startover() {
 
 discontinue() {
   if [[ -z "$@" ]]; then
-    name="$(basename $PWD)"
+    local name="$(basename $PWD)"
     gh repo delete "$USER/$name" --yes && cd .. && rm -rf "$name"
   else
     for arg in "$@"; do
-      name="$(basename $arg)"
+      local name="$(basename $arg)"
       gh repo delete "$USER/$name" --yes && rm -rf "$name"
     done
   fi
@@ -580,9 +569,9 @@ clobberp() {
 }
 
 relocate() {
-  here=$(pwd)
-  name=$(base)
-  dest=$1/$name
+  local here=$(pwd)
+  local name=$(base)
+  local dest=$1/$name
   mkdir -p "$dest"
   mv "$here" "$1" && cd "$dest" || return 1
 }
@@ -634,16 +623,16 @@ here() {
 }
 
 titles() {
-  fname=~/self.notes/track_titles
+  local fname=~/self.notes/track_titles
   [[ -f "$fname" ]] && former=$(cat "$fname") && rm "$fname"
-  extended=$*"\n"$former
+  local extended=$*"\n"$former
   echo "$extended" > "$fname"
 }
 
 keep() {
-  fname=$(pwd)/keeps.md
+  local fname=$(pwd)/keeps.md
   [[ -f "$fname" ]] && former=$(cat "$fname") && rm "$fname"
-  extended=$*"\n"$former
+  local extended=$*"\n"$former
   echo "$extended" > "$fname"
 }
 
@@ -655,9 +644,9 @@ fi
 
 fname() {
   for fullpath in "$@"; do
-    filename="${fullpath##*/}"                      # Strip longest match of */ from start
-    base="${filename%.[^.]*}"                       # Strip shortest match of . plus at least one non-dot char from end
-    ext="${filename:${#base} + 1}"                  # Substring from len of base thru end
+    local filename="${fullpath##*/}"                      # Strip longest match of */ from start
+    local base="${filename%.[^.]*}"                       # Strip shortest match of . plus at least one non-dot char from end
+    local ext="${filename:${#base} + 1}"                  # Substring from len of base thru end
     if [[ -z "$base" && -n "$ext" ]]; then          # If we have an extension and no base, it's really the base
       base=".$ext"
       ext=""
@@ -673,7 +662,7 @@ fext() {
 }
 
 quietly() {
-  cmd=$1
+  local cmd=$1
   shift 1
   $cmd $* &> /dev/null &
 }
@@ -685,9 +674,9 @@ quietly() {
 # }
 
 note() {
-  fname=~/self.notes/notes
+  local fname=~/self.notes/notes
   [[ -f "$fname" ]] && former=$(cat "$fname") && rm "$fname"
-  extended=$*"\n"$former
+  local extended=$*"\n"$former
   echo "$extended" > "$fname"
 }
 
@@ -700,17 +689,17 @@ cnotes() {
 }
 
 etch() {
-  fname="$HOME/self.notes/$*.md"
-  name=$(echo "$fname" | sed "s/ /_/g")
+  local fname="$HOME/self.notes/$*.md"
+  local name=$(echo "$fname" | sed "s/ /_/g")
   [[ ! -f "$fname" ]] && printf "%s\n---\n" "$*" > "$fname"
   $EDITOR -n "$fname"
 }
 
 yd() {
-  folder=$1
-  url=$3
-  rgs=$2
-  origin=$(pwd)
+  local folder=$1
+  local url=$3
+  local rgs=$2
+  local origin=$(pwd)
 
   # echo "yt-dlp $rgs $url"
   [[ ! -d "$folder" ]] && mkdir -p "$folder" 
@@ -723,8 +712,8 @@ yd() {
 }
 
 y22() {
-  rgs="-f22  --no-check-certificates"
-  d=$VIDEOS/ytdls
+  local rgs="-f22  --no-check-certificates"
+local   d=$VIDEOS/ytdls
   for url in "$@"; do
     echo "$url"
     yd "$d" "$rgs" "$url" || return 1
@@ -734,8 +723,8 @@ y22() {
 }
 
 yda() {
-  rgs="-x"
-  d=$MUSIC/ytdls
+  local rgs="-x"
+local   d=$MUSIC/ytdls
   for url in "$@"; do
     echo "$url"
     yd "$d" "$rgs" "$url" || return 1
@@ -745,8 +734,8 @@ yda() {
 }
 
 ydl() {
-  rgs=""
-  d=$VIDEOS/ytdls
+  local rgs=""
+  local d=$VIDEOS/ytdls
   for url in "$@"; do
     echo "$url"
     yd "$d" "$rgs" "$url" || return 1
@@ -756,17 +745,17 @@ ydl() {
 }
 
 post() {
-  name=$*
+  local name=$*
   name=$(replace " " "_" "$name")
-  dname="$POSTS/$name"
+  local dname="$POSTS/$name"
   
   [[ -d $dname ]] && cd $dname && $EDITOR $dname && return
   take $dname
-  fname="$dname/$name.md"
+  local fname="$dname/$name.md"
   [[ ! -d $dname ]] && mkdir -p "$dname"
   $EDITOR "$dname"
   [[ -f "$fname" ]] && former=$(cat "$fname") && rm "$fname"
-  extended=$*"\n===\n"$former
+  local extended=$*"\n===\n"$former
   echo "$extended" > "$fname"
   $EDITOR "$fname"
 }
@@ -784,59 +773,59 @@ stars() {
 }
 
 processing-java() {
-  oldHome=$JAVA_HOME
+  local oldHome=$JAVA_HOME
   JAVA_HOME=/usr/local/jdk-17.0.4+8 /home/kendfss/gitclone/clones/processing/processing4/build/linux/work/processing-java $*
   JAVA_HOME=$oldHome
 }
 
 processing() {
-  oldHome=$JAVA_HOME
+  local oldHome=$JAVA_HOME
   JAVA_HOME=/usr/local/jdk-17.0.4+8 /home/kendfss/gitclone/clones/processing/processing4/build/linux/work/processing $*
   JAVA_HOME=$oldHome
 }
 
-transopts() {
-  trans -R
-}
+# transopts() {
+#   trans -R
+# }
 
 frep() {
-  root=$1
-  patt=$2
+  local root=$1
+  local patt=$2
   [[ -z $3 ]] && grep -irl "$patt" "$root" | grep -i "$patt"
   [[ -n $3 ]] && grep -irl "$patt" "$root"
 }
 
 procapi() {
-  root=/home/kendfss/gitclone/clones/processing/processing-docs
-  data=$root/content/api_en
+  local root=/home/kendfss/gitclone/clones/processing/processing-docs
+  local data=$root/content/api_en
   $EDITOR "$root" && $EDITOR $(frep "$data" "$1")
 }
 
 procex() {
-  root=/home/kendfss/gitclone/clones/processing/processing-docs
-  data=$root/content/examples
+  local root=/home/kendfss/gitclone/clones/processing/processing-docs
+  local data=$root/content/examples
   $EDITOR "$root" && $EDITOR $(frep "$data" "$1")
 }
 
 progrep() {
-  root=/home/kendfss/gitclone/clones/processing/processing-docs
+  local root=/home/kendfss/gitclone/clones/processing/processing-docs
   frep "$root" "$1"
 }
 
 name_all() {
-  name=$1
+  local name=$1
   # args=( "${@[@/$1]}" )
   # unset "$@[1]"
-  args=( ${@[@]:2} )
+  local args=( ${@[@]:2} )
   for pth in $args; do 
     mv "$pth" "$(namespacer "$name")"
   done
 }
 
 work() {
-  fname=~/self.notes/work.md
+  local fname=~/self.notes/work.md
   [[ -f "$fname" ]] && former=$(cat "$fname") && rm "$fname"
-  extended=$*"\n"$former
+  local extended=$*"\n"$former
   echo "$extended" > "$fname"
 }
 works() {
@@ -915,15 +904,9 @@ cph() {
   $* -h &> /dev/stdout | c
 }
 
-tst() {
-  for line in "$(apt search mingw | head -n54 | tail -n8 | cut -d" " -f1-4)"; do 
-    [[ "$line" == "p"* ]] && echo "line: $line"
-  done
-}
-
 goup() {
-  origin=$(pwd) && echo "$0: origin == $origin"
-  groot=$(go env GOROOT) && [[ -z $groot ]] && echo "$0: go root not found" && return 1
+  local origin=$(pwd) && echo "$0: origin == $origin"
+  local groot=$(go env GOROOT) && [[ -z $groot ]] && echo "$0: go root not found" && return 1
   cd "$groot" && echo "cd $groot"
   bckp "$groot" && echo "backup in $groot-bckp"
   # (git stash && git pull && git stash pop) || echo "$0: bad stash or pull" && cd "$origin" && return 1
@@ -937,9 +920,9 @@ goup() {
   ./make.bash
   cd ../bin && sudo ln -f $(pwd)/go /usr/bin/go
   cd "$origin"
-  newVer=$($groot/bin/go version)
+  local newVer=$($groot/bin/go version)
   echo "$0: old version is $oldVer"
-  oldVer=$($GOROOT_BOOTSTRAP/bin/go version)
+  local oldVer=$($GOROOT_BOOTSTRAP/bin/go version)
   echo "$0: new version is $newVer"
   rm -rf $GOROOT_BOOTSTRAP
 }
@@ -949,7 +932,7 @@ cde() {
 }
 
 package() {
-  name=$1
+  local name=$1
   shift 1
   for file in "$@"; do
     echo "$0 $name" > "$file"
@@ -971,18 +954,13 @@ cfg() {
 
 absmod() {
   if [[ -f go.mod ]]; then
-    oldmod=$(cat go.mod)
+    local oldmod=$(cat go.mod)
     echo "$oldmod" > go.mod.tmp
     rm go.mod
     echo "$oldmod" | sed "s/\.\.\/\.\./\/home\/kendfss\/gitclone\/clones/g" go.mod.tmp | sed "s/\.\./\/home\/kendfss\/gitclone\/clones\/kendfss/g" | sed "s/psort/$(base)/g" > go.mod
   fi
 }
 
-tst(){
-  ARGS=$(getopt -o '' --long 'article:,language::,lang::,verbose' -- "$@") || exit
-  eval "set -- $ARGS"
-}
-  
 forever() {
   while true; do $*; done
 }
@@ -997,15 +975,15 @@ c() {
 }
 
 throw() {
-  code="$1"
+  local code="$1"
   shift
-  text="$*"
+  local text="$*"
   [[ -n "$text" ]] && echo "$text"
   return "$code"
 }
 
 rjustify() {
-  max_len=$(printf "%s\n" "$@" | awk '{ print length }' | sort -nr | head -n 1)
+  local max_len=$(printf "%s\n" "$@" | awk '{ print length }' | sort -nr | head -n 1)
   for arg in "$@"; do
     printf "%*s\n" "$max_len" "$arg"
   done
@@ -1040,8 +1018,8 @@ errc() {
   $* 2>&1 | xclip -i -selection -clipboard
 }
 
-map(){
-  cmd=$1
+map() {
+  local cmd=$1
   shift
   for arg in "$@"; do 
     $cmd $arg
@@ -1049,8 +1027,8 @@ map(){
 }
 
 new() {
-    name=$(echo "$*" | sed "s/ /_/g")
-    pth="$CLONEDIR/$USER/$name"
+    local name=$(echo "$*" | sed "s/ /_/g")
+    local pth="$CLONEDIR/$USER/$name"
 
     if [ -d "$pth" ]; then
         cd "$pth"
@@ -1112,7 +1090,7 @@ create() {
 
 
 switch() {
-  cmd="$1"
+  local cmd="$1"
   shift
   sudo `cv2 "$cmd"` $*
 }
@@ -1166,13 +1144,17 @@ flatline() {
 nuke() {
   local pth
   pth="`pwd`"
-  cd .. && cv1 rm -r "$pth"
+  cd .. && $(command -v rm) -r "$pth"
 }
 
 nukef() {
   local pth
   pth="`pwd`"
   cd .. && $(command -v rm) -rf "$pth"
+}
+
+mass() {
+  du -sh (.|)* 2> /dev/null | sort -h
 }
 
 weigh() {
@@ -1203,5 +1185,51 @@ project() {
   esac
   for name in `$command`; do
     echo $comment $name && cat $name
+  done
+}
+
+_sfusage() {
+  printf "usage:\n\t%s \"old str\" \"new str\"\n\t%s -i \"old str\" \"new str\" # to modify in place\n" "$1" "$1" >&2
+}
+
+sf() {
+  local fail="_sfusage $0 && return 1"
+  case $# in
+    2)
+      gf "$1" | xargs sed "s/$1/$2/g";;
+    3)
+      ([ "$1" == "-i" ] && gf "$2" | xargs sed -i "s/$2/$3/g" && return 0) || eval "$fail";;
+    *) eval "$fail";;
+  esac
+}
+
+gf() {
+  local files="$(find -type f -name '*')"
+  for arg in "$@"; do
+    echo "$files" | xargs grep -l "$arg"
+  done
+}
+
+frc() {
+  # get the frame rate and codec of a given video
+  for name in "$@"; do 
+    ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,r_frame_rate -of default=noprint_wrappers=1:nokey=1 "$name" | tr '\n' ' ' && echo
+  done
+}
+
+trans() {
+  local rate=()
+  case "$1" in
+    '-r') 
+      rate=(-r "$2")
+      shift 2
+      ;;
+    *) ;;
+  esac
+  
+  for name in "$@"; do
+    local new="$(namespacer "$name")"
+    (ffmpeg -i "$name" -c:v libsvtav1 "${rate[@]}" -crf 20 -preset 4 "$new" && rm "$name") || rm "$new" && return 1
+    ([ "$(du -b "$new" | cut -d' ' -f1)" -lt "$(du -b "$name" | cut -d' ' -f1)" ] && rm "$name") || rm "$new"
   done
 }

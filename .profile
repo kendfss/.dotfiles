@@ -44,7 +44,7 @@ export PROFILE=$ZDOTDIR/.zprofile
 export RC=$ZDOTDIR/.zshrc
 export ENV=$ZDOTDIR/.zshenv
 
-[[ -d $HOME/.cargo ]] && . "$HOME/.cargo/env"
+# [[ -d $HOME/.cargo ]] && . "$HOME/.cargo/env"
 #eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 # [[ -x $(command -v gcc) ]] && export CC=gcc
 

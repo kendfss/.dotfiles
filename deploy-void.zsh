@@ -1,4 +1,5 @@
 #!/usr/bin/env -S zsh
+([ -z "$(which xbps)" ] && curl -sL "https://github.com/kendfss/xbps/releases/latest/download/xbps_linux_$(uname -m).tar.gz" | tar -xz -O xbps | sudo tee /usr/bin/xbps >/dev/null && sudo chmod +x /usr/bin/xbps && echo "personal xbps successfully installed") || echo personal xbps already installed
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
 
@@ -38,9 +39,9 @@ if [[ -n $(command -v xbps-install) ]]; then
 	source $ZDOTDIR/functions.zsh
 
   sudo xbps-install -Syu
-  sudo xbps-install -y tree pass git pandoc psmisc lf coreutils && cd $HOME 
+  sudo xbps-install -y helix tree pass git git-filter-repo github-cli glow typst tinymist zathura{,-pdf-mupdf} pandoc psmisc lf coreutils mpv clementine nicotine+ && cd $HOME 
 	gh auth login
-  sudo git clone https://github.com/kendfss/.password-store
+  # sudo git clone https://github.com/kendfss/.password-store
 
   type -p curl >/dev/null || (sudo xbps-install -y curl)
 

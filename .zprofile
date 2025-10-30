@@ -5,17 +5,16 @@ export ZDOTDIR=$HOME/.zsh
 # emulate sh -c 'source ~/.profile'
 # source
 
-[[ -d $HOME/.cargo ]] && . "$HOME/.cargo/env"
+[[ -d "$HOME/.cargo" ]] && . "$HOME/.cargo/env"
 
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
 
 export GOPATH="$HOME/go"
 
-if [[ -f $(command -v go) ]]; then
+if [[ -x "$(command -v go)" ]]; then
   export GOS=$(go env GOROOT)
   export GOP=$(go env GOPATH)
 fi
-
 
 if [[ -z $(command -v set_title) ]]; then
   source "$ZDOTDIR/termsupport.zsh" 
@@ -25,4 +24,4 @@ fi
 
 # set_title
 
-export PATH="$HOME/.elan/bin:$PATH"
+[ -d "$HOME/.elan" ] && export PATH="$PATH:$HOME/.elan/bin"

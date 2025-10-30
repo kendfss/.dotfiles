@@ -11,7 +11,7 @@ languages.toml
 # ._.*
 *.gz
 *.old
-test.*
+# test.*
 sketch.zsh
 *dump
 sizemap.txt
@@ -43,3 +43,4 @@ settings
 bin/
 keeps.md
 todo.md
+promo.md

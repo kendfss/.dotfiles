@@ -9,8 +9,7 @@ export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin"
 [[ -z "$(command -v manpath)" ]] && alias manpath="/usr/bin/manpath"
 
 PATH="$PATH:/usr/local/bin:/usr/bin"
-PATH="$PATH:/usr/local/lib/nodejs/node-v16.15.0-linux-x64/bin:$HOME/.elan/bin"
-
+[ -d "$HOME/.elan" ] && PATH="$PATH:$HOME/.elan/bin"
 export PATH
 
 export WORDCHARS=${WORDCHARS//[&+;\-_\/=.]}

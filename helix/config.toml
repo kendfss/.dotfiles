@@ -3,7 +3,7 @@
 #   passing args
 
 # cleaning macro => ]s=<ret><home>fct=<right>&<A-;>
-theme            = 'adwaita-dark'
+theme            = 'transparent'
 
 [editor]
 shell = ["zsh", "-c"]
