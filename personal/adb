@@ -1,0 +1,96 @@
+### Contents
+- [Device Basics](#device)
+- [Logcat](#logging)
+- [File Management](#device)
+- [Remote Shell](#remote)
+
+### Device Basics
+```sh
+# Lists connected devices
+adb devices 
+
+# Lists connected devices and kind
+adb devices -l 
+
+# Restarts adbd with root permissions
+adb root 
+
+# Starts the adb server
+adb start-server 
+
+# Kills the adb server
+adb kill-server 
+
+# Remounts file system with read/write access
+adb remount 
+
+# Reboots the device
+adb reboot 
+
+# bootloader 	Reboots the device into fastboot
+adb reboot 
+
+# Reboots the device into fastboot
+adb disable-verity 
+
+# wait-for-device can be specified after adb to ensure that the command will run once the device is connected.
+adb wait-for-device devices
+ # List of devices attached
+ # somedevice-1234 device
+ # someotherdevice-1234 device
+
+# -s can be used to send the commands to a specific device when multiple are connected.
+adb -s somedevice-1234 root
+```
+
+### Logging
+```s
+# Starts printing log messages to stdout
+adb logcat
+
+# Displays current log buffer sizes
+adb logcat -g
+
+# Sets the buffer size (K or M)
+adb logcat -G <size>
+
+# Clears the log buffers
+adb logcat -c
+
+# Enables ALL log messages (verbose)
+adb logcat *:V
+
+# Dumps to specified file
+adb logcat -f <filename> 
+```
+
+
+### file management
+```sh
+# Copies the local to the device at remote
+adb push <local> <remote>
+
+# Copies the remote from the device to local
+adb pull <remote> <local>
+```
+
+### remote shell
+```sh
+# Runs the specified command on device (most unix commands work here)
+adb shell <command>
+
+# Displays the current screen resolution
+adb shell wm size
+
+# Sets the resolution to WxH
+adb shell wm size WxH
+
+# Lists all installed packages
+adb shell pm list packages
+
+# Lists all installed 3rd-party packages
+adb shell pm list packages -3
+
+# Starts the specified package
+adb shell monkey -p app.package.name
+```

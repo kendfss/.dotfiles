@@ -1,0 +1,34 @@
+# count the number of lines that match "mattn" in go files
+	egrep -c mattn *.{go,mod}
+
+# print lines that don't match "mattn" in go.mod
+	egrep -v mattn go.mod
+
+# print case insensitive matches in go files
+	egrep -i mattn *.go
+
+# print names of files with matching lines
+	egrep -l mattn *.go
+# print name of given file if it contains matching lines
+	egrep -l mattn tensor.go
+
+# print names of files without matching lines
+	egrep -L mattn *.go
+
+# print lines that match the whole word
+	egrep -w matt *.go
+
+# match entire lines
+	egrep -x return *.go
+
+# upper bound on number of returned matches
+	egrep -m N pattern path(s)
+
+# print only matching parts
+	egrep -o pattern path(s)
+
+# print line numbers
+	egrep -n pattern path(s)
+
+# recursive search
+	egrep -r mattn .

@@ -1,0 +1,179 @@
+### Usage
+```bash
+find <paths> <conditions> <actions>
+```
+===
+
+### Quickies
+# To find files following symlinks (otherwise the symlinks are not followed):
+find -L . -type f
+
+# To find files by case-insensitive extension (ex: .jpg, .JPG, .jpG):
+find . -iname "*.jpg"
+
+# To find directories:
+find . -type d
+
+# To find files:
+find . -type f
+
+# To find files by octal permission:
+find . -type f -perm 777
+
+# To find files with setuid bit set:
+find . -xdev \( -perm -4000 \) -type f -print0 | xargs -0 ls -l
+
+# To find files newer than 1 day old and copy elsewhere (remove -p flag in xargs to not be asked):
+find . -type f -ctime -1 -print0 | xargs -0 -p cp -t <dir>
+# or:
+find . -type f -ctime -1 -print0 | xargs -0 -p -J % cp % <dir>
+
+# To find files with extension '.txt' and remove them:
+find ./path/ -name '*.txt' -delete
+
+# To find files with tilde as postfix and remove them:
+find ./path/ -name '*~' -delete
+
+# To find files with extension '.txt' and dump their contents:
+find ./path/ -name '*.txt' -exec cat '{}' \;
+
+# To find files with extension '.txt' and look for a string into them:
+find ./path/ -name '*.txt' | xargs grep 'string'
+
+# To find files with size bigger than 5 Mebibyte and sort them by size:
+find . -size +5M -type f -print0 | xargs -0 ls -Ssh | sort -z
+
+# To find files bigger than 2 Megabyte and list them:
+find . -type f -size +200000000c -exec ls -lh {} \; | awk '{ print $9 ": " $5 }'
+
+# To find files modified more than 7 days ago and list file information:
+find . -type f -mtime +7d -ls
+
+# To find symlinks owned by a user and list file information:
+find . -type l -user <username-or-userid> -ls
+
+# To search for and delete empty directories:
+find . -type d -empty -exec rmdir {} \;
+
+# To search for directories named build at a max depth of 2 directories:
+find . -maxdepth 2 -name build -type d
+
+# To search all files who are not in .git directory:
+find . ! -iwholename '*.git*' -type f
+
+# To find all files that have the same node (hard link) as MY_FILE_HERE:
+find . -type f -samefile MY_FILE_HERE 2>/dev/null
+
+# To find all files in the current directory and modify their permissions:
+find . -type f -exec chmod 644 {} \;
+
+# To find all files changed in last 2 days:
+find . -type f -ctime -48h
+find . -type f -ctime -2
+# Or created in last 2 days:
+find . -type f -Btime -2
+# Or accessed in last 2 days:
+find . -type f -atime -2
+
+# To find and rename (imperfect) all files and dirs that have a comma in the
+# name (dry-run):
+find . -name '*,*' | while read f; do echo mv "$f" "${f//,/}"; done
+
+# To find all broken links. Note -L returns a file unless it is a broken link:
+find -L /usr/ports/packages -type l
+
+# To find and run multiple shell commands (without multiple execs):
+# See: https://stackoverflow.com/questions/5119946/find-exec-with-multiple-commands
+find . -type f -exec sh -c "echo '{}'; cat '{}';" \;
+
+# To find files that are newer than a file:
+find <path> -newer <target-file>
+===
+
+### Conditions
+
+```bash
+-name "*.c"
+```
+
+```bash
+-user jonathan
+-nouser
+```
+
+```bash
+-type f            # File
+-type d            # Directory
+-type l            # Symlink
+```
+
+```bash
+-depth 2           # At least 3 levels deep
+-regex PATTERN
+```
+
+```bash
+-size 8            # Exactly 8 512-bit blocks 
+-size -128c        # Smaller than 128 bytes
+-size 1440k        # Exactly 1440KiB
+-size +10M         # Larger than 10MiB
+-size +2G          # Larger than 2GiB
+```
+
+```bash
+-newer   file.txt
+-newerm  file.txt        # modified newer than file.txt
+-newerX  file.txt        # [c]hange, [m]odified, [B]create
+-newerXt "1 hour ago"    # [t]imestamp
+```
+
+### Access time conditions
+
+```bash
+-atime 0           # Last accessed between now and 24 hours ago
+-atime +0          # Accessed more than 24 hours ago
+-atime 1           # Accessed between 24 and 48 hours ago
+-atime +1          # Accessed more than 48 hours ago
+-atime -1          # Accessed less than 24 hours ago (same a 0)
+-ctime -6h30m      # File status changed within the last 6 hours and 30 minutes
+-mtime +1w         # Last modified more than 1 week ago
+```
+
+These conditions only work in MacOS and BSD-like systems (no GNU/Linux support).
+
+### Condition flow
+
+```bash
+\! -name "*.c" # NOT named "*.c"
+\( x -or y \)
+```
+
+### Actions
+
+```bash
+-exec rm {} \;
+-print
+-delete
+```
+
+### Examples
+
+```bash
+find . -name '*.jpg'
+find . -name '*.jpg' -exec rm {} \;
+```
+
+```bash
+find . -newerBt "24 hours ago"
+```
+
+```bash
+find . -type f -mtime +29 # find files modified more than 30 days ago
+find . -type f -newermt 2016-08-07 \! -newermt 2016-08-08 # find in date range
+```
+
+
+
+
+
+

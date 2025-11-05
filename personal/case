@@ -1,0 +1,30 @@
+# The go equivalent of
+```sh
+fn() {
+  case $1 in
+  '-s'|'-v')
+    echo 1;;
+  '--conf')
+    echo 2;;&
+  *)
+    echo 3;;
+  esac
+}
+```
+
+# is (very roughly)
+```golang
+package main
+
+func fn(args ...string) {
+	switch args[0] {
+	case "-s", "-v":
+		println(1)
+	case "--conf":
+		println(2)
+		fallthrough
+	default:
+		println(3)
+	}
+}
+```

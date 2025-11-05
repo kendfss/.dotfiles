@@ -1,3 +1,4 @@
+[ -f ~/.secrets ] && source ~/.secrets
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
 export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin"

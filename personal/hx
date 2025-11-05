@@ -1,0 +1,7 @@
+# case sensitive searching
+use the `(?-i)` regex parameter
+
+# update grammars
+```bash
+hx -g fetch && hx -g build
+```

@@ -1,0 +1,102 @@
+Here are several ways to fix an invisible cursor in your terminal after a program exits:
+
+## Quick Fixes (Try These First)
+
+1. **Reset the terminal**
+   ```bash
+   reset
+   ```
+
+2. **Clear the screen**
+   ```bash
+   clear
+   ```
+
+3. **Force cursor visibility**
+   ```bash
+   echo -e '\e[?25h'
+   ```
+
+## More Specific Solutions
+
+4. **Use tput to control cursor**
+   ```bash
+   tput cnorm  # Show cursor
+   ```
+
+5. **If you're in Vim or similar**
+   ```bash
+   :set guicursor=  # In Vim command mode
+   ```
+
+6. **Bash/Zsh prompt reset**
+   ```bash
+   exec $SHELL  # Restarts your shell
+   ```
+
+## Prevention
+
+To prevent this from happening:
+
+- **Always handle signals properly** in your programs
+- **Use trap commands** in shell scripts:
+  ```bash
+  trap "tput cnorm" EXIT INT TERM
+  ```
+
+- **For C programs**, ensure you reset terminal attributes:
+  ```c
+  #include <termios.h>
+  #include <unistd.h>
+  
+  void enable_raw_mode() {
+    struct termios raw;
+    tcgetattr(STDIN_FILENO, &raw);
+    // Save original state for restoration
+    // ... your code ...
+  }
+  
+  // Restore before exit
+  void disable_raw_mode() {
+    // Restore saved terminal state
+  }
+  ```
+- **for Go programs**:
+  ```go
+  package main
+  
+  import (
+      "fmt"
+      "os"
+      "os/signal"
+      "syscall"
+  )
+  
+  func main() {
+      // Set up signal handling for graceful shutdown
+      sigChan := make(chan os.Signal, 1)
+      signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+      
+      defer restoreTerminal()
+      
+      go func() {
+          <-sigChan  // Wait for interrupt signal (Ctrl+C)
+          restoreTerminal()
+          os.Exit(0) // Need os package for Exit
+      }()
+      
+      runProgram()
+  }
+  
+  func restoreTerminal() {
+      fmt.Print("\033[?25h")
+  }
+  
+  func runProgram() {
+      fmt.Print("\033[?25l") // Hide cursor
+      fmt.Println("Working... (Press Ctrl+C to exit)")
+      // Simulate long-running work
+      select {} // Block forever
+  }
+  ```
+The `reset` command is usually the most reliable solution when you're not sure what caused the issue.

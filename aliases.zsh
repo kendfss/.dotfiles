@@ -6,6 +6,7 @@ if [[ $(uname) -eq Linux ]]; then
   export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/20.1.5948944"
 fi
 
+alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of compact=p=0:nk=1"
 alias zt=zathura
 alias pt=ptpython
 alias lst="ls --time=ctime"

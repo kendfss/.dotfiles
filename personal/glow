@@ -1,0 +1,33 @@
+# Read from file
+```bash
+glow README.md
+```
+
+# Read from stdin
+```bash
+echo "[Glow](https://github.com/charmbracelet/glow)" | glow -
+```
+
+# Fetch README from GitHub / GitLab
+```bash
+glow github.com/charmbracelet/glow
+```
+
+# Fetch markdown from HTTP
+```bash
+glow https://host.tld/file.md
+```
+
+# word wrapping
+```bash
+glow -w 60
+```
+
+# Paging
+- CLI output can be displayed in your preferred pager with the -p flag. This defaults to the ANSI-aware less -r if $PAGER is not explicitly set.
+
+# Styles
+- You can choose a style with the -s flag. When no flag is provided glow tries to detect your terminal's current background color and automatically picks either the dark or the light style for you.
+```bash
+glow -s [dark|light]
+```

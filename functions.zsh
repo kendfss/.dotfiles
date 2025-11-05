@@ -40,27 +40,25 @@ recover() {
 
 exts() {
   # print file extensions
-    [[ -z $1 ]] && argv[1]="$(pwd)"
-    dir=$1
-    shift 1 > /dev/null || return 1
+  local exts=()
+  for arg in "$@"; do [ -f "$arg" ] && local base="$(basename "$arg")" && local ext="${base##*.}" && echo "$ext"; done | sort -ui
+  return
 
-    # if (( $# )); then
-    #     dir="$@"
-    # else
-    #     dir=$(pwd)
-    # fi
+  [[ -z $1 ]] && argv[1]="$(pwd)"
+  dir=$1
+  shift 1 > /dev/null || return 1
 
-    local files=$(ls -1 $dir)
-    local extensions=()
+  local files=$(ls -1 $dir)
+  local extensions=()
 
-    for file in $files; do
-        local extension=${file##*.}
-        extensions+=($extension)
-    done
+  for file in $files; do
+      local extension=${file##*.}
+      extensions+=($extension)
+  done
 
-    for extension in $extensions; do
-        echo "$extension"
-    done
+  for extension in $extensions; do
+      echo "$extension"
+  done
 }
 
 tpb() {
@@ -351,7 +349,7 @@ clone() {
     shift 1
   fi
   if [[ $1 != *"/"* ]]; then
-    local dev=$1
+    local dev="$1"
     shift 1
   fi
   for repo in "$@"; do
@@ -1108,16 +1106,15 @@ gofiles() {
 
 
 cheat() {
-  local cmd;
-  for pth in {$HOME/{.local,go}/,/{usr/,}{s,}}bin/cheat; do [[ -x "$pth" ]] && cmd=$pth && break; done
-  [[ -z "$cmd" ]] && echo cannot find executable > /dev/stderr && return
+  for pth in {$HOME/{.local,go}/,/{usr/,}{s,}}bin/cheat; do [[ -x "$pth" ]] && local cmd=$pth && break; done
+  [[ -z "$cmd" ]] && echo cannot find executable > /dev/stderr && return 1
   case $1 in
   '-s'|'-v'|'-e')
     $cmd $*;;
   '--conf')
-    bat -p $($cmd $*) && $cmd $*;;
+    glow -p $($cmd $*) && $cmd $*;;
   *)
-    $cmd $* | bat -plmd;;
+    $cmd $* | glow;;
   esac
 }
 
@@ -1204,9 +1201,11 @@ sf() {
 }
 
 gf() {
-  local files="$(find -type f -name '*')"
+  local dir="$PWD"
+  [[ "$1" == "-d" ]] && local dir="$2" && shift 2
+  local files="$(find "$dir" -type f -name '*')"
   for arg in "$@"; do
-    echo "$files" | xargs grep -l "$arg"
+    echo "$files" | xargs grep -l "$arg" 2>/dev/null
   done
 }
 
@@ -1219,22 +1218,137 @@ frc() {
 
 trans() {
   local rate=()
-  case "$1" in
-    '-r') 
-      rate=(-r "$2")
-      shift 2
-      ;;
-    *) ;;
-  esac
+  for arg in "$@"; do
+    case "$1" in
+      '-h'|'--help'|'help'|'') 
+        printf "%s is a video transcoder\nusage: %s [flag] VIDEO_FILES...\n\t-h, --help\tprint this message\n\t-r, --rate\tframerate of output videos\n" "${0##*/}" "${0##*/}"
+        return 0
+        ;;
+      '-r'|'--rate'|'rate') 
+        if [ -z "$2" ]; then
+          echo "${0##*/}: -r flag requires a frame rate value" >&2
+          return 1
+        fi
+        rate=(-r "$2")
+        shift 2
+        ;;
+      *) break;;
+    esac
+  done
+
+  [ "$#" -eq "0" ] && echo "${0##*/}: no input path(s) specified" >&2 && return 1
   
   for name in "$@"; do
+    [ ! -f "$name" ] && echo "${0##*/}: '$name' is not a valid file" >&2 && continue
+
     local ext="${name##*.}"
-    local base="$(echo "$(basename "$name")" | sed "s/$ext$//g")"
-    local new="$(namespacer "$base")mp4"
-    # echo "$new"
-    # return
-    # echo "$ext" "$base" "$new"
-    (ffmpeg -i "$name" -c:v libsvtav1 "${rate[@]}" -crf 20 -preset 4 "$new" && rm "$name") || rm "$new" && return 1
-    ([ "$(du -b "$new" | cut -d' ' -f1)" -lt "$(du -b "$name" | cut -d' ' -f1)" ] && rm "$name") || rm "$new"
+    local base="${name%.*}"  # Simpler than sed
+    local new="$(namespacer "${base}.mp4")"  # Added dot before mp4
+    
+    echo "Transcoding: $(basename "$name")"
+    if ! SVT_LOG=0 ffmpeg -hide_banner -loglevel error -stats -i "$name" -c:v libsvtav1 "${rate[@]}" -crf 20 -preset 2 "$new"; then
+      rm -f "$new"
+      echo "${0##*/}: transcoding failed for '$name'" >&2
+      return 1
+    fi
+    
+    local orig_size=$(du -b "$name" | cut -f1)
+    local new_size=$(du -b "$new" | cut -f1)
+    
+    if [ "$new_size" -lt "$orig_size" ]; then
+      rm "$name" && echo "✔ Kept transcoded file (saved $(( (orig_size - new_size) / 1024 )) KB)"
+    else
+      rm "$new" && echo "✗ Kept original ($orig_size bytes) file because transcoded ($new_size bytes) was larger"
+    fi
   done
 }
+
+play() {
+  if [[ "0" == "$#" ]]; then
+    local files=()
+    while IFS= read -r -d '' file; do
+      files+=("$file")
+    done < <(find ~/Music ~/.local/share/nicotine/downloads -type f \( -name "*.flac" -o -name "*.mp3" -o -name "*.m4a" -o -name "*.ogg" -o -name "*.opus" -o -name "*.wav" -o -name "*.aif" \) -print0 | shuf -z)
+    
+    # Single mpv instance with shuffle
+    mpv --no-resume-playback --shuffle "${files[@]}"
+    return
+  fi
+  
+  if [[ "-l" == "$1" ]]; then
+    shift
+    exts **
+    return
+  fi
+  
+  # For arguments, shuffle them and play in single instance
+  local args=("$@")
+  mpv --no-resume-playback --shuffle "${args[@]}"
+}
+
+sample() {
+  [ "$1" = "-h" ] && echo "usage: $0 [dir/path - default .] [duration_in_seconds - default 180]" >/dev/stderr && return 0
+  local preview path secs target response fileMode;
+  [ "$1" = "-p" ] && preview=true && shift
+  path="$(pwd)"
+  secs=180
+  [ "$#" = "2" ] && path="$1" && secs="$2"
+  [ "$#" = "1" ] && path="$1"
+  [ "$path" = ".." ] && path="$(dirname "$(pwd)")"
+  [ "$path" = "." ] && path="$(pwd)"
+  [ -f "$path" ] && fileMode=true
+  target="$(namespacer ~/Music/samples/$(basename "$path").flac)"
+  if [ -n "$preview" ]; then
+    [ -d "$path" ] && find "$path" -type f -print0 | xargs -0 cat | sort | aplay >&2 /dev/null
+    [ -f "$path" ] && cat "$path" | sort | aplay >&2 /dev/null
+  else
+    printf 'sampling %s into %s for %s seconds [Y/n] ' "$path" "$target" "$secs"
+    read -r response
+    case "$response" in
+      [yY]|[yY][eE][sS]|"")
+        [ -d "$path" ] && find "$path" -type f -print0 | xargs -0 cat | sort | head -c $((8000 * $secs)) | flac - -s -f --endian=little --sign=unsigned --channels=1 --bps=8 --sample-rate=8000 -o "$target" >/dev/null
+        [ -f "$path" ] && cat "$path" | sort | head -c $((8000 * $secs)) | flac - -s -f --endian=little --sign=unsigned --channels=1 --bps=8 --sample-rate=8000 -o "$target" >/dev/null;;
+      *) return;;
+    esac
+  fi
+}
+
+symlinkDialogue() {
+    local source="$1"
+    local target="$2"
+    
+    if [ ! -e "$target" ]; then
+        sudo ln -s "$source" "$target" && printf 'linked %s -> %s\n' "$source" "$target"
+        return $?
+    fi
+    
+    if [ -L "$target" ]; then
+        local current_link
+        current_link="$(readlink "$target")"
+        if [ "$current_link" = "$source" ]; then
+            echo "Symlink already correct: $target -> $source"
+            return 0
+        fi
+    fi
+    
+    # Handle existing file/symlink that needs updating
+    echo "Conflict: $target already exists" >&2
+    if [ -L "$target" ]; then
+        echo "  Current symlink: $target -> $current_link" >&2
+    fi
+    echo "  Desired symlink: $target -> $source" >&2
+    
+    printf "Overwrite? [y/N] "
+    read -r response
+    case "$response" in
+        [yY]|[yY][eE][sS])
+            sudo ln -sf "$source" "$target" && echo "Updated: $target -> $source"
+            return $?
+            ;;
+        *)
+            echo "Skipped: $target"
+            return 1
+            ;;
+    esac
+}
+

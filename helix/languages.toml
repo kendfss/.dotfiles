@@ -1,40 +1,161 @@
+# https://pawelgrzybek.com/the-deno-language-server-configuration-in-helix/
+# https://helix-editor.vercel.app/reference/formatters
+# https://helix-editor.vercel.app/configuration/languages
+# https://github-wiki-see.page/m/helix-editor/helix/wiki/Formatter-Configurations
+# https://docs.deno.com/runtime/getting_started/setup_your_environment/#helix
+
 [[language]]
 name       = "elvish"
+scope      = "source.elvish"
 file-types = ["conf"]
 
 [[language]]
-name        = "go"
-auto-format = true
-file-types  = ["go", "kage"]
-formatter   = { command = "zsh", args = ["-c", 'gofumpt | goimports -local "github.com/kendfss/$(basename $PWD)"'] }
+name             = "go"
+scope            = "source.go"
+auto-format      = true
+file-types       = ["go", "kage"]
+formatter        = { command = "zsh", args = ["-c", 'gofumpt | goimports -local "github.com/kendfss/$(basename $PWD)"'] }
+language-servers = ["gopls", "lsp-ai"]
+
+[language-server.lsp-ai]
+command = "lsp-ai"
+args    = ["--stdio", "--config", "~/.config/lsp-ai/config.json"]
 
 [language-server.gopls.config]
 diagnosticsTrigger          = "Save"
-vulncheck                   = "Imports"
 gofumpt                     = true
 "ui.diagnostic.staticcheck" = true
+vulncheck                   = "Imports"
 
 [language-server.gopls.config.hints]
 compositeLiteralTypes = true
 
 [[language]]
-name        = "v"
+name        = "rust"
+scope       = "source.rust"
+file-types  = ["rs"]
 auto-format = true
 
 [[language]]
+name        = "v"
+scope       = "source.v"
+auto-format = true
+file-types  = ["v"]
+
+[[language]]
 name        = "python"
+scope       = "source.python"
+auto-format = true
+file-types  = ["py"]
+
+[[language]]
+name        = "lua"
+scope       = "source.lua"
+auto-format = true
+formatter   = { command = "stylua", args = ["-"] }
+file-types  = ["lua"]
+
+[[language]]
+name        = "toml"
+scope       = "source.toml"
+auto-format = true
+formatter   = { command = "taplo", args = ["format", "-o", "align_entries=true", "-o", "align_comments=true", "-o", "array_trailing_comma=true", "-o", "array_auto_expand=false", "-o", "array_auto_collapse=true", "-o", "compact_arrays=true", "-o", "compact_inline_tables=false", "-o", "inline_table_expand=true", "-o", "compact_entries=false", "-o", "column_width=80", "-o", "indent_tables=false", "-o", "indent_entries=false", "-o", "trailing_newline=true", "-o", "reorder_keys=false", "-o", "reorder_arrays=false", "-o", "reorder_inline_tables=false", "-o", "crlf=false", "-o", "allowed_blank_lines=2", "-o", "indent_string=' '", "-"] }
+file-types  = ["toml"]
+
+[[language]]
+name       = "sql"
+scope      = "source.sql"
+formatter  = { command = "sqlformat", args = ["--reindent", "--indent_width", "2", "--keywords", "upper", "--identifiers", "lower", "-"] }
+file-types = ["sql"]
+
+[[language]]
+name        = "json"
+scope       = "source.json"
+file-types  = ["json"]
+formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "json"] }
 auto-format = true
 
-# [[language]]
-# name                 = "kage"
-# file-types           = ["kage"]
-# injection-regex      = "kage"
-# auto-format          = true
-# scope                = "source.kage"
-# comment-token        = "//"
-# block-comment-tokens = { start     = "/*", end  = "*/" }
-# indent               = { tab-width = 4   , unit = "\t" }
+[[language]]
+name             = "javascript"
+scope            = "source.js"
+shebangs         = ["deno"]
+roots            = ["deno.json", "deno.jsonc", "package.json"]
+file-types       = ["js", "jsx"]
+formatter        = { command = 'deno', args = ["fmt", "-", "--ext", "js"] }
+auto-format      = true
+language-servers = ["deno-lsp"]
 
-# [[grammar]]
-# name = "kage"
-# source = { git = "https://github.com/tree-sitter/tree-sitter-go", rev = "64457ea6b73ef5422ed1687178d4545c3e91334a" }
+[[language]]
+name             = "typescript"
+scope            = "source.ts"
+shebangs         = ["deno"]
+roots            = ["deno.json", "deno.jsonc", "package.json"]
+file-types       = ["ts", "tsx"]
+formatter        = { command = 'deno', args = ["fmt", "-", "--ext", "ts"] }
+auto-format      = true
+language-servers = ["deno-lsp"]
+
+[language-server.deno-lsp]
+command = "deno"
+args    = ["lsp"]
+
+[language-server.deno-lsp.config.deno]
+enable                                      = true
+unstable                                    = true
+suggest.imports.hosts                       = { "https://deno.land" = true }
+inlayHints.parameterNames.enabled           = "all"
+inlayHints.parameterTypes.enabled           = true
+inlayHints.variableTypes.enabled            = true
+inlayHints.propertyDeclarationTypes.enabled = true
+inlayHints.functionLikeReturnTypes.enabled  = true
+inlayHints.enumMemberValues.enabled         = true
+
+
+[[language]]
+name        = "markdown"
+scope       = "source.md"
+file-types  = ["md"]
+formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "md"] }
+auto-format = true
+
+[[language]]
+name        = "html"
+scope       = "source.html"
+file-types  = ["html", "htm"]
+formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "html"] }
+auto-format = true
+
+[[language]]
+name        = "css"
+scope       = "source.css"
+file-types  = ["css"]
+formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "css"] }
+auto-format = true
+
+[[language]]
+name        = "scss"
+scope       = "source.scss"
+file-types  = ["scss"]
+formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "scss"] }
+auto-format = true
+
+[[language]]
+name        = "sass"
+scope       = "source.sass"
+file-types  = ["sass"]
+formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "sass"] }
+auto-format = true
+
+[[language]]
+name        = "less"
+scope       = "source.less"
+file-types  = ["less"]
+formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "less"] }
+auto-format = true
+
+[[language]]
+name        = "yaml"
+scope       = "source.yaml"
+file-types  = ["yaml", "yml"]
+formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "yaml"] }
+auto-format = true

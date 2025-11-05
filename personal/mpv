@@ -1,0 +1,67 @@
+# seeking
+left/right             # bwd/fwd 5 secs
+shift+left/right       # 1 sec
+ctrl+left/right        # prev/next subtitle
+ctrl+shift+left/right  # delay video to sync subtitles
+ctrl -/+               # audio -+0.1 secs
+z/Z                    # subtitles -+0.1 secs 
+up/down                # fwd/bwd 1 min
+shift+up/down          # 5 second
+shift+backspace        # undo prev seek
+ctrl+shift+backspace   # mark current position -> turns shift+backspace into a revert button
+enter                  # fwd in playlist
+home                   # seek to start of file
+pg-up/down             # seek to prev/next chapter
+shift+pg-up/down       # seek bwd/fwd by 10 mins
+
+# transport
+shift+home/end         # first/last playlist item
+p/space                # pause toggle
+q                      # stop and quit
+Q                      # stop, save position, quit
+/|*                    # de/in-crease volume
+9/0                    # de/in-crease volume
+m                      # mute sound
+f                      # fullscreen
+esc                    # exit fullscreen
+l                      # set/clear A-B loop points
+L                      # toggle infinite looping
+ctrl+v                 # append to playlist
+
+# streams
+_                      # cycle through available video tracks
+\#                     # cycle through audio tracks
+E                      # cycle through available editions
+v                      # subtitle toggle
+j/J                    # cycle through subtitles
+f9                     # show streams
+
+# ui
+T                      # toggle stay on top
+w/W                    # de/in-crease pan-and-scan range
+o/P                    # show progress bar
+O                      # toggle OSD
+F/G                    # -/+ 10% subtitle size
+u                      # toggle --sub-ass-override
+V                      # cycle through ASS video data. see --sub-ass-use-video-data
+r/R                    # move subtitles up/down
+s                      # screenshot w/ subtitles
+S                      # screenshot w/o subtitles
+ctrl+s                 # screenshot w/ subtitles, OSD, and scaled video
+b                      # toggle debanding; useful for anime and other content with gradients
+d                      # cycle deinterlacing filter
+A                      # cycle aspect ratio override
+ctrl+h                 # toggle hardware decoding
+alt+left/right/up/down # move video rectangle
+alt +/-                # video zoom
+alt+backspace          # reset zoom/pan
+f8                     # show playlist
+i/I                    # toggle statistics overlay
+\`                     # show console; esc hides it
+1/2                    # adjust contrast
+3/4                    # adjust brightness
+5/6                    # adjust gamma
+7/8                    # adjust saturation
+alt+0                  # half video window size
+alt+1                  # restore window size
+alt+2                  # double original window size

@@ -1,0 +1,5 @@
+# basic syntax
+```bash
+while condition; do commands; done
+while list do list done
+```

@@ -1,0 +1,5 @@
+#!/bin/sh
+. $(dirname $0)/constants.sh
+echo "$(date): system is shutting down. executing brightness hook" > "$LOG_FILE"
+cat "$BACKLIGHT_DEVICE" > "$BRIGHTNESS_FILE"
+exit 0

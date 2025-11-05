@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# The `run` script for the shutdown hook service.
+# This script should ideally do nothing or sleep indefinitely.
+# It needs to exist for the `finish` script to be invoked on service shutdown.
+# 
+. $(dirname $0)/constants.sh
+
+
+if [ -f "$BRIGHTNESS_FILE" ]; then
+    BRIGHTNESS_VALUE=$(cat "$BRIGHTNESS_FILE")
+    echo "$BRIGHTNESS_VALUE" > "$BACKLIGHT_DEVICE"
+fi
+
+# Keep the service running indefinitely so that the finish script can be invoked.
+exec sleep infinity
+
+

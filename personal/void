@@ -1,0 +1,6 @@
+# delete old kernels 
+cheat vkpurge
+
+# search package repositories
+xbps-query -Rs <package name>
+

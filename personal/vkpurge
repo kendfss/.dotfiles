@@ -1,0 +1,8 @@
+```bash
+# show installed versions
+vkpurge list
+vkpurge list '2.6.*' 4.3.4_1
+
+# purge 7 eldest
+vkpurge list | head -n7 | xargs sudo vkpurge
+```

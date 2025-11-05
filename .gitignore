@@ -1,4 +1,6 @@
 *.log
+CRUSH.md
+.crush/
 tmp/
 pending/
 tst/
@@ -6,7 +8,7 @@ tst
 *-bckp
 *.bckp
 *.bk
-languages.toml
+# languages.toml
 # *DS_Store
 # ._.*
 *.gz
@@ -44,3 +46,6 @@ bin/
 keeps.md
 todo.md
 promo.md
+.env
+services/*/supervise
+.secrets

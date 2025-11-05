@@ -1,0 +1,5 @@
+* Basic syntax
+#!/path/to/executable --flags
+
+* Keeping flags while using `env`
+#!/usr/bin/env -S python -i
