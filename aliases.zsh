@@ -6,6 +6,9 @@ if [[ $(uname) -eq Linux ]]; then
   export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/20.1.5948944"
 fi
 
+alias -g G='| grep'
+alias -g L='| less'
+alias plumb="wine \"/home/kendfss/.wine/drive_c/Program Files/Image-Line/FL Studio 2025/System/Tools/Plugin Manager/PluginManager.exe\""
 alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of compact=p=0:nk=1"
 alias zt=zathura
 alias pt=ptpython
@@ -55,4 +58,12 @@ alias uuid='uuidgen | tr "[A-Z]" "[a-z]"'
 alias reddit="s -p reddit"
 alias gv="gh repo view"
 alias status="git status"
+
+alias lg="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit"
+alias ga="git add"
+alias gc="git commit -m"
+alias gp="git push"
+alias gl="git pull"
+alias gst="git status -sb"
+alias gco="git checkout"
 

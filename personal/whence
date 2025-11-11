@@ -1,0 +1,57 @@
+For each name, indicate how it would be interpreted if used as a command name.
+
+
+# Produce a more verbose report.
+```zsh
+whence -v
+```
+
+# Print the results in a csh-like format. This takes precedence over -v.
+```zsh
+whence -c
+```
+
+# For each name, print ‘name: word’ where word is one of alias, builtin, command, function, hashed, reserved or none, according as name corresponds to an alias, a built-in command, an external command, a shell function, a command defined with the hash builtin, a reserved word, or is not recognised. This takes precedence over -v and -c.
+```zsh
+whence -w
+```
+
+# Causes the contents of a shell function to be displayed, which would otherwise not happen unless the -c flag were used.
+```zsh
+whence -f
+```
+
+# Do a path search for name even if it is an alias, reserved word, shell function or builtin.
+```zsh
+whence -p
+```
+
+# Do a search for all occurrences of name throughout the command path. Normally only the first occurrence is printed.
+```zsh
+whence -a
+```
+
+# The arguments are taken as patterns (pattern characters should be quoted), and the information is displayed for each command matching one of these patterns.
+```zsh
+whence -m
+```
+
+# If a pathname contains symlinks, print the symlink-free pathname as well.
+```zsh
+whence -s
+```
+
+# As -s, but if the pathname had to be resolved by following multiple symlinks, the intermediate steps are printed, too. The symlink resolved at each step might be anywhere in the path.
+```zsh
+whence -S
+```
+
+# Expand tabs when outputting shell functions using the -c option. This has the same effect as the -x option to the functions builtin.
+```zsh
+whence -x num
+```
+
+If name is not an alias, built-in command, external command, shell function, hashed command, or a reserved word, the exit status shall be non-zero, and — if -v, -c, or -w was passed — a message will be written to standard output. (This is different from other shells that write that message to standard error.)
+
+whence is most useful when name is only the last path component of a command, i.e. does not include a ‘/’; in particular, pattern matching only succeeds if just the non-directory component of the command is passed.
+

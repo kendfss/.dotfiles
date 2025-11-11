@@ -15,7 +15,13 @@ scope            = "source.go"
 auto-format      = true
 file-types       = ["go", "kage"]
 formatter        = { command = "zsh", args = ["-c", 'gofumpt | goimports -local "github.com/kendfss/$(basename $PWD)"'] }
-language-servers = ["gopls", "lsp-ai"]
+language-servers = ["gopls", "lsp-ai", "golangci-lint-lsp"]
+
+[language-server.golangci-lint-lsp]
+command = "golangci-lint-langserver"
+
+[language-server.golangci-lint-lsp.config]
+command = ["golangci-lint", "run", "--output.json.path=stdout", "--show-stats=false", "--issues-exit-code=1"]
 
 [language-server.lsp-ai]
 command = "lsp-ai"

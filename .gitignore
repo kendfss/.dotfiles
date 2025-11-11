@@ -1,4 +1,5 @@
 *.log
+mpv/scripts/*.so
 CRUSH.md
 .crush/
 tmp/

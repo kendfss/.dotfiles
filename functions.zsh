@@ -879,11 +879,19 @@ east() {
   done
 }
 
+# killfl() {
+#   kill -9 "$(pidof FL64.exe)"
+# }
+
 fl() {
-  # for arg in "$@"; do
-  # quietly wine ~/.wine/drive_c/Program\ Files/Image-Line/FL\ Studio\ 20/FL64.exe $* &> /dev/null
-  quietly wine ~/.wine/drive_c/Program\ Files/Image-Line/FL\ Studio\ 21/FL64.exe $* &> /dev/null
-  # done
+  local pids="$(pgrep FL64\.exe)"
+  [ -n "$pids" ] && echo "$pids" | xargs -I{} kill -9 {} && { [ -z "$1" ] && return }
+  case "$1" in
+    '-r'|'--reload'|'r'|'reload') shift 1;;
+    '-k'|'--kill'|'k'|'kill') return;;
+    *);;
+  esac
+  quietly wine ~/.wine/drive_c/Program\ Files/Image-Line/FL\ Studio*/FL64.exe #$* #&> /dev/null
 }
 
 vimruntime() {
@@ -1264,14 +1272,19 @@ trans() {
 }
 
 play() {
+  local sockName="/tmp/mpvsocket"
+  local verbose
+  if [ "$1" = "v" ] || [ "$1" = "-v" ]; then
+    verbose="-v"
+    shift 1
+  fi
   if [[ "0" == "$#" ]]; then
     local files=()
     while IFS= read -r -d '' file; do
       files+=("$file")
-    done < <(find ~/Music ~/.local/share/nicotine/downloads -type f \( -name "*.flac" -o -name "*.mp3" -o -name "*.m4a" -o -name "*.ogg" -o -name "*.opus" -o -name "*.wav" -o -name "*.aif" \) -print0 | shuf -z)
-    
+    done < <(find ~/Music ~/.local/share/nicotine/downloads /music -type f \( -name "*.flac" -o -name "*.mp3" -o -name "*.m4a" -o -name "*.ogg" -o -name "*.opus" -o -name "*.wav" -o -name "*.aif" \) -print0 | shuf -z)
     # Single mpv instance with shuffle
-    mpv --no-resume-playback --shuffle "${files[@]}"
+    mpv $verbose --input-ipc-server=$sockName --no-resume-playback --no-audio-display --shuffle "${files[@]}"
     return
   fi
   
@@ -1280,10 +1293,14 @@ play() {
     exts **
     return
   fi
-  
+
+  local shuffle
+  if [ "-s" = "$1" ] || [ "s" = "$1" ]; then
+    shuffle="--shuffle"
+  fi
   # For arguments, shuffle them and play in single instance
   local args=("$@")
-  mpv --no-resume-playback --shuffle "${args[@]}"
+  mpv $verbose --input-ipc-server=$sockName --no-resume-playback --no-audio-display $shuffle "${args[@]}"
 }
 
 sample() {
@@ -1352,3 +1369,40 @@ symlinkDialogue() {
     esac
 }
 
+gg() {
+  (( $# )) || { echo "usage: gg pat1 [pat2..]" >&2; return 1 }
+
+  # first arg seeds the file list
+  local files
+  files=(${(f)"$(rg -l "$1")"})
+  shift
+
+  for pat in "$@"; do
+    files=(${(f)"$(rg -l "$pat" -- $files)"})
+  done
+
+  printf "%s\n" $files
+}
+
+goclean() {
+  # clean go's caches and re-fetch dependencies
+  local origin="$(pwd)"
+  ([ "$1" = "l" ] || [ "$1" = "-l" ] || [ "$1" = "log" ] || [ "$1" = "--log" ]) && du -sh "$HOME/(.|)*" 2> /dev/null | sort -h 
+  go clean -x -{test,fuzz,mod}cache
+  for name in $CLONES/$USER/*; do
+    echo "$name"
+    [ -f "$name/go.mod" ] && cd "$name" && go mod tidy;
+    echo
+  done
+  ([ "$1" = "l" ] || [ "$1" = "-l" ] || [ "$1" = "log" ] || [ "$1" = "--log" ]) && du -sh "$HOME/(.|)*" 2> /dev/null | sort -h 
+  cd "$origin"
+}
+
+myip() {
+  local ip="$(curl http://ipecho.net/plain)"
+  echo "$ip"
+}
+
+distro() {
+  cat /etc/*-release | cut -d= -f2 | sed 's/"//g' | tail -n1
+}

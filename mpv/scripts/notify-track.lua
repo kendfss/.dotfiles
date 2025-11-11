@@ -1,15 +1,17 @@
-function debug_metadata()
-	local metadata = mp.get_property_native("metadata") or {}
-	print("=== Available Metadata ===")
-	for k, v in pairs(metadata) do
-		print(k .. ": " .. tostring(v))
-	end
-	print("==========================")
-end
+local last_id = nil
 
-function notify_track_change()
+function notify_track()
+	local path = mp.get_property("path") or ""
+	local title = mp.get_property("media-title") or ""
+	local id = path .. "|" .. title
+
+	if id == last_id then
+		return
+	end
+	last_id = id
+	-- function notify_track_change()
 	-- Debug: print all available metadata
-	debug_metadata()
+	-- debug_metadata()
 
 	-- Try different property names for metadata
 	local title = mp.get_property("media-title")
@@ -44,11 +46,11 @@ end
 
 -- Multiple triggers to catch different scenarios
 mp.register_event("file-loaded", function()
-	mp.add_timeout(0.5, notify_track_change)
+	mp.add_timeout(0.5, notify_track)
 end)
 
 mp.observe_property("playlist-pos", "number", function(name, value)
 	if value then
-		mp.add_timeout(0.3, notify_track_change)
+		mp.add_timeout(0.3, notify_track)
 	end
 end)

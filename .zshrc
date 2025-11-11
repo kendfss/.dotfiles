@@ -29,6 +29,11 @@ local LOCAL_ZSHRC=$HOME/.zshlocal/.zshrc       # Allow the local machine to have
 
 # Load external config files and tools
     source $ZSH_CONF/termsupport.zsh                     # Set terminal window title and other terminal-specific things
+
+
+# Completion
+    autoload -Uz compinit && compinit
+    zstyle ':completion:*' menu select
     source $ZSH_CONF/functions.zsh                       # Load misc functions. Done in a seperate file to keep this from getting too long and ugly
     [[ -z SKIPPROFILE ]] && source $ZSH_CONF/.zprofile   # Setup our profile post-login
     source $ZSH_CONF/aliases.zsh                         # Load aliases. Done in a seperate file to keep this from getting too long and ugly
@@ -124,15 +129,6 @@ local LOCAL_ZSHRC=$HOME/.zshlocal/.zshrc       # Allow the local machine to have
 
 
 # Aliases
-    # git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit" 
-
-    # alias -g ...='../..'
-    # alias -g ....='../../..'
-    # alias -g .....='../../../..'
-    # alias -g ......='../../../../..'
-    # alias -g .......='../../../../../..'
-    # alias -g ........='../../../../../../..'
-
     # alias ls="ls -h --color='auto'"
     alias lsa='ls -a'
     alias ll='ls -l'
@@ -174,4 +170,5 @@ source $PLUGINS/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # export PYENV_ROOT="$HOME/.pyenv"
 # [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 # eval "$(pyenv init -)"
+
 

@@ -1,0 +1,274 @@
+version: "2"
+
+linters:
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - dupl
+    - dupword
+    - durationcheck
+    - embeddedstructfieldcheck
+    - err113
+    - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - exptostd
+    - fatcontext
+    - forcetypeassert
+    - gocheckcompilerdirectives
+    - gochecksumtype
+    - gocognit
+    - goconst
+    - gocritic
+    - godoclint
+    - godot
+    - godox
+    - gomoddirectives
+    - goprintffuncname
+    - gosec
+    - gosmopolitan
+    - govet
+    - iface
+    - importas
+    - inamedparam
+    - ineffassign
+    - interfacebloat
+    - intrange
+    - iotamixing
+    - ireturn
+    - lll
+    - loggercheck
+    - maintidx
+    - makezero
+    - mirror
+    - misspell
+    - mnd
+    - modernize
+    - nestif
+    - nilerr
+    - nilnesserr
+    - nilnil
+    - noctx
+    - nolintlint
+    - nosprintfhostport
+    - paralleltest
+    - perfsprint
+    - prealloc
+    - predeclared
+    - protogetter
+    - reassign
+    - recvcheck
+    - revive
+    - rowserrcheck
+    - sloglint
+    - sqlclosecheck
+    - staticcheck
+    - tagalign
+    - testableexamples
+    - testifylint
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - unqueryvet
+    - unused
+    - usestdlibvars
+    - usetesting
+    - varnamelen
+    - wastedassign
+    - whitespace
+    - wrapcheck
+    - zerologlint
+  disable:
+    - wsl
+    - wsl_v5
+    - noinlineerr
+    - nonamedreturns
+    - testpackage
+    - tagliatelle
+  settings:
+    unparam:
+      check-exported: true
+    testifylint:
+      enable-all: true
+      disable-all: false
+    prealloc:
+      simple: false
+      range-loops: true
+      for-loops: true
+    nilnil:
+      only-two: false
+      detect-opposite: true
+    makezero:
+      always: false
+    maintidx:
+      under: 200
+    iotamixing:
+      report-individual: true
+    importas:
+      no-unaliased: true
+      no-extra-aliases: false
+    iface:
+      enable:
+        - identical
+        - unused
+        - opaque
+        - unexported
+    godot:
+      period: false
+      capital: true
+      check-all: false
+    godoclint:
+      default: all
+      disable:
+        - require-pkg-doc
+    gocritic:
+      enabled-checks:
+        - appendAssign
+        - appendCombine
+        - argOrder
+        - assignOp
+        - badLock
+        - badCond
+        - badLock
+        - badSorting
+        - badSyncOnceFunc
+        - boolExprSimplify
+        - builtinShadow
+        - captLocal
+        - caseOrder
+        - codegenComment
+        - commentedOutCode
+        - defaultCaseOrder
+        - deferInLoop
+        - deferUnlambda
+        - deprecatedComment
+        - dupArg
+        - dupCase
+        - dupImport
+        - dupOption
+        - dupSubExpr
+        - dynamicFmtString
+        - elseif
+        - emptyDecl
+        - emptyFallthrough
+        - emptyStringTest
+        - equalFold
+        - evalOrder
+        - exitAfterDefer
+        - exposedSyncMutex
+        - externalErrorReassign
+        - filepathJoin
+        - flagDeref
+        - flagName
+        - hexLiteral
+        - commentedOutImport
+        - httpNoBody
+        - hugeParam
+        - ifElseChain
+        - importShadow
+        - indexAlloc
+        - initClause
+        - mapKey
+        - methodExprCall
+        - nestingReduce
+        - newDeref
+        - nilValReturn
+        - octalLiteral
+        - offBy1
+        - paramTypeCombine
+        - preferDecodeRune
+        - preferFilepathJoin
+        - preferFprint
+        - preferStringWriter
+        - preferWriteByte
+        - ptrToRefParam
+        - rangeAppendAll
+        - rangeExprCopy
+        - redundantSprint
+        - regexpMust
+        - regexpPattern
+        - regexpSimplify
+        - singleCaseSwitch
+        - sliceClear
+        - sloppyLen
+        - sloppyReassign
+        - sloppyTypeAssert
+        - sortSlice
+        - sprintfQuotedString
+        - sqlQuery
+        - stringConcatSimplify
+        - stringXbytes
+        - stringsCompare
+        - switchTrue
+        - syncMapLoadAndDelete
+        - timeExprSimplify
+        - todoCommentWithoutDetail
+        - tooManyResultsChecker
+        - truncateCmp
+        - typeAssertChain
+        - typeDefFirst
+        - typeSwitchVar
+        - typeUnparen
+        - uncheckedInlineErr
+        - underef
+        - unlabelStmt
+        - unlambda
+        - unnamedResult
+        - unnecessaryBlock
+        - unnecessaryDefer
+        - unslice
+        - valSwap
+        - weakCond
+        - whyNoLint
+        - wrapperFunc
+        - yodaStyleExpr
+        - zeroByteRepeat
+      disabled-checks:
+        - ruleguard
+      disable-all: false
+      enable-all: false
+      settings:
+        rangeExprCopy:
+          sizeThreshold: 100
+          skipTestFuncs: true
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+    goconst:
+      match-constant: true
+      min-len: 3
+      min-occurrences: 3
+      ignore-calls: false
+      ignore-string-values:
+        - ""
+      numbers: true
+      min: 3
+      max: -1
+      find-duplicates: true
+      eval-const-expressions: true
+    gocognit:
+      min-complexity: 10
+    gochecksumtype:
+      default-signifies-exhaustive: false
+      include-shared-interfaces: false
+    embeddedstructfieldcheck:
+      empty-line: false
+      forbid-mutex: false
+    exhaustive:
+      explicit-exhaustive-switch: false
+      explicit-exhaustive-map: false
+      default-case-required: true
+      default-signifies-exhaustive: false
+      package-scope-only: false
+    dupword:
+      comments-only: false
+      keywords:
+        - "the"
+        - "and"
+        - "a"

@@ -1,0 +1,11 @@
+# skip boot selector on startup
+set
+	`GRUB_HIDDEN_TIMEOUT=0`
+	`GRUB_HIDDEN_TIMEOUT_QUIET=true`
+ in `/etc/default/grub`
+then run
+```bash
+sudo update-grub
+```
+
+
