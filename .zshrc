@@ -2,6 +2,7 @@
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
 export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin"
+export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music"
 
 [[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
 

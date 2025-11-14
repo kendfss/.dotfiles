@@ -1,4 +1,7 @@
 #!/usr/bin/env -S zsh
+
+mkdir -p "$HOME/.config" || echo "couldn't make ~/.config directory" && exit 1
+
 ([ -z "$(which xbps)" ] && curl -sL "https://github.com/kendfss/xbps/releases/latest/download/xbps_linux_$(uname -m).tar.gz" | tar -xz -O xbps | sudo tee /usr/bin/xbps >/dev/null && sudo chmod +x /usr/bin/xbps && echo "personal xbps successfully installed") || echo personal xbps already installed
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
@@ -42,11 +45,18 @@ symlinkDialogue "$DOTFILES/glow" "$HOME/.config/glow"
 
 symlinkDialogue "$DOTFILES/mpv" "$HOME/.config"
 
+mkdir -p "$HOME/.config/cheat/cheatsheets"
 symlinkDialogue "$DOTFILES/personal" "$HOME/.config/cheat/cheatsheets"
 
 for item in $ZDOTDIR/.*; do 
-  ([[ -f $item ]] && (name=$(basename "$item"); [[ -f "$HOME/$name" ]] && rm "$HOME/$name"; ln -f "$item" "$HOME/$name")) || continue;
+  [ -f "$item" ] || continue
+  local target="$HOME/$(basename "$item")"
+  symlinkDialogue "$item" "$target"
 done
+
+symlinkDialogue "$DOTFILES/helix" "$HOME/.config/helix"
+
+symlinkDialogue "$DOTFILES/kitty" "$HOME/.config/kitty"
 
 _rm() {
   for arg in "$@"; do 
@@ -64,7 +74,7 @@ if [[ -n "$(command -v xbps-install)" ]]; then
   sudo xbps-install -y zsh zsh-doc tmux zsh-syntax-highlighting zsh-autosuggestions kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq || return 1
   gochain
 	gh auth login
-  _rm "$ZDOTDIR/fast-syntax-highlighting" && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$ZDOTDIR/zsh-syntax-highlighting" 
+  # _rm "$ZDOTDIR/fast-syntax-highlighting" && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$ZDOTDIR/zsh-syntax-highlighting" 
   # _rm "$ZDOTDIR/zsh-autosuggestions" && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions "$ZDOTDIR/zsh-autosuggestions" 
   # _rm "$HOME/.tmux/plugins" && git clone --depth=1 https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
@@ -80,7 +90,7 @@ if [[ -n "$(command -v xbps-install)" ]]; then
 
   cd "$DOTFILES"
 
-	cd ~/.config && git clone --depth=1 https://github.com/kendfss/cheat
+	# cd ~/.config && git clone --depth=1 https://github.com/kendfss/cheat
 	# [[ ! -x "$(command -v cheat)" ]] && clone cheat/cheat && go install ./...
 
 	[[ ! -x "$(command -v rustup)" ]] && sudo xbps-install -y rustup rust-analyzer mdBook

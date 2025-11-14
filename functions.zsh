@@ -1272,19 +1272,19 @@ trans() {
 }
 
 play() {
-  local sockName="/tmp/mpvsocket"
   local verbose
   if [ "$1" = "v" ] || [ "$1" = "-v" ]; then
     verbose="-v"
     shift 1
   fi
   if [[ "0" == "$#" ]]; then
+    local dirs="$(echo "$PLAYPATH" | tr ':' ' ')"
     local files=()
     while IFS= read -r -d '' file; do
       files+=("$file")
-    done < <(find ~/Music ~/.local/share/nicotine/downloads /music -type f \( -name "*.flac" -o -name "*.mp3" -o -name "*.m4a" -o -name "*.ogg" -o -name "*.opus" -o -name "*.wav" -o -name "*.aif" \) -print0 | shuf -z)
+    done < <(find ${=dirs} -type f \( -name "*.flac" -o -name "*.mp3" -o -name "*.m4a" -o -name "*.ogg" -o -name "*.opus" -o -name "*.wav" -o -name "*.aif" \) -print0 | shuf -z)
     # Single mpv instance with shuffle
-    mpv $verbose --input-ipc-server=$sockName --no-resume-playback --no-audio-display --shuffle "${files[@]}"
+    mpv $verbose --no-resume-playback --no-audio-display --shuffle "${files[@]}"
     return
   fi
   
@@ -1300,7 +1300,7 @@ play() {
   fi
   # For arguments, shuffle them and play in single instance
   local args=("$@")
-  mpv $verbose --input-ipc-server=$sockName --no-resume-playback --no-audio-display $shuffle "${args[@]}"
+  mpv $verbose --no-resume-playback --no-audio-display $shuffle "${args[@]}"
 }
 
 sample() {

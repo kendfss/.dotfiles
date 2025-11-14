@@ -50,3 +50,5 @@ promo.md
 .env
 services/*/supervise
 .secrets
+dist/
+helix/runtime/

@@ -9,10 +9,6 @@ function notify_track()
 		return
 	end
 	last_id = id
-	-- function notify_track_change()
-	-- Debug: print all available metadata
-	-- debug_metadata()
-
 	-- Try different property names for metadata
 	local title = mp.get_property("media-title")
 		or mp.get_property("metadata/title")
@@ -40,7 +36,6 @@ function notify_track()
 
 	-- Send notification with longer timeout
 	local cmd = string.format('notify-send -t 8000 -u low -i audio-x-generic "%s" "%s"', title, message)
-	print("Executing: " .. cmd)
 	os.execute(cmd)
 end
 
