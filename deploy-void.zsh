@@ -13,7 +13,14 @@ export ZDOTDIR=$HOME/.zsh
 [[ -z $ZDOTDIR ]] && echo "\$ZDOTDIR is undefined" && exit 1
 [[ -z $DOTFILES ]] && echo "\$DOTFILES is undefined" && exit 1
 
-[ ! -d ~/.config ] || { [ -e ~/.config ] && echo "$HOME/.config exists and is not a directory" && exit 1; } || mkdir ~/.config
+if [ ! -d ~/.config ]; then
+    if [ -e ~/.config ]; then
+        echo "$HOME/.config exists and is not a directory" >&2
+        exit 1
+    else
+        mkdir ~/.config
+    fi
+fi
 
 source "$ZDOTDIR/functions.zsh"
 
