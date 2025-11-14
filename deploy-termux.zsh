@@ -19,6 +19,8 @@ if [ ! -d ~/.config ]; then
     fi
 fi
 
+pkg install -y tsu
+
 source "$DOTFILES/functions.zsh"
 
 symlinkDialogue "$DOTFILES" "$ZDOTDIR"
@@ -62,7 +64,7 @@ if [[ -n "$(command -v pkg)" ]]; then
 
   pkg update && pkg upgrade
 
-  pkg install -y tsu zsh tmux helix git gh golang{,-doc} shfmt direnv ripgrep jq || return 1
+  pkg install -y zsh tmux helix git gh golang{,-doc} shfmt direnv ripgrep jq || return 1
   gochain
 	gh auth login
   _rm "$ZDOTDIR/fast-syntax-highlighting" && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$ZDOTDIR/zsh-syntax-highlighting" 
