@@ -19,8 +19,6 @@ if [ ! -d ~/.config ]; then
     fi
 fi
 
-pkg install -y tsu
-
 source "$DOTFILES/functions.zsh"
 
 symlinkDialogue "$DOTFILES" "$ZDOTDIR"
@@ -29,7 +27,7 @@ export PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$HOME/.local/bin:$HOME/go
 
 cd $ZDOTDIR
 
-for name in "$DOTFILES"/scripts/*; do
+for name in "$DOTFILES/scripts"/*; do
     [ -x "$name" ] || continue
     target="/usr/bin/$(basename "$name")"
     symlinkDialogue "$name" "$target"
@@ -45,7 +43,7 @@ symlinkDialogue "$DOTFILES/helix" "$HOME/.config/helix"
 [ ! -e "$HOME/.config/cheat/cheatsheets" ] && mkdir -p "$HOME/.config/cheat/cheatsheets"
 symlinkDialogue "$DOTFILES/personal" "$HOME/.config/cheat/cheatsheets/personal"
 
-for item in $ZDOTDIR/.*; do 
+for item in $DOTFILES/.*; do 
   [ -f "$item" ] || continue
   local target="$HOME/$(basename "$item")"
   symlinkDialogue "$item" "$target"
