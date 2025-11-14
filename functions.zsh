@@ -1333,9 +1333,10 @@ sample() {
 symlinkDialogue() {
     local source="$1"
     local target="$2"
-    
+    local sudo
+    [ -x "$(which sudo)" ] && sudo="$(which sudo)"
     if [ ! -e "$target" ]; then
-        sudo ln -s "$source" "$target" && printf 'linked %s -> %s\n' "$source" "$target"
+        $sudo ln -s "$source" "$target" && printf 'linked %s -> %s\n' "$source" "$target"
         return $?
     fi
     
@@ -1359,7 +1360,7 @@ symlinkDialogue() {
     read -r response
     case "$response" in
         [yY]|[yY][eE][sS])
-            sudo ln -sf "$source" "$target" && echo "Updated: $target -> $source"
+            $sudo ln -sf "$source" "$target" && echo "Updated: $target -> $source"
             return $?
             ;;
         *)
