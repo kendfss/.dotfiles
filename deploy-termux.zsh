@@ -19,7 +19,7 @@ if [ ! -d ~/.config ]; then
     fi
 fi
 
-source "$ZDOTDIR/functions.zsh"
+source "$DOTFILES/functions.zsh"
 
 symlinkDialogue "$DOTFILES" "$ZDOTDIR"
 
