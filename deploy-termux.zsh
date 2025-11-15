@@ -56,7 +56,7 @@ _rm() {
 if [[ -n "$(command -v pkg)" ]]; then
   pkg update && pkg upgrade
 
-  pkg install -y zsh openssh tmux helix direnv ripgrep jq termux-services perl || return 1
+  pkg install -y openssh tmux helix direnv ripgrep jq termux-services perl || return 1
   _rm "$ZDOTDIR/fast-syntax-highlighting" && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$ZDOTDIR/zsh-syntax-highlighting" 
   _rm "$ZDOTDIR/zsh-autosuggestions" && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions "$ZDOTDIR/zsh-autosuggestions" 
   # _rm "$HOME/.tmux/plugins" && git clone --depth=1 https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
