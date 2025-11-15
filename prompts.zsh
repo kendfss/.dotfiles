@@ -68,7 +68,7 @@ pth="%(3C.%-1d:%1~.%1~)"
 if [[ "$PREFIX" != "/data/data/com.termux/files/usr" ]]; then
   export PS1="%B%F{cyan}$pth%f%b(%F{%(?.green.red)}%n%#%m%f) %(!.$dot.%(?.$tick.$cross)) "
 else 
-  export PS1="%B%F{cyan}$pth%f%b(%F{%(?.green.red)}%n%#%m%f)
+  export PS1="%B%F{cyan}$pth%f%b(%F{%(?.green.red)}%n%#termux%f)
 %(!.$dot.%(?.$tick.$cross)) "
 fi
 
