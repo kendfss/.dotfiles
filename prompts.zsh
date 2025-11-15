@@ -15,7 +15,7 @@ pexp() {
 #     vcs_info
 # }
 
-# git
+if [[ "$PREFIX" != "/data/data/com.termux/files/usr" ]]; then
   autoload -Uz vcs_info
 
   precmd_vcs_info() {
@@ -55,6 +55,7 @@ pexp() {
 
   # Use three format groups: %0_ for branch, %1_ for unstaged, %2_ for staged
   zstyle ':vcs_info:git:*' formats '%b' '%u' '%c'
+fi
 
 tick='✔'
 cross='✗'
