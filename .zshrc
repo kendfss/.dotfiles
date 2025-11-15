@@ -25,7 +25,7 @@ bindkey '^[[3;3~' kill-word
 
 local ZSH_CONF=$HOME/.zsh                      # Define the place I store all my zsh config stuff
 local ZSH_CACHE=$ZSH_CONF/cache                # for storing files like history and zcompdump 
-mkdir $ZSH_CACHE
+[ ! -e $ZSH_CACHE ] && mkdir $ZSH_CACHE
 local LOCAL_ZSHRC=$HOME/.zshlocal/.zshrc       # Allow the local machine to have its own overriding zshrc if it wants it
 
 # Load external config files and tools
