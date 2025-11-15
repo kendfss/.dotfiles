@@ -1358,3 +1358,7 @@ myip() {
 distro() {
   cat /etc/*-release | cut -d= -f2 | sed 's/"//g' | tail -n1
 }
+
+plumb() {
+  wine "/home/kendfss/.wine/drive_c/Program Files/Image-Line/FL Studio 2025/System/Tools/Plugin Manager/PluginManager.exe" &>/dev/null &
+}

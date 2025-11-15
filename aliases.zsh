@@ -8,7 +8,6 @@ fi
 
 alias -g G='| grep'
 alias -g L='| less'
-alias plumb="wine \"/home/kendfss/.wine/drive_c/Program Files/Image-Line/FL Studio 2025/System/Tools/Plugin Manager/PluginManager.exe\""
 alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of compact=p=0:nk=1"
 alias zt=zathura
 alias pt=ptpython
