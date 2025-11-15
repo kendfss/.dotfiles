@@ -693,55 +693,6 @@ etch() {
   $EDITOR -n "$fname"
 }
 
-yd() {
-  local folder=$1
-  local url=$3
-  local rgs=$2
-  local origin=$(pwd)
-
-  # echo "yt-dlp $rgs $url"
-  [[ ! -d "$folder" ]] && mkdir -p "$folder" 
-  cd "$folder" || (echo "couldn't get into $folder" && return 1)
-
-  yt-dlp $rgs $url && cd "$origin" && return
-  echo "download failed for other reasons"
-  cd "$origin" 
-  return 1
-}
-
-y22() {
-  local rgs="-f22  --no-check-certificates"
-local   d=$VIDEOS/ytdls
-  for url in "$@"; do
-    echo "$url"
-    yd "$d" "$rgs" "$url" || return 1
-    print "\n\n\n"
-  done
-  # yd "$d" "$rgs" "$*"
-}
-
-yda() {
-  local rgs="-x"
-local   d=$MUSIC/ytdls
-  for url in "$@"; do
-    echo "$url"
-    yd "$d" "$rgs" "$url" || return 1
-    print "\n\n\n"
-  done
-  # yd "$d" "$rgs" "$*"
-}
-
-ydl() {
-  local rgs=""
-  local d=$VIDEOS/ytdls
-  for url in "$@"; do
-    echo "$url"
-    yd "$d" "$rgs" "$url" || return 1
-    print "\n\n\n"
-  done
-  # yd "$d" "$rgs" "$*"
-}
-
 post() {
   local name=$*
   name=$(replace " " "_" "$name")

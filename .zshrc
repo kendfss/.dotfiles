@@ -57,8 +57,6 @@ local LOCAL_ZSHRC=$HOME/.zshlocal/.zshrc       # Allow the local machine to have
     # export SUBLIME="/Users/kendfss/Library/Application Support/Sublime Text"
     export VIDEOS=$HOME/$([[ $(uname) -eq Linux ]] && echo Videos || echo Movies)
     export MUSIC=$HOME/Music
-    [[ ! -d $VIDEOS/ydls ]] && mkdir $VIDEOS/ydls
-    [[ ! -d $MUSIC/ydls ]] && mkdir $MUSIC/ydls
     export NOTES=$HOME/self.notes
     export POSTS=$NOTES/posts
 # https://zsh.sourceforge.io/Doc/Release/Options.html
@@ -167,8 +165,6 @@ if [ -z $LINKED_ZSH_PLUGINS ]; then
     [[ -d $ZSH_CONF/zsh-autosuggestions ]] && source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
     [[ -d $ZSH_CONF/zsh-syntax-highlighting ]] && source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
-# sudo ln -s /usr/share/zsh/plugins/zsh-syntax-highlighting /usr/local/share/zsh-syntax-highlighting
-# source $HOME/.elan/env
 
 [[ -x "$(command -v direnv)" ]] && eval "$(direnv hook zsh)"
 

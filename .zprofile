@@ -2,9 +2,6 @@ export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
 [[ ! (-d $ZDOTDIR || -L $ZDOTDIR) ]] && ln -fs $DOTFILES $ZDOTDIR
 
-# emulate sh -c 'source ~/.profile'
-# source
-
 [[ -d "$HOME/.cargo" ]] && . "$HOME/.cargo/env"
 
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
