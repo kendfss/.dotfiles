@@ -65,6 +65,10 @@ pth="%(3C.%-1d:%1~.%1~)"
 # echo :$pth
 # export PS1="%B%F{blue}%-1d:%1~%f%b(%F{%(?.green.red)}%n%#%m%f) %(!.$dot.%(?.$tick.$cross)) "
 # export PS1="%B%F{cyan}$pth%f%b$(git_prompt_info)(%F{%(?.green.red)}%n%#%m%f) %(!.$dot.%(?.$tick.$cross)) "
-export PS1="%B%F{cyan}$pth%f%b(%F{%(?.green.red)}%n%#%m%f) %(!.$dot.%(?.$tick.$cross)) "
+if [[ "$PREFIX" != "/data/data/com.termux/files/usr" ]]; then
+  export PS1="%B%F{cyan}$pth%f%b(%F{%(?.green.red)}%n%#%m%f) %(!.$dot.%(?.$tick.$cross)) "
+else 
+  export PS1="%B%F{cyan}$pth%f%b(%F{%(?.green.red)}%n%#%m%f)\n%(!.$dot.%(?.$tick.$cross)) "
+fi
 
   # Expand prompt format strings
