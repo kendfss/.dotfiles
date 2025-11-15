@@ -1,7 +1,7 @@
 [ -f ~/.secrets ] && source ~/.secrets
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR=$HOME/.zsh
-export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin"
+export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin:$DOTFILES/scripts"
 export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music"
 
 [[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
@@ -158,11 +158,17 @@ autoload -Uz chpwd_recent_dirs cdr add-zsh-hook
 add-zsh-hook chpwd chpwd_recent_dirs
 zstyle ':chpwd:*' recent-dirs-max 5
 
-export PLUGINS=/usr/share/zsh/plugins
-# [[ -d $ZSH_CONF/zsh-autosuggestions ]] && source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
-source $PLUGINS/zsh-autosuggestions/zsh-autosuggestions.zsh
-# [[ -d $ZSH_CONF/zsh-syntax-highlighting ]] && source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source $PLUGINS/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+if [ -d /usr/share/zsh/plugins ]; then
+    export PLUGINS=/usr/share/zsh/plugins
+    source $PLUGINS/zsh-autosuggestions/zsh-autosuggestions.zsh
+    source $PLUGINS/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+    local LINKED_ZSH_PLUGINS=true
+fi
+
+if [ -z $LINKED_ZSH_PLUGINS ]; then
+    [[ -d $ZSH_CONF/zsh-autosuggestions ]] && source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+    [[ -d $ZSH_CONF/zsh-syntax-highlighting ]] && source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+fi
 # sudo ln -s /usr/share/zsh/plugins/zsh-syntax-highlighting /usr/local/share/zsh-syntax-highlighting
 # source $HOME/.elan/env
 
