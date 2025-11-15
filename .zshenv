@@ -28,7 +28,6 @@ export RUST_BACKTRACE=1
 # export GOEXPERIMENT=unified
 
 PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
-[[ -x "$(command -v manpath)" ]] && PATH="$PATH:$(manpath -q)"
 # if [[ $(uname) = Linux ]]; then
 #     # PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
 #     # export PKG_CONFIG_LIBDIR=/usr/lib

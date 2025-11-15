@@ -8,7 +8,6 @@ export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music"
 
 [[ -z "$(command -v which)" ]] && alias which="command -v"
 [[ -z "$(command -v mkdir)" ]] && alias mkdir="/usr/bin/mkdir"
-[[ -z "$(command -v manpath)" ]] && alias manpath="/usr/bin/manpath"
 
 PATH="$PATH:/usr/local/bin:/usr/bin"
 [ -d "$HOME/.elan" ] && PATH="$PATH:$HOME/.elan/bin"
@@ -48,7 +47,6 @@ local LOCAL_ZSHRC=$HOME/.zshlocal/.zshrc       # Allow the local machine to have
     export LESS="-R"                            # Set the default options for less 
     export LANG="en_US.UTF-8"                   # I'm not sure who looks at this, but I know it's good to set in general
     export GOFMT=gofumpt
-    # export MANPATH="/usr/local/share/man/man1"
     export CLONEDIR=$HOME/gitclone/clones
     export CLONES=$HOME/gitclone/clones
     export REPO_HOST=https://github.com

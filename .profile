@@ -35,7 +35,8 @@ if [[ -f $(command -v go) ]]; then
     export PATH="$PATH:$(go env GOROOT):$(go env GOPATH)"
 fi
 
-PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:$(manpath)"
+# PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:$(manpath)"
+PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
 #PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
 export PATH
 export DOTDIR=$HOME/.zsh
