@@ -72,7 +72,7 @@ if [[ -n "$(command -v xbps-install)" ]]; then
 
   sudo xbps-install -Syu
 
-  sudo xbps-install -y rsync zsh zsh-doc tmux zsh-syntax-highlighting zsh-autosuggestions kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq || return 1
+  sudo xbps-install -y rsync zsh zsh-doc tmux zsh-syntax-highlighting zsh-autosuggestions kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer clang-tools-extra lldb || exit 1
   gochain
 	gh auth login
   # _rm "$DOTFILES/fast-syntax-highlighting" && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$DOTFILES/zsh-syntax-highlighting" 
