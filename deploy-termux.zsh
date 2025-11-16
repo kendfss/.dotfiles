@@ -1,10 +1,8 @@
 #!/usr/bin/env -S zsh
 
 export DOTFILES=$HOME/.dotfiles
-export ZDOTDIR=$HOME/.zsh
 
 
-[[ -z $ZDOTDIR ]] && echo "\$ZDOTDIR is undefined" && exit 1
 [[ -z $DOTFILES ]] && echo "\$DOTFILES is undefined" && exit 1
 
 if [ ! -d ~/.config ]; then
@@ -18,19 +16,18 @@ fi
 
 source "$DOTFILES/functions.zsh"
 
-symlinkDialogue "$DOTFILES" "$ZDOTDIR"
+
+export ROOT=/data/data/com.termux/files
 
 export PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$HOME/.local/bin:$HOME/go/bin"
 
 for name in "$DOTFILES/scripts"/*; do
     [ -x "$name" ] || continue
-    target="/usr/bin/$(basename "$name")"
+    target="$ROOT/usr/bin/$(basename "$name")"
     symlinkDialogue "$name" "$target"
 done
 
 symlinkDialogue "$DOTFILES/glow" "$HOME/.config/glow"
-
-symlinkDialogue "$DOTFILES/mpv" "$HOME/.config/mpv"
 
 symlinkDialogue "$DOTFILES/helix" "$HOME/.config/helix"
 
@@ -51,14 +48,18 @@ _rm() {
   done
 }
 
-[[ -z "$CLONEDIR" ]] && export CLONEDIR=$HOME/gitclone/clones && mkdir -p $CLONEDIR
+if [ -z "$CLONEDIR" ]; then
+  export CLONEDIR=$HOME/gitclone/clones
+else
+  mkdir -p $CLONEDIR
+fi
 
 if [[ -n "$(command -v pkg)" ]]; then
   pkg update && pkg upgrade
 
-  pkg install -y openssh tmux helix direnv ripgrep jq termux-services perl || return 1
-  _rm "$ZDOTDIR/fast-syntax-highlighting" && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$ZDOTDIR/zsh-syntax-highlighting" 
-  _rm "$ZDOTDIR/zsh-autosuggestions" && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions "$ZDOTDIR/zsh-autosuggestions" 
+  pkg install -y openssh zsh{,-completions} tmux helix direnv ripgrep jq termux-services perl glow bat || return 1
+  _rm "$DOTFILES/fast-syntax-highlighting" && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$DOTFILES/zsh-syntax-highlighting" 
+  _rm "$DOTFILES/zsh-autosuggestions" && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions "$DOTFILES/zsh-autosuggestions" 
   # _rm "$HOME/.tmux/plugins" && git clone --depth=1 https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
 else

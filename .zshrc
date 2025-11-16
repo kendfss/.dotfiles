@@ -1,10 +1,8 @@
 [ -f ~/.secrets ] && source ~/.secrets
 export DOTFILES=$HOME/.dotfiles
-export ZDOTDIR=$HOME/.zsh
 export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin:$DOTFILES/scripts"
 export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music"
 
-[[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
 
 [[ -z "$(command -v which)" ]] && alias which="command -v"
 [[ -z "$(command -v mkdir)" ]] && alias mkdir="/usr/bin/mkdir"

@@ -127,7 +127,7 @@ auto-format = true
 [[language]]
 name        = "html"
 scope       = "source.html"
-file-types  = ["html", "htm"]
+file-types  = ["html", "htm", "nksf"]
 formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "html"] }
 auto-format = true
 

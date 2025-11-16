@@ -1,6 +1,4 @@
 export DOTFILES=$HOME/.dotfiles
-export ZDOTDIR=$HOME/.zsh
-[[ ! (-d $ZDOTDIR || -L $ZDOTDIR) ]] && ln -fs $DOTFILES $ZDOTDIR
 
 [[ -d "$HOME/.cargo" ]] && . "$HOME/.cargo/env"
 
@@ -14,8 +12,8 @@ if [[ -x "$(command -v go)" ]]; then
 fi
 
 if [[ -z $(command -v set_title) ]]; then
-  source "$ZDOTDIR/termsupport.zsh" 
-  source "$ZDOTDIR/functions.zsh" 
+  source "$DOTFILES/termsupport.zsh" 
+  source "$DOTFILES/functions.zsh" 
   export SKIPPROFILE=1 # prevent re-sourcing this file if/when the .zshrc is sourced
 fi
 

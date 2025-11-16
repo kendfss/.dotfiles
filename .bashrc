@@ -1,7 +1,5 @@
 echo running $0
 export DOTFILES=$HOME/.dotfiles
-export ZDOTDIR=$HOME/.zsh
-[[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
 
 [[ -d $HOME/.cargo ]] && . "$HOME/.cargo/env"
 

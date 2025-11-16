@@ -38,12 +38,24 @@ recover() {
   done
 }
 
-exts() {
-  # print file extensions
-  local exts=()
-  for arg in "$@"; do [ -f "$arg" ] && local base="$(basename "$arg")" && local ext="${base##*.}" && echo "$ext"; done | sort -ui
-  return
+ext() {
+  for arg in "$@"; do
+    [ -f "$arg" ] && local base="$(basename "$arg")" && local ext="${base##*.}"
+    [ "$ext" = "$base" ] && ext=""
+    echo "$ext";
+  done
+}
 
+exts() {
+  if [ "$1" = "-s" ]; then
+    shift 1
+    ext "$@" | sort -ui
+  else
+    ext "$@"
+  fi
+}
+
+_() {
   [[ -z $1 ]] && argv[1]="$(pwd)"
   dir=$1
   shift 1 > /dev/null || return 1
@@ -531,7 +543,7 @@ hide() {
 }
 
 dots() {
-  $EDITOR "$ZDOTDIR"
+  $EDITOR "$DOTFILES"
 }
 
 startover() {
@@ -662,7 +674,9 @@ fext() {
 quietly() {
   local cmd=$1
   shift 1
-  $cmd $* &> /dev/null &
+  for arg in "$@"; do
+    $cmd "$arg" &> /dev/null &
+  done
 }
 
 # stdout() {
@@ -1361,4 +1375,18 @@ distro() {
 
 plumb() {
   wine "/home/kendfss/.wine/drive_c/Program Files/Image-Line/FL Studio 2025/System/Tools/Plugin Manager/PluginManager.exe" &>/dev/null &
+}
+
+upyet() {
+  while true; do
+    ping -c3 -W5 ifconfig.me &>/dev/null && break
+    sleep 10
+  done
+  local msg="Internet connection is up!"
+  notify-send -t 60000 "$msg" 
+  echo $msg
+}
+
+kff() {
+  ps -ef | grep '[f]irefox' | awk '{print $2}' | xargs -I{} kill -9 {}
 }

@@ -1,12 +1,10 @@
 export HARDWARECLOCK=localtime
 export DOTFILES=$HOME/.dotfiles
-export ZDOTDIR=$HOME/.zsh
 export CONFIG=$HOME/.config
 export VIRTUAL_ENV=$HOME/.venv
 export CC="$(which gcc)"
 [ -d $VIRTUAL_ENV ] && source $VIRTUAL_ENV/bin/activate
 export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.cache/dart-sdk/bin:$HOME/.cache/vscode/bin:$DOTFILES/scripts"
-[[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
 export DICTAPI="https://api.dictionaryapi.dev/api/v2/entries/en_GB"
 
 dirof_() {
@@ -56,10 +54,9 @@ export PATH
 
 export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR=/usr/share/zsh/plugins/zsh-syntax-highlighting/highlighters
 
-export ZDOTDIR=$HOME/.zsh
-export PROFILE=$ZDOTDIR/.zprofile
-export RC=$ZDOTDIR/.zshrc
-export ENV=$ZDOTDIR/.zshenv
+export PROFILE=$DOTFILES/.zprofile
+export RC=$DOTFILES/.zshrc
+export ENV=$DOTFILES/.zshenv
 [[ -d $HOME/.cargo ]] && . "$HOME/.cargo/env"
 
 export UNSPLASH_ID="680402"

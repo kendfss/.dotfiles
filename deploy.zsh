@@ -1,25 +1,20 @@
 export SRC=/media/$USER/OLLA
 export DOTFILES=$HOME/.dotfiles
-export ZDOTDIR=$HOME/.zsh
 
-[[ -L $ZDOTDIR ]] && rm $ZDOTDIR
-[[ -d $ZDOTDIR ]] && rm -rf $ZDOTDIR
 
 [[ -z $SRC ]] && echo "\$SRC is undefined" && exit 1
-[[ -z $ZDOTDIR ]] && echo "\$ZDOTDIR is undefined" && exit 1
 [[ -z $DOTFILES ]] && echo "\$DOTFILES is undefined" && exit 1
 
 [[ ! -d $DOTFILES ]] && cp -r $SRC/.dotfiles "$(dirname $DOTFILES)"
-ln -fs $DOTFILES $ZDOTDIR
 
 # cp -r $SRC/.zsh $HOME
-cd $ZDOTDIR
+cd $DOTFILES
 
 _link() {
   for arg in "$@"; do
-      # [[ ! -a $HOME/$arg ]] && $HOME/$arg ]] &&  ln -f "$ZDOTDIR/$arg" "$HOME/$arg"
-     [[ -f $ZDOTDIR/$arg ]] && ln -f "$ZDOTDIR/$arg" "$HOME/$arg"
-     [[ -d $ZDOTDIR/$arg ]] && ln -fs "$ZDOTDIR/$arg" "$HOME/$arg"
+      # [[ ! -a $HOME/$arg ]] && $HOME/$arg ]] &&  ln -f "$DOTFILES/$arg" "$HOME/$arg"
+     [[ -f $DOTFILES/$arg ]] && ln -f "$DOTFILES/$arg" "$HOME/$arg"
+     [[ -d $DOTFILES/$arg ]] && ln -fs "$DOTFILES/$arg" "$HOME/$arg"
   done
 }
 
@@ -33,10 +28,10 @@ _rm() {
 
 [[ -z $CLONEDIR ]] && export CLONEDIR=$HOME/gitclone/clones && mkdir -p $CLONEDIR
 
-for item in $ZDOTDIR/.*; do 
+for item in $DOTFILES/.*; do 
   ([[ -f $item ]] && (name=$(basename "$item"); [[ -f "$HOME/$name" ]] && rm "$HOME/$name"; ln -f "$item" "$HOME/$name")) || continue;
 done
-# _rm $HOME/.ssh && ln -s $ZDOTDIR/.ssh $HOME/.ssh #[[ -d $HOME/.ssh ]] && rm  $ZDOTDIR/.ssh
+# _rm $HOME/.ssh && ln -s $DOTFILES/.ssh $HOME/.ssh #[[ -d $HOME/.ssh ]] && rm  $DOTFILES/.ssh
 
 if [[ -n $(command -v apt) ]]; then
   sudo apt update
@@ -46,13 +41,13 @@ if [[ -n $(command -v apt) ]]; then
 
   sudo add-apt-repository ppa:maveonair/helix-editor
   sudo apt install -y helix
-  ln -fs $ZDOTDIR/helix $HOME/.config/helix
+  ln -fs $DOTFILES/helix $HOME/.config/helix
 
   sudo apt install -y zsh zsh-doc wget htop tmux zsh-syntax-highlighting zsh-autosuggestions rlwrap project func
   
   chsh -s `command -v zsh`
-  # _rm $ZDOTDIR/fast-syntax-highlighting && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting  $ZDOTDIR/zsh-syntax-highlighting 
-  # _rm $ZDOTDIR/zsh-autosuggestions && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions  $ZDOTDIR/zsh-autosuggestions 
+  # _rm $DOTFILES/fast-syntax-highlighting && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting  $DOTFILES/zsh-syntax-highlighting 
+  # _rm $DOTFILES/zsh-autosuggestions && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions  $DOTFILES/zsh-autosuggestions 
   # _rm $HOME/.tmux/plugins && git clone --depth=1 https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
   sudo apt install -y coreutils build-essential g++ bat git tmux
@@ -67,13 +62,13 @@ if [[ -n $(command -v apt) ]]; then
   [[ ! -x $(command -v typescript-language-server) ]] && sudo `command -v npm` i -g typescript-language-server
   [[ ! -x $(command -v bash-language-server) ]] && sudo `command -v npm` i -g bash-language-server
 
-  # cd $ZDOTDIR
+  # cd $DOTFILES
   # exec $SHELL
 
   export PATH="$PATH:/usr/local/go/bin"
   gov=go1.20.4.linux-amd64
   wget -O $gov.tar.gz  https://go.dev/dl/$gov.tar.gz && $ rm -rf /usr/local/go && tar -C /usr/local -xzf $gov.tar.gz && go version
-  source $ZDOTDIR/functions.zsh
+  source $DOTFILES/functions.zsh
   go install github.com/mgechev/revive@latest
   go install github.com/cli/cli@lates
   gh auth login

@@ -1,6 +1,4 @@
 export DOTFILES=$HOME/.dotfiles
-export ZDOTDIR=$HOME/.zsh
-[[ ! -d $ZDOTDIR ]] && ln -fs $DOTFILES $ZDOTDIR
 
 # ~/.profile: executed by the command interpreter for login shells.
 # This file is not read by bash(1), if ~/.bash_profile or ~/.bash_login
@@ -39,11 +37,10 @@ fi
 PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
 #PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
 export PATH
-export DOTDIR=$HOME/.zsh
-export ZDOTDIR=$HOME/.zsh
-export PROFILE=$ZDOTDIR/.zprofile
-export RC=$ZDOTDIR/.zshrc
-export ENV=$ZDOTDIR/.zshenv
+export DOTFILES=$HOME/.dotfiles
+export PROFILE=$DOTFILES/.zprofile
+export RC=$DOTFILES/.zshrc
+export ENV=$DOTFILES/.zshenv
 
 # [[ -d $HOME/.cargo ]] && . "$HOME/.cargo/env"
 #eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
