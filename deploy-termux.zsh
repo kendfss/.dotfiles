@@ -57,7 +57,7 @@ fi
 if [[ -n "$(command -v pkg)" ]]; then
   pkg update && pkg upgrade
 
-  pkg install -y openssh zsh{,-completions} tmux helix direnv ripgrep jq termux-services perl glow bat || return 1
+  pkg install -y openssh zsh{,-completions} tmux helix direnv ripgrep jq termux-services perl glow bat clang || return 1
   _rm "$DOTFILES/fast-syntax-highlighting" && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$DOTFILES/zsh-syntax-highlighting" 
   _rm "$DOTFILES/zsh-autosuggestions" && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions "$DOTFILES/zsh-autosuggestions" 
   # _rm "$HOME/.tmux/plugins" && git clone --depth=1 https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
