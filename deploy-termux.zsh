@@ -35,10 +35,10 @@ if [[ -n "$(command -v pkg)" ]]; then
 
   export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
   mkdir -p "$ZSH_PLUGINS"
+  symlinkDialogue "$ZSH_PLUGINS" "$TERMUX__ROOTFS_DIR/usr/share/zsh/plugins"
   for name in zsh-{autosuggestions,syntax-highlighting}; do
     [ ! -e "$DOTFILES/$name" ] && git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" && source "$ZSH_PLUGINS/$name/$name.zsh"
   done
-  symlinkDialogue "$ZSH_PLUGINS" "$TERMUX__ROOTFS_DIR/usr/share/zsh/plugins"
 
   export TMUX_PLUGINS="$HOME/.tmux/plugins"
   mkdir -p "$TMUX_PLUGINS"

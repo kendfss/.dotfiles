@@ -38,6 +38,7 @@ enable = true
 [keys.normal.w]
 t     = 'transpose_view'
 w     = ':write'
+x     = ':x'
 q     = { q = ':quit', a = ':quit-all' }
 up    = 'jump_view_up'
 down  = 'jump_view_down'

@@ -49,7 +49,7 @@ local CACHEDIR=$DOTFILES/cache                # for storing files like history a
     export POSTS=$NOTES/posts
 # https://zsh.sourceforge.io/Doc/Release/Options.html
 # ZSH History
-    alias history='fc -fl 1'
+    history() { fc -fl 1 | sk -me; }
     HISTFILE=$CACHEDIR/history                 # Keep our home directory neat by keeping the histfile somewhere else
     SAVEHIST=10000                              # Big history
     HISTSIZE=10000                              # Big history
