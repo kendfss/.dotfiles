@@ -150,8 +150,10 @@ if [ -d "$DOTFILES/zsh-plugins" ]; then
 fi
 
 if [ -d "$ZSH_PLUGINS" ]; then
-    for name in zsh-{autosuggestions,syntax-highlighting}; do
-        source "$ZSH_PLUGINS/$name/$name.zsh"
-    done
+    [ ! -d "$TERMUX__PREFIX" ] && source "$ZSH_PLUGINS/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+    source "$ZSH_PLUGINS/zsh-autosuggestions/zsh-autosuggestions.zsh"
+    # for name in zsh-{autosuggestions,syntax-highlighting}; do
+    #     source "$ZSH_PLUGINS/$name/$name.zsh"
+    # done
 fi
 
