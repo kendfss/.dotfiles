@@ -1255,49 +1255,6 @@ play() {
   mpv $verbose --no-resume-playback --no-audio-display $shuffle "${args[@]}"
 }
 
-sshplay() {
-    # local ssh_host="$USER@$(ip addr show | awk '/^\s+inet\s/{print $2}' | tail -1)"  # CHANGE THIS
-    local ssh_host="hp17"  # CHANGE THIS
-    local verbose=""
-    local shuffle=true
-    
-    # Parse flags
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            v|-v)
-                verbose="-v"
-                shift
-                ;;
-            -s|--shuffle)
-                shuffle=true
-                shift
-                ;;
-            -n|--no-shuffle)
-                shuffle=false
-                shift
-                ;;
-            *)
-                break
-                ;;
-        esac
-    done
-    
-    # Build find command based on your original logic
-    local find_cmd='find $(echo "$PLAYPATH" | tr ":" " ") -type f \( -name "*.flac" -o -name "*.mp3" -o -name "*.m4a" -o -name "*.ogg" -o -name "*.opus" -o -name "*.wav" -o -name "*.aif" \)'
-    
-    if [ "$shuffle" = true ]; then
-        find_cmd="$find_cmd | shuf"
-    fi
-    
-    # Stream files over SSH
-    ssh "$ssh_host" "$find_cmd" | while read -r file; do
-        if [ -n "$file" ]; then
-            echo "Streaming: $file"
-            ssh "$ssh_host" "cat '$file'" | mpv $verbose --no-resume-playback --no-audio-display -
-        fi
-    done
-}
-
 sample() {
   [ "$1" = "-h" ] && echo "usage: $0 [dir/path - default .] [duration_in_seconds - default 180]" >/dev/stderr && return 0
   local preview path secs target response fileMode;
