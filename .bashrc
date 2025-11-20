@@ -22,3 +22,9 @@ source "$DOTFILES/aliases.zsh"
 # [[ !${BLE_VERSION-} ]] || ble-attach
 
 export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
+
+
+[[ $- != *i* ]] && return
+if [ -z "$TMUX" ]; then
+  exec tmux
+fi

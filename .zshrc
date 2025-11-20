@@ -157,3 +157,9 @@ if [ -d "$ZSH_PLUGINS" ]; then
     # done
 fi
 
+[[ $- != *i* ]] && return
+if [ -z "$TMUX" ]; then
+  exec tmux
+fi
+
+
