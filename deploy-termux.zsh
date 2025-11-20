@@ -7,7 +7,7 @@ PATH="$PATH:$DOTFILES/scripts:$HOME/.local/bin:$HOME/go/bin"
 
 [ -z "$DOTFILES" ] && echo "\$DOTFILES is undefined" && exit 1
 
-source "$DOTFILES/functions.zsh" || echo "couldn't source functions" && exit 1
+source "$DOTFILES/functions.zsh" || { echo "couldn't source functions" && exit 1; }
 
 symlinkDialogue $HOME/.{dotfiles,config}/helix
 symlinkDialogue $HOME/.{dotfiles,config}/glow
