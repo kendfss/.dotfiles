@@ -25,6 +25,6 @@ export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')
 
 
 [[ $- != *i* ]] && return
-if [ -z "$TMUX" ]; then
-  exec tmux
+if [ -z "$TMUX" ] && [ -z "$SSH_TTY" ] && [ -z "$SSH_CONNECTION" ]; then
+    exec tmux
 fi

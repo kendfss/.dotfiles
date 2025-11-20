@@ -158,8 +158,6 @@ if [ -d "$ZSH_PLUGINS" ]; then
 fi
 
 [[ $- != *i* ]] && return
-if [ -z "$TMUX" ]; then
-  exec tmux
+if [ -z "$TMUX" ] && [ -z "$SSH_TTY" ] && [ -z "$SSH_CONNECTION" ]; then
+    exec tmux
 fi
-
-
