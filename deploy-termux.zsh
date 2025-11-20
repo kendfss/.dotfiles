@@ -31,7 +31,7 @@ done
 if [[ -n "$(command -v pkg)" ]]; then
   pkg update && pkg upgrade
 
-  pkg install -y openssh fzf openssl-tool zsh tmux helix direnv ripgrep jq termux-services perl glow bat clang fd || return 1
+  pkg install -y openssh fzf zsh tmux helix direnv ripgrep jq termux-services perl glow bat clang fd mpv mandoc iproute2 || return 1
 
   export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
   mkdir -p "$ZSH_PLUGINS"
