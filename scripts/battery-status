@@ -1,7 +1,13 @@
 #!/bin/env zsh
 
-if [ -x "$(command -v termux-battery-sta%us)" ]; then
-	termux-battery-status | jq .percentage || exit 1
+local out
+if [ -x "$(command -v termux-battery-status)" ]; then
+	out="$(termux-battery-status | jq .status)" # || exit 1
 else
-	cat /sys/class/power_supply/BAT0/capacity || exit 1
+	out="$(cat /sys/class/power_supply/BAT0/status)" # || exit 1
+
 fi
+
+[ $? = 0 ] || exit $?
+
+echo $out | tr '[:upper:]' '[:lower:]' | sed 's/charging/↯/;s/discharging/▮/;s/full/✓/'

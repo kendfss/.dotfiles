@@ -1,0 +1,8 @@
+#!/bin/env zsh
+
+if [ -x "$(command -v termux-battery-sta%us)" ]; then
+	termux-battery-status | jq .percentage || exit 1
+else
+	cat /sys/class/power_supply/BAT0/capacity || exit 1
+fi
+
