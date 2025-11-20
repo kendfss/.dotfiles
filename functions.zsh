@@ -1310,9 +1310,6 @@ symlinkDialogue() {
         fi
     fi
     
-    # Conflict handling - exhaustive analysis
-    echo "Conflict: $target already exists" >&2
-    
     # Detailed target analysis
     local target_type="unknown"
     local target_details=()
@@ -1324,9 +1321,16 @@ symlinkDialogue() {
         target_type="directory"
         target_details+=("items: $(find "$target" -maxdepth 1 | wc -l | tr -d ' ')")
     elif [ -f "$target" ]; then
+        local hashCount="$(openssl dgst -sha256 -r "$target" "$source" 2>/dev/null| awk '{print $1}' | uniq | wc -l)"
+        [ "$hashCount" = "1" ] && echo "$source and $target are hash-equivalent files!"
         target_type="regular file"
         target_details+=("size: $(du -h "$target" | cut -f1)")
         target_details+=("lines: $(wc -l < "$target" 2>/dev/null || echo "N/A")")
+        target_details+=("hash: $(openssl dgst -sha256 -r "$target" | awk '{print $1}')")
+    elif [ -x "$target" ]; then
+        local hashCount="$(openssl dgst -sha256 -r "$target" "$source" 2>/dev/null| awk '{print $1}' | uniq | wc -l)"
+        [ "$hashCount" = "1" ] && echo "$source and $target are hash-equivalent executables!"
+        target_details+=("size: $(du -h "$target" | cut -f1)")
     elif [ -b "$target" ]; then
         target_type="block device"
     elif [ -c "$target" ]; then
@@ -1337,6 +1341,9 @@ symlinkDialogue() {
         target_type="socket"
     fi
     
+    # Conflict handling - exhaustive analysis
+    echo "Conflict: $target already exists" >&2
+
     # Permissions and ownership
     target_details+=("permissions: $(stat -c "%A %U:%G" "$target" 2>/dev/null || ls -la "$target" | cut -d' ' -f1,3,4)")
     
