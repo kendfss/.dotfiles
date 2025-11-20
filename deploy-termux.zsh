@@ -41,8 +41,17 @@ if [[ -n "$(command -v pkg)" ]]; then
   done
 
   export TMUX_PLUGINS="$HOME/.tmux/plugins"
+  local origin="$(pwd)"
   mkdir -p "$TMUX_PLUGINS"
-  [ ! -e "$TMUX_PLUGINS" ] && git clone --depth=1 "https://github.com/tmux-plugins/tpm" "$TMUX_PLUGINS/tpm"
+  if clone tmux-plugins/tpm; then
+    symlinkDialogue "$(pwd)" "$TMUX_PLUGINS/tpm"
+    cd "$origin"
+  else
+    echo "couldn't clone tmux-plugins/tpm"
+    cd "$origin"
+    exit 1
+  fi
+  # [ ! -e "$TMUX_PLUGINS" ] && git clone --depth=1 "https://github.com/tmux-plugins/tpm" "$TMUX_PLUGINS/tpm"
 
 else
   echo "pkg is not available. Make sure you have the package manager for termux installed." && return 1
