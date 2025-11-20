@@ -515,10 +515,6 @@ commit() {
   git commit -m "$msg"
 }
 
-push() {
-  git push origin
-}
-
 acp() {
   if [[ -z $1 ]]; then
     argv[1]=\.

@@ -14,7 +14,10 @@ elif [ -x "$(command -v sk)" ]; then
 elif [ -x "$(command -v fzf)" ]; then
   alias skim=fzf
   alias sk=fzf
+else
+  echo "neither fzf or skim are installed"
 fi
+
 if ! command -v rg &>/dev/null; then
   echo "ripgrep not found. setting alias rg='grep -E'. good luck!"
   alias rg='grep -E'
@@ -24,6 +27,8 @@ alias glog='git log --graph --decorate --oneline'
 alias rg='rg -g "!.git/"'
 [ "$0" = "zsh" ] && alias -g G='| grep' && alias -g L='| less'
 alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of compact=p=0:nk=1"
+
+alias push='git push'
 alias zt=zathura
 alias pt=ptpython
 alias lst="ls --time=ctime"
