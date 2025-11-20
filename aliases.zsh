@@ -28,6 +28,7 @@ alias rg='rg -g "!.git/"'
 [ "$0" = "zsh" ] && alias -g G='| grep' && alias -g L='| less'
 alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of compact=p=0:nk=1"
 
+alias pull='git pull'
 alias push='git push'
 alias zt=zathura
 alias pt=ptpython
