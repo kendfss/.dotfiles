@@ -1,3 +1,4 @@
+#!/bin/env zsh
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR="$DOTFILES"
 

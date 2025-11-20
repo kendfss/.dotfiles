@@ -1286,12 +1286,21 @@ symlinkDialogue() {
     local source="$1"
     local target="$2"
     local sudo
-    [ -x "$(which sudo)" ] && sudo="$(which sudo)"
-    if [ ! -e "$target" ]; then
-        $sudo ln -s "$source" "$target" && printf 'linked %s -> %s\n' "$source" "$target"
+    [ -x "$(which sudo 2>/dev/null)" ] && sudo="$(which sudo)"
+    
+    # Validate source exists
+    if [ ! -e "$source" ] && [ ! -L "$source" ]; then
+        echo "Error: Source '$source' does not exist" >&2
+        return 2
+    fi
+    
+    # Case 1: Target doesn't exist - simple creation
+    if [ ! -e "$target" ] && [ ! -L "$target" ]; then
+        $sudo ln -s "$source" "$target" && printf 'Linked %s -> %s\n' "$source" "$target"
         return $?
     fi
     
+    # Case 2: Target is already the correct symlink
     if [ -L "$target" ]; then
         local current_link
         current_link="$(readlink "$target")"
@@ -1301,25 +1310,127 @@ symlinkDialogue() {
         fi
     fi
     
-    # Handle existing file/symlink that needs updating
+    # Conflict handling - exhaustive analysis
     echo "Conflict: $target already exists" >&2
-    if [ -L "$target" ]; then
-        echo "  Current symlink: $target -> $current_link" >&2
-    fi
-    echo "  Desired symlink: $target -> $source" >&2
     
-    printf "Overwrite? [y/N] "
-    read -r response
-    case "$response" in
-        [yY]|[yY][eE][sS])
-            $sudo ln -sf "$source" "$target" && echo "Updated: $target -> $source"
-            return $?
-            ;;
-        *)
-            echo "Skipped: $target"
-            return 1
-            ;;
-    esac
+    # Detailed target analysis
+    local target_type="unknown"
+    local target_details=()
+    
+    if [ -L "$target" ]; then
+        target_type="symlink"
+        target_details+=("points to: $(readlink "$target")")
+    elif [ -d "$target" ]; then
+        target_type="directory"
+        target_details+=("items: $(find "$target" -maxdepth 1 | wc -l | tr -d ' ')")
+    elif [ -f "$target" ]; then
+        target_type="regular file"
+        target_details+=("size: $(du -h "$target" | cut -f1)")
+        target_details+=("lines: $(wc -l < "$target" 2>/dev/null || echo "N/A")")
+    elif [ -b "$target" ]; then
+        target_type="block device"
+    elif [ -c "$target" ]; then
+        target_type="character device"
+    elif [ -p "$target" ]; then
+        target_type="named pipe"
+    elif [ -S "$target" ]; then
+        target_type="socket"
+    fi
+    
+    # Permissions and ownership
+    target_details+=("permissions: $(stat -c "%A %U:%G" "$target" 2>/dev/null || ls -la "$target" | cut -d' ' -f1,3,4)")
+    
+    # Display conflict details
+    echo "  Type: $target_type" >&2
+    for detail in "${target_details[@]}"; do
+        echo "  $detail" >&2
+    done
+    echo "  Desired: symlink pointing to $source" >&2
+    
+    # Interactive resolution with multiple options
+    echo >&2
+    echo "Resolution options:" >&2
+    echo "  o) Overwrite with new symlink" >&2
+    echo "  b) Backup existing and create symlink" >&2
+    if [ "$target_type" = "directory" ] || [ "$target_type" = "regular file" ]; then
+        echo "  m) Move existing to ${target}.old" >&2
+    fi
+    if [ "$target_type" = "symlink" ]; then
+        echo "  r) Remove current symlink" >&2
+    fi
+    echo "  s) Skip (do nothing)" >&2
+    echo "  i) Inspect target further" >&2
+    
+    while true; do
+        printf "Choose action [o/b/m/r/s/i]: " >&2
+        read -r response
+        
+        case "$response" in
+            o|O)
+                $sudo ln -sf "$source" "$target" && echo "Overwritten: $target -> $source"
+                return $?
+                ;;
+            b|B)
+                local backup="${target}.backup.$(date +%s)"
+                if $sudo mv "$target" "$backup" 2>/dev/null; then
+                    echo "Backed up to: $backup"
+                    $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
+                    return $?
+                else
+                    echo "Error: Backup failed" >&2
+                    continue
+                fi
+                ;;
+            m|M)
+                if [ "$target_type" = "directory" ] || [ "$target_type" = "regular file" ]; then
+                    local moved="${target}.old"
+                    if $sudo mv "$target" "$moved" 2>/dev/null; then
+                        echo "Moved existing to: $moved"
+                        $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
+                        return $?
+                    else
+                        echo "Error: Move failed" >&2
+                        continue
+                    fi
+                else
+                    echo "Invalid option for this file type" >&2
+                    continue
+                fi
+                ;;
+            r|R)
+                if [ "$target_type" = "symlink" ]; then
+                    if $sudo rm "$target" 2>/dev/null; then
+                        echo "Removed existing symlink"
+                        $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
+                        return $?
+                    else
+                        echo "Error: Removal failed" >&2
+                        continue
+                    fi
+                else
+                    echo "Invalid option for this file type" >&2
+                    continue
+                fi
+                ;;
+            s|S)
+                echo "Skipped: $target"
+                return 1
+                ;;
+            i|I)
+                echo "Inspecting $target:" >&2
+                $sudo ls -la "$target" >&2
+                if [ -f "$target" ] && command -v file >/dev/null 2>&1; then
+                    echo "File type: $(file "$target")" >&2
+                fi
+                echo >&2
+                continue
+                ;;
+            *)
+                echo "Invalid option. Please choose o, b, m, r, s, or i." >&2
+                continue
+                ;;
+        esac
+    done
 }
 
 gg() {
