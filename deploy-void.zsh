@@ -2,7 +2,9 @@
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR="$DOTFILES"
 
-mkdir -p "$HOME/.config" || echo "couldn't make ~/.config directory" && exit 1
+mkdir -p "$HOME/.config" || { echo "couldn't make ~/.config directory" && exit 1; }
+
+source "$DOTFILES/functions.zsh" || { echo "couldn't source functions" && exit 1; }
 
 ([ -z "$(which xbps)" ] && curl -sL "https://github.com/kendfss/xbps/releases/latest/download/xbps_linux_$(uname -m).tar.gz" | tar -xz -O xbps | sudo tee /usr/bin/xbps >/dev/null && sudo chmod +x /usr/bin/xbps && echo "personal xbps successfully installed") || echo personal xbps already installed
 
@@ -88,7 +90,7 @@ if [[ -n "$(command -v xbps-install)" ]]; then
 
   sudo xbps-install -y python3{,-{sqlparse,wheel,numpy,Pillow,PyAudio,attrs,audioread,binaryornot,bitarray,boolean.py,click,dill,google-{auth{-{httplib2,oauthlib},},api-{core,python-client}},httpx,requests,language-server,path,pandas,pathtools,pip,pipenv,pipx,platformdirs,re-assert,send2trash,scruffy,tabulate,virtualenv,argcomplete,click,jedi,parsing,parso,userpath,yaml}}
   
-	[[ -z "$(command -v npm)" ]] && sudo xbps-install -y nodejs && sudo npm i -g {bash,awk,yaml}-language-server deno || return 1
+	[[ -z "$(command -v npm)" ]] && sudo xbps-install -y nodejs && sudo npm i -g {bash,awk,yaml}-language-server deno || { echo "couldn't install node and npm isn't available" && exit 1; }
 
   cd "$DOTFILES"
 

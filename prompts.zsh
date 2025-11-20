@@ -54,7 +54,7 @@ pth="%(3C.%-1d:%1~.%1~)"
 if [ -z "$TERMUX__PREFIX" ]; then
   export PS1="%B%F{cyan}$pth%f%b(%F{%(?.green.red)}%n%#%m%f) %(!.$dot.%(?.$tick.$cross)) "
 else 
-  export PS1="%B%F{cyan}$pth%f%b(%F{%(?.green.red)}%n%#$(getprop ro.product.model 2>/dev/null)%f)
+  export PS1="%B%F{cyan}$pth%f%b(%F{%(?.green.red)}%n%#$(/system/bin/getprop ro.product.device 2>/dev/null)%f)
 %(!.$dot.%(?.$tick.$cross)) "
 fi
 
