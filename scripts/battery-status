@@ -10,4 +10,4 @@ fi
 
 [ $? = 0 ] || exit $?
 
-echo $out | tr '[:upper:]' '[:lower:]' | sed 's/charging/↯/;s/discharging/▮/;s/full/✓/'
+echo $out | tr '[:upper:]' '[:lower:]' | sed 's/charging/↯/;s/discharging/▮/;s/full/✓/;s/"//'
