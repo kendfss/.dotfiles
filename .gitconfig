@@ -1,21 +1,30 @@
 [init]
 	defaultBranch = main
+
 [user]
-	name = kendfss
+	name  = kendfss
 	email = kenneth@kendfss.xyz
+
 [alias]
-    ignore = update-index --assume-unchanged
-    accept = update-index --no-assume-unchanged
+    ignore  = update-index --assume-unchanged
+    accept  = update-index --no-assume-unchanged
     ignored = !git ls-files -v | grep "^[[:lower:]]"
-	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit
+	lg      = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit
+	rs      = reset HEAD~1 --soft
+	restage = reset HEAD~1 --soft
+	
+
 [core]
-	editor = hx
+	editor       = hx
     excludesfile = ~/.gitignore
+
 [color "status"]
-	changed = yellow bold
-	added = green 
+	changed   = yellow bold
+	added     = green 
 	untracked = red 
+
 [http]
 	cookiefile = ~/.gitcookies
+
 # [url "ssh://git@github.com/"]
 	# insteadOf = https://github.com/

@@ -1,59 +1,48 @@
 [ -f ~/.secrets ] && source ~/.secrets
 export DOTFILES=$HOME/.dotfiles
-export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin:$DOTFILES/scripts"
-export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music"
-
+export ZDOTDIR="$DOTFILES"
+PATH="$PATH:$HOME/dartsdk/dart-sdk/bin:$DOTFILES/scripts"
+export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music:/mnt/Elements/drive:/mnt/Elements/music"
+export MUSIC_FORMATS="mp3|m4a|wav|flac|ogg|aif|aiff|opus"
 
 [[ -z "$(command -v which)" ]] && alias which="command -v"
-[[ -z "$(command -v mkdir)" ]] && alias mkdir="/usr/bin/mkdir"
+[[ -z "$(command -v mkdir)" ]] && alias mkdir="$TERMUX__ROOTFS_DIR/usr/bin/mkdir"
 
-PATH="$PATH:/usr/local/bin:/usr/bin"
+PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/local/bin:$TERMUX__ROOTFS_DIR/usr/bin"
 [ -d "$HOME/.elan" ] && PATH="$PATH:$HOME/.elan/bin"
-export PATH
 
 export WORDCHARS=${WORDCHARS//[&+;\-_\/=.]}
-# bindkey "^H" kill-word
-bindkey "^[[1;3C" forward-word
-bindkey "^[[1;3D" backward-word
-bindkey "^[[1~" beginning-of-line
-bindkey "^[[4~" end-of-line
-bindkey "^[[3~" delete-char
-# bindkey '^[[3;3~' backward-kill-word
-bindkey '^[[3;3~' kill-word
 
-local ZSH_CONF=$HOME/.zsh                      # Define the place I store all my zsh config stuff
-local ZSH_CACHE=$ZSH_CONF/cache                # for storing files like history and zcompdump 
-[ ! -e $ZSH_CACHE ] && mkdir $ZSH_CACHE
-local LOCAL_ZSHRC=$HOME/.zshlocal/.zshrc       # Allow the local machine to have its own overriding zshrc if it wants it
+local CACHEDIR=$DOTFILES/cache                # for storing files like history and zcompdump 
+[ ! -e $CACHEDIR ] && mkdir $CACHEDIR
 
 # Load external config files and tools
-    source $ZSH_CONF/termsupport.zsh                     # Set terminal window title and other terminal-specific things
+    source $DOTFILES/termsupport.zsh                     # Set terminal window title and other terminal-specific things
 
 
 # Completion
     autoload -Uz compinit && compinit
     zstyle ':completion:*' menu select
-    source $ZSH_CONF/functions.zsh                       # Load misc functions. Done in a seperate file to keep this from getting too long and ugly
-    [[ -z SKIPPROFILE ]] && source $ZSH_CONF/.zprofile   # Setup our profile post-login
-    source $ZSH_CONF/aliases.zsh                         # Load aliases. Done in a seperate file to keep this from getting too long and ugly
-    source $ZSH_CONF/spectrum.zsh                        # Make nice colors available
-    source $ZSH_CONF/prompts.zsh                         # Setup our PS1, PS2, etc.
+    source $DOTFILES/functions.zsh                       # Load misc functions. Done in a seperate file to keep this from getting too long and ugly
+    source $DOTFILES/keybindings.zsh                       # Load misc functions. Done in a seperate file to keep this from getting too long and ugly
+    [[ -z SKIPPROFILE ]] && source $DOTFILES/.zprofile   # Setup our profile post-login
+    source $DOTFILES/aliases.zsh                         # Load aliases. Done in a seperate file to keep this from getting too long and ugly
+    source $DOTFILES/spectrum.zsh                        # Make nice colors available
+    source $DOTFILES/prompts.zsh                         # Setup our PS1, PS2, etc.
 
 
 # Set important shell variables
     export EDITOR=hx                            # Set default editor
     export PAGER=less                           # Set default pager
     export LESS="-R"                            # Set the default options for less 
-    export LANG="en_US.UTF-8"                   # I'm not sure who looks at this, but I know it's good to set in general
+    export LANG="en_GB.UTF-8"                   # I'm not sure who looks at this, but I know it's good to set in general
     export GOFMT=gofumpt
     export CLONEDIR=$HOME/gitclone/clones
     export CLONES=$HOME/gitclone/clones
     export REPO_HOST=https://github.com
     export DEVELOPER=$USER
-    # export GOPATH="$HOME/go:$CLONEDIR/$USER"
     export GOPATH="$HOME/go"
     export WORKSPACE="$HOME/workspace"
-    # export SUBLIME="/Users/kendfss/Library/Application Support/Sublime Text"
     export VIDEOS=$HOME/$([[ $(uname) -eq Linux ]] && echo Videos || echo Movies)
     export MUSIC=$HOME/Music
     export NOTES=$HOME/self.notes
@@ -61,7 +50,7 @@ local LOCAL_ZSHRC=$HOME/.zshlocal/.zshrc       # Allow the local machine to have
 # https://zsh.sourceforge.io/Doc/Release/Options.html
 # ZSH History
     alias history='fc -fl 1'
-    HISTFILE=$ZSH_CACHE/history                 # Keep our home directory neat by keeping the histfile somewhere else
+    HISTFILE=$CACHEDIR/history                 # Keep our home directory neat by keeping the histfile somewhere else
     SAVEHIST=10000                              # Big history
     HISTSIZE=10000                              # Big history
     setopt EXTENDED_HISTORY                     # Include more information about when the command was executed, etc
@@ -100,13 +89,13 @@ local LOCAL_ZSHRC=$HOME/.zshlocal/.zshrc       # Allow the local machine to have
     setopt EVAL_LINENO                          # do not use relative line numbers when reporting errors in functions
 
 # Shell Emulation
-    # setopt NO_CLOBBER                           # disallows > to overwrite existing files. Use >| or >! instead.
+    setopt NO_CLOBBER                           # disallows > to overwrite existing files. Use >| or >! instead.
     setopt APPEND_CREATE                        # create nonexistent files in append mode
 
 # Misc
     setopt ZLE                                  # Enable the ZLE line editor, which is default behavior, but to be sure
     declare -U path                             # prevent duplicate entries in path
-    # eval $(dircolors $ZSH_CONF/dircolors)       # Uses custom colors for LS, as outlined in dircolors
+    eval $(dircolors $DOTFILES/dircolors)       # Uses custom colors for LS, as outlined in dircolors
     LESSHISTFILE="/dev/null"                    # Prevent the less hist file from being made, I don't want it
     umask 002                                   # Default permissions for new files, subract from 777 to understand
     setopt NO_BEEP                              # Disable beeps
@@ -125,7 +114,6 @@ local LOCAL_ZSHRC=$HOME/.zshlocal/.zshrc       # Allow the local machine to have
 
 
 # Aliases
-    # alias ls="ls -h --color='auto'"
     alias lsa='ls -a'
     alias ll='ls -l'
     alias la='ls -la'
@@ -136,10 +124,10 @@ local LOCAL_ZSHRC=$HOME/.zshlocal/.zshrc       # Allow the local machine to have
     alias rd='rmdir'
 
     # # Search running processes. Usage: psg <process_name>
-    # alias psg="ps aux $( [[ -n "$(uname -a | grep CYGWIN )" ]] && echo '-W') | grep -i $1"
+    alias psg="ps aux $( [[ -n "$(uname -a | grep CYGWIN )" ]] && echo '-W') | grep -i $1"
 
     # Copy with a progress bar
-    alias cpv="rsync -poghb --backup-dir=/tmp/rsync -e /dev/null --progress --" 
+    alias cpv="rsync -poghb --backup-dir=$TERMUX__PREFIX/tmp/rsync -e /dev/null --progress --" 
 
     alias d='dirs -v | head -10'                      # List the last ten directories we've been to this session, no duplicates
 
@@ -153,22 +141,17 @@ autoload -Uz chpwd_recent_dirs cdr add-zsh-hook
 add-zsh-hook chpwd chpwd_recent_dirs
 zstyle ':chpwd:*' recent-dirs-max 5
 
-if [ -d /usr/share/zsh/plugins ]; then
-    export PLUGINS=/usr/share/zsh/plugins
-    source $PLUGINS/zsh-autosuggestions/zsh-autosuggestions.zsh
-    source $PLUGINS/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-    local LINKED_ZSH_PLUGINS=true
-fi
-
-if [ -z $LINKED_ZSH_PLUGINS ]; then
-    [[ -d $ZSH_CONF/zsh-autosuggestions ]] && source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
-    [[ -d $ZSH_CONF/zsh-syntax-highlighting ]] && source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-fi
-
 [[ -x "$(command -v direnv)" ]] && eval "$(direnv hook zsh)"
 
-# export PYENV_ROOT="$HOME/.pyenv"
-# [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-# eval "$(pyenv init -)"
+export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
 
+if [ -d "$DOTFILES/zsh-plugins" ]; then
+    export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
+fi
+
+if [ -d "$ZSH_PLUGINS" ]; then
+    for name in zsh-{autosuggestions,syntax-highlighting}; do
+        source "$ZSH_PLUGINS/$name/$name.zsh"
+    done
+fi
 

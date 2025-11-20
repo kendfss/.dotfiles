@@ -1,7 +1,7 @@
 # A script to make using 256 colors in zsh less painful.
 autoload -Uz add-zsh-hook
 
-# P.C. Shyamshankar &lt;sykora@lucentbeing.com&gt;
+# P.C. Shyamshankar <sykora@lucentbeing.com>
 # Copied from http://github.com/sykora/etc/blob/master/zsh/functions/spectrum/
 
 autoload -U colors && colors

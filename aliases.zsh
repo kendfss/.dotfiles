@@ -6,31 +6,36 @@ if [[ $(uname) -eq Linux ]]; then
   export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/20.1.5948944"
 fi
 
-alias -g G='| grep'
-alias -g L='| less'
+if [ -x "$(command -v sk)" ] && [ -x "$(command -v fzf)" ]; then
+  echo "WARNING both fzf and skim/sk installed!"
+elif [ -x "$(command -v sk)" ]; then
+  alias skim=sk
+  alias fzf=sk
+elif [ -x "$(command -v fzf)" ]; then
+  alias skim=fzf
+  alias sk=fzf
+fi
+if ! command -v rg &>/dev/null; then
+  echo "ripgrep not found. setting alias rg='grep -E'. good luck!"
+  alias rg='grep -E'
+fi
+[ "$0" = "bash" ] && alias exit='exit &>/dev/null'
+alias glog='git log --graph --decorate --oneline'
+alias rg='rg -g "!.git/"'
+[ "$0" = "zsh" ] && alias -g G='| grep' && alias -g L='| less'
 alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of compact=p=0:nk=1"
 alias zt=zathura
 alias pt=ptpython
 alias lst="ls --time=ctime"
-# alias pip=pip3
 alias treec="tree | c && p"
-# alias py39="/usr/local/opt/python@3.9/libexec/bin/python"
-# alias pip39="/usr/local/opt/python@3.9/libexec/bin/pip"
-# alias python39="/usr/local/opt/python@3.9/libexec/bin/python"
 alias cl="clear; ls"
-# alias st="open -a \"/Applications/Sublime Text.app/Contents/MacOS/sublime_text\""
 alias editor="$EDITOR"
 alias glone="cd $HOME/gitclone; python main.py"
-# alias glone="$HOME/gitclone/main.py"
 alias sqin="mysql -u root -p"
 alias isfile="test -f"
-# alias p=pbpaste
-# alias c=pbcopy
-# alias goc="go doc"
 alias voc="v doc -comments"
 alias gtidy="go tidy -v"
 alias gos="cd \$GOS"
-# alias gop="cd \$GOPATH/src"
 alias md="mkdir -p"
 alias pcd="cd \"\$(p)\""
 alias rmp="rm \"\$(p)\""
@@ -42,27 +47,20 @@ alias mouseinfo="python -m mouseinfo"
 alias brewenv="open \"$HOME/Library/Caches/Homebrew/downloads\""
 alias links="find \"\$(p)\" -maxdepth 1 -type l -ls"
 alias rmf="rm -rf"
-alias airport=/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport
 alias gfm="git fetch && git merge"
 alias cgun="clear; gun"
 alias gun="$GOFMT -e -w .; go run"
 alias vimguide="vim $HOME/gitclone/clones/hackjutsu/vim-cheatsheet/readme.md"
 alias unhide="echo -en \"\e[?25h\""
-alias wipe="/usr/bin/osascript -e 'tell application \"System Events\" to tell process \"Terminal\" to keystroke \"k\" using command down'"
 alias cls="printf '\33c\e[3J'"
-alias pocw="open 'file://$HOME/Documents/docs/python-3.10.0rc1-docs-html/index.html'"
-# alias vstgen=/Users/kendfss/programs/scripts/vstgen.make
-alias router="open http://192.168.8.1/html/home.html"
 alias uuid='uuidgen | tr "[A-Z]" "[a-z]"'
 alias reddit="s -p reddit"
 alias gv="gh repo view"
 alias status="git status"
-
+alias statusu="git status -uno"
 alias lg="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit"
-alias ga="git add"
 alias gc="git commit -m"
-alias gp="git push"
-alias gl="git pull"
 alias gst="git status -sb"
-alias gco="git checkout"
+alias checkout="git checkout"
+export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
 

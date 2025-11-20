@@ -33,21 +33,20 @@ if [[ -f $(command -v go) ]]; then
     export PATH="$PATH:$(go env GOROOT):$(go env GOPATH)"
 fi
 
-# PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:$(manpath)"
-PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
-#PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
-export PATH
+PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/bin:$TERMUX__ROOTFS_DIR/bin:$TERMUX__ROOTFS_DIR/usr/sbin:$TERMUX__ROOTFS_DIR/sbin:$TERMUX__ROOTFS_DIR/usr/local/bin"
 export DOTFILES=$HOME/.dotfiles
 export PROFILE=$DOTFILES/.zprofile
 export RC=$DOTFILES/.zshrc
 export ENV=$DOTFILES/.zshenv
 
-# [[ -d $HOME/.cargo ]] && . "$HOME/.cargo/env"
-#eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-# [[ -x $(command -v gcc) ]] && export CC=gcc
+[ -d "$HOME/.cargo" ] && . "$HOME/.cargo/env"
+[ -x "$(command -v clang)" ] && export CC=clang
 
-export PATH="$HOME/.elan/bin:$PATH"
+PATH="$HOME/.elan/bin:$PATH"
 
 # export PYENV_ROOT="$HOME/.pyenv"
 # command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 # eval "$(pyenv init -)"
+
+export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
+

@@ -1,13 +1,9 @@
-#!/usr/bin/env -S zsh
+export DOTFILES=$HOME/.dotfiles
+export ZDOTDIR="$DOTFILES"
 
 mkdir -p "$HOME/.config" || echo "couldn't make ~/.config directory" && exit 1
 
 ([ -z "$(which xbps)" ] && curl -sL "https://github.com/kendfss/xbps/releases/latest/download/xbps_linux_$(uname -m).tar.gz" | tar -xz -O xbps | sudo tee /usr/bin/xbps >/dev/null && sudo chmod +x /usr/bin/xbps && echo "personal xbps successfully installed") || echo personal xbps already installed
-export DOTFILES=$HOME/.dotfiles
-
-
-
-[[ -z $DOTFILES ]] && echo "\$DOTFILES is undefined" && exit 1
 
 if [ ! -d ~/.config ]; then
     if [ -e ~/.config ]; then
@@ -30,7 +26,7 @@ linkToHome() {
 }
 
 
-export PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$HOME/.local/bin:$HOME/go/bin"
+PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$HOME/.local/bin:$HOME/go/bin"
 for name in "$DOTFILES"/scripts/*; do
     [ -x "$name" ] || continue
     target="/usr/bin/$(basename "$name")"
@@ -59,25 +55,29 @@ symlinkDialogue "$DOTFILES/helix" "$HOME/.config/helix"
 
 symlinkDialogue "$DOTFILES/kitty" "$HOME/.config/kitty"
 
-_rm() {
-  for arg in "$@"; do 
-    [[ -d "$arg" ]] && rm -rf "$arg"
-    [[ -L "$arg" ]] && rm "$arg"
-  done
-}
-
 [[ -z "$CLONEDIR" ]] && export CLONEDIR=$HOME/gitclone/clones && mkdir -p $CLONEDIR
 
 if [[ -n "$(command -v xbps-install)" ]]; then
 
   sudo xbps-install -Syu
 
-  sudo xbps-install -y rsync zsh zsh-doc tmux zsh-syntax-highlighting zsh-autosuggestions kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer clang-tools-extra lldb || exit 1
+  sudo xbps-install -y git zsh acl-progs rsync zsh zsh-doc tmux kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer skim clang-tools-extra lldb || exit 1
   gochain
+
+  export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
+  mkdir -p "$ZSH_PLUGINS"
+  for name in zsh-{autosuggestions,syntax-highlighting}; do
+    [ ! -e "$DOTFILES/$name" ] && git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" && source "$ZSH_PLUGINS/$name/$name.zsh"
+  done
+  symlinkDialogue "$ZSH_PLUGINS" "/usr/share/zsh/plugins"
+
+  export TMUX_PLUGINS="$HOME/.tmux/plugins"
+  mkdir -p "$TMUX_PLUGINS"
+  [ ! -e "$TMUX_PLUGINS" ] && git clone --depth=1 "https://github.com/tmux-plugins/tpm" "$TMUX_PLUGINS/tpm"
+
 	gh auth login
-  # _rm "$DOTFILES/fast-syntax-highlighting" && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$DOTFILES/zsh-syntax-highlighting" 
-  # _rm "$DOTFILES/zsh-autosuggestions" && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions "$DOTFILES/zsh-autosuggestions" 
-  # _rm "$HOME/.tmux/plugins" && git clone --depth=1 https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+
+  
 
   sudo xbps-install -y wget htop rlwrap tree glow typst tinymist zathura{,-pdf-mupdf} pandoc psmisc lf coreutils mpv mpv-mpris playerctl nicotine+ lua-language-server StyLua taplo build-essential bat gcc llvm && cd $HOME 
 
@@ -103,3 +103,6 @@ if [[ -n "$(command -v xbps-install)" ]]; then
 else
   echo "xbps-install is not available. Make sure you have the package manager for Void Linux installed." && return 1
 fi
+
+export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
+

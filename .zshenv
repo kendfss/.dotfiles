@@ -1,9 +1,11 @@
 export HARDWARECLOCK=localtime
 export DOTFILES=$HOME/.dotfiles
 export CONFIG=$HOME/.config
-export VIRTUAL_ENV=$HOME/.venv
-export CC="$(which gcc)"
-[ -d $VIRTUAL_ENV ] && source $VIRTUAL_ENV/bin/activate
+if [ -x "$(command -v clang)" ]; then
+  export CC="$(which clang)"
+fi
+VIRTUAL_ENV=$HOME/.venv
+[ -d $VIRTUAL_ENV ] && export VIRTUAL_ENV && source $VIRTUAL_ENV/bin/activate
 export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.cache/dart-sdk/bin:$HOME/.cache/vscode/bin:$DOTFILES/scripts"
 export DICTAPI="https://api.dictionaryapi.dev/api/v2/entries/en_GB"
 
@@ -14,55 +16,30 @@ dirof_() {
   done
 }
 
-# export HELIX_RUNTIME=$CLONES/helix-editor/helix/runtime
-
-# export NVIM=$HOME/.config/nvim
-export CMAKE_ROOT=/usr/local/share/cmake-3.24
-export IPDATAKEY=22c8e4ddd882816537eb93039043f10c552da195d7f4625928cf51bb
-
-# export VIMRUNTIME=/usr/share/vim/vim81
-export SUBLIME_CONFIG=$HOME/.config/sublime-text
 export RUST_BACKTRACE=1
-# export GOEXPERIMENT=unified
 
-PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
-# if [[ $(uname) = Linux ]]; then
-#     # PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
-#     # export PKG_CONFIG_LIBDIR=/usr/lib
-# fi
+export PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/bin:$TERMUX__ROOTFS_DIR/bin:$TERMUX__ROOTFS_DIR/usr/sbin:$TERMUX__ROOTFS_DIR/sbin:$TERMUX__ROOTFS_DIR/usr/local/bin"
 
 if [[ $(uname) = Darwin ]]; then
-    PATH="$PATH:/Library/TeX/texbin:/Library/Apple/usr/bin"
-    PATH="$PATH:/Library/Frameworks/Python.framework/Versions/3.10/bin"
+    export PATH="$PATH:/Library/TeX/texbin:/Library/Apple/usr/bin"
+    export PATH="$PATH:/Library/Frameworks/Python.framework/Versions/3.10/bin"
 fi
 
 if [[ -x $(command -v node) ]]; then
-    PATH="$PATH:$(dirof_ node)"
-    PATH="$PATH:$(dirof_ npm)"
+    export PATH="$PATH:$(dirof_ node)"
+    export PATH="$PATH:$(dirof_ npm)"
 fi
 
-# if [[ -d $GOPATH ]]; then
-if [[ -d /usr/local/go ]]; then
-    # PATH="$PATH:$(go env GOROOT)"
-    # PATH="$PATH:$(go env GOPATH)"
-    PATH="$PATH:/usr/local/go/bin"
-fi
+[ -d /usr/local/go/bin ] && export PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/local/go/bin"
 
 
-PATH="$PATH:$HOME/programs/scripts:$HOME/go/bin"
-export PATH
+[ -x "$(command -v go)" ] && export PATH="$PATH:$HOME/go/bin"
 
-export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR=/usr/share/zsh/plugins/zsh-syntax-highlighting/highlighters
 
 export PROFILE=$DOTFILES/.zprofile
 export RC=$DOTFILES/.zshrc
 export ENV=$DOTFILES/.zshenv
-[[ -d $HOME/.cargo ]] && . "$HOME/.cargo/env"
-
-export UNSPLASH_ID="680402"
-export UNSPLASH_ACCESS="vmApm7_xcObRGvWsE5dig7r-vcjEaTnOq4q8eHzpDzA"
-export UNSPLASH_SECRET="Lzda_dUBd7aNZC9Dl2HPPSs6dGypNT47IwSQrrg2gqY"
-
-export YOUTUBE_DATA_KEY="AIzaSyBi80e78ZssZs3YohJcTwLMBU7YenAoITg"
+[ -d "$HOME/.cargo" ] && . "$HOME/.cargo/env"
 
 export XDG_DATA_DIRS="$XDG_DATA_DIRS:/var/lib/flatpak/exports/share:/home/kendfss/.local/share/flatpak/exports/share"
+export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"

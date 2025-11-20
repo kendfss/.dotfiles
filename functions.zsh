@@ -2,7 +2,6 @@
 autoload -Uz add-zsh-hook
 
 goc() {
-  # [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
   case $1 in
   '')
     go doc -u | bat -Pplgo --theme ansi;;
@@ -82,8 +81,8 @@ tcb() {
 }
 
 
-# Make a directory and cd into it
 take() {
+  # Make a directory and cd into it
   mkdir -p $1 && cd $1
 }
 alias mcd=take
@@ -102,8 +101,8 @@ cv1() {
 }
 
 
-# intellegently extract archives based on extension. 
 function extract {
+  # Intellegently extract archives based on extension. 
   local file=$1
   shift
   local dir=$1
@@ -194,13 +193,13 @@ function extract {
          esac
    fi
 }
- 
- 
-# web_search from terminal
+
+
 function web_search() {
+  # Web_search from terminal
   emulate -L zsh
  
-  # define search engine URLS
+  # Define search engine URLS
   typeset -A urls
   local urls=(
     google      "https://www.google.com/search?q="
@@ -208,34 +207,34 @@ function web_search() {
     github      "https://github.com/search?q="
   )
  
-  # check whether the search engine is supported
+  # Check whether the search engine is supported
   if [[ -z "$urls[$1]" ]]; then
     echo "Search engine $1 not supported."
     return 1
   fi
  
-  # search or go to main page depending on number of arguments passed
+  # Search or go to main page depending on number of arguments passed
   if [[ $# -gt 1 ]]; then
-    # build search url:
-    # join arguments passed with '+', then append to search engine URL
+    # Build search url:
+    # Join arguments passed with '+', then append to search engine URL
     local url="${urls[$1]}${(j:+:)@[2,-1]}"
   else
-    # build main page url:
-    # split by '/', then rejoin protocol (1) and domain (2) parts with '//'
+    # Build main page url:
+    # Split by '/', then rejoin protocol (1) and domain (2) parts with '//'
     local url="${(j://:)${(s:/:)urls[$1]}[1,2]}"
   fi
  
   open_command "$url"
 }
  
-#use generalized open command
 function open_command() {
+  # Use generalized open command
   emulate -L zsh
   setopt shwordsplit
  
   local open_cmd
  
-  # define the open command
+  # Define the open command
   case "$OSTYPE" in
     darwin*)  open_cmd='open' ;;
     cygwin*)  open_cmd='cygstart' ;;
@@ -246,57 +245,31 @@ function open_command() {
               ;;
   esac
  
-  # don't use nohup on OSX
+  # Don't use nohup on OSX
   if [[ "$OSTYPE" == darwin* ]]; then
     $open_cmd "$@" &>/dev/null
   else
     nohup $open_cmd "$@" &>/dev/null
   fi
 }
- 
-# Show dots while waiting for tab-completion
-expand-or-complete-with-dots() {
-	# toggle line-wrapping off and back on again
-	[[ -n "$terminfo[rmam]" && -n "$terminfo[smam]" ]] && echoti rmam
-	print -Pn "%{%F{red}......%f%}"
-	[[ -n "$terminfo[rmam]" && -n "$terminfo[smam]" ]] && echoti smam
- 
-	zle expand-or-complete
-	zle redisplay
-}
-zle -N expand-or-complete-with-dots
-bindkey "^I" expand-or-complete-with-dots
-
 
 urlencode() {
-    # urlencode <string>
-
-    local old_lang=$LANG
-    LANG=C
-    
-    local old_lc_collate=$LC_COLLATE
-    LC_COLLATE=C
-
+    # Urlencode <string>
+    local LANG=C
+    local LC_COLLATE=C
     local length="${#1}"
-    for (( i = 0; i < length; i++ )); do
-        local c="${1:$i:1}"
+    for (( arg = 0; i < length; i++ )); do
+        local c="${1:$arg:1}"
         case $c in
             [a-zA-Z0-9.~_-]) printf '%s' "$c" ;;
             *) printf '%%%02X' "'$c" ;;
         esac
     done
-
-    LANG=$old_lang
-    LC_COLLATE=$old_lc_collate
 }
 
+
 reload() {
-  # exec $SHELL
   exec $SHELL -l
-  # source $DOTFILES/.zshrc
-  # . $DOTFILES/aliases.zsh
-  # echo done
-  # fuck
 }
 
 bckp() {
@@ -313,7 +286,7 @@ bckp() {
 }
 
 blank() {
-  for i in {1..$1}; do
+  for arg in {1..$1}; do
     echo ""
   done
 }
@@ -323,7 +296,7 @@ bar() {
   if [[ $2 ]]; then
     char=$2
   fi
-  for i in {1..$1}; do
+  for arg in {1..$1}; do
     printf "%s" "$char"
   done
   print ""
@@ -334,7 +307,7 @@ bar() {
   declare -a chars
   local chars=(\\ /)
   chars=(\# " ")
-  for i in {1..$1}; do
+  for arg in {1..$1}; do
     ind=$(($RANDOM % 2))
     printf "%s" "${chars[$(($ind + 1))]}"
   done
@@ -371,7 +344,6 @@ clone() {
     repo=$(basename "$repo")
     echo "cloning $dev/$repo"
     take "$CLONEDIR/$dev" && git clone $depth "$REPO_HOST/$dev/$repo" "$repo" && cd "$repo" 
-    # take "$CLONEDIR/$dev" && sudo git clone --depth=1 "$REPO_HOST/$dev/$repo" "$repo" && cd "$repo" && 
   done
 }
 
@@ -380,27 +352,20 @@ fork() {
     local dev=$1
     shift 1
   fi
-
   for repo in "$@"; do
     if [[ $repo == *"/"* ]]; then
       local dev=$(basename "$(dirname "$repo")")
     fi
-
     local repo=$(basename "$repo")
-    # echo "cloning $dev/$repo"
     local user="$HOME/gitclone/clones/$USER" 
     mkdir -p "$user" && cd "$user" && gh repo fork "$dev/$repo" && cd "$repo" 2> /dev/null
   done
-  # dev=$USER
-  # repo=$(basename "$1")
-  # take "$HOME/gitclone/clones/$dev" && gh repo fork "$1" && cd "$repo" 2> /dev/null
 }
 
 padd() {
   printf "\n" >> ~/.zprofile
-  for i in "$@"; do
-    printf "%s" "$i" >> ~/.zprofile
-    printf "\n" >> ~/.zprofile
+  for arg in "$@"; do
+    printf "%s\n" "$arg" >> ~/.zprofile
   done
 }
 
@@ -448,38 +413,6 @@ cmd() {
   [[ ${#argv[@]} -gt 0 ]] && echo "using \"$1\" extension. will exit with 1" && touch "cmd/main.$1" && return 1
 }
 
-function argstudy() {
-  # We use "$@" instead of $* to preserve argument-boundary information
-  ARGS=$(getopt -o 'a:l::v' --long 'article:,language::,lang::,verbose' -- "$@") || exit
-  eval "set -- $ARGS"
-
-  while true; do
-      case $1 in
-        (-v|--verbose)
-              ((VERBOSE++)); shift;;
-        (-a|--article)
-              ARTICLE=$2; shift 2;;
-        (-l|--lang|--language)
-              # handle optional: getopt normalizes it into an empty string
-              if [ -n "$2" ]; then
-                local LANG=$2
-              fi
-              shift 2;;
-        (--)  shift; break;;
-        (*)   exit 1;;           # error
-      esac
-  done
-
-  # remaining=("$@")
-
-  [[ -n $VERBOSE ]] && echo "verbose enabled"
-  [[ -n $ARTICLE ]] && echo "ARTICLE enabled"
-  [[ -n $LANG ]]  && echo "LANG enabled"
-
-  echo "Remainders:"
-  echo "$*"
-}
-
 api() {
   mkdir -p api 
   [[ ${#argv[@]} -eq 0 ]] && echo "no extension. created dir but exiting with 1" && return 1
@@ -489,16 +422,97 @@ api() {
   [[ $1 == "marco" ]] || [[ $1 == "mc" ]] && touch "api/core.mc" && return 0
   [[ $1 == "fork" ]] || [[ $1 == "fk" ]] && touch "api/core.fk" && return 0
   [[ ${#argv[@]} -eq 1 ]] && touch "api/core.$1" && return 0
-  # [[ ${#argv[@]} -gt 0 ]] && echo "using \"$1\" extension. will exit with 1" && touch "api/core.$1" && return 1
   echo "using \"$1\" extension. will exit with 1" && touch "api/core.$1" && return 1
 }
 
 add() {
-  git add "$@"
+  local dry=false
+  local visible=false
+  local hidden=false
+  local force=""
+  local help_text=$(cat <<EOF
+usage: ${0} [flags] [args]
+  stage files in a git repository
+  
+  flags:
+    --help               print this message
+    -v, --visible        include non-hidden files that aren't in gitignore
+    -h, --hidden         include hidden files that aren't in gitignore
+    -f, --force          forcefully stage files matched by .gitignore
+    -d, --dry, --dry-run just print the names to the files that would be stage
+
+  args:
+    paths to any files
+
+  examples:
+    # stage your readme
+    $0 README.md
+    # stage hidden and visible files (the order of terms doesn't matter in short flags)
+    $0 -hv
+    # stage all tracked files
+    $0
+EOF
+)
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      '--help') echo "$help_text"; return 0;;
+      '-v'|'--visible') visible=true;;
+      '-h'|'--hidden') hidden=true;;
+      '-d'|'--dry'|'--dry-run') dry=true;;
+      '-f'|'--force') force="-f";;
+      -*) 
+        [[ "$1" == *"v"* ]] && visible=true
+        [[ "$1" == *"h"* ]] && hidden=true
+        [[ "$1" == *"d"* ]] && dry=true
+        [[ "$1" == *"f"* ]] && force="-f"
+        ;;
+      *) break;;  
+    esac
+    shift
+  done
+
+  local files=""
+
+  if [[ $# -gt 0 ]]; then
+    files=$(printf "%s\n" "$@")
+  fi
+
+  if [[ $# -eq 0 ]] && ! $visible && ! $hidden; then
+    files+=$(git status -s | rg '^[ MA]M\s' | awk '{print $2}')$'\n'
+    files+=$(git status -s | rg '^[ R]M\s' | awk '{print $4}')$'\n'
+  fi
+  
+  if $visible; then
+    files+=$(git status -s -- [^.]* 2>/dev/null | awk '{print $2}')$'\n'
+  fi
+  
+  if $hidden; then
+    files+=$(git status -s -- .[^.]* 2>/dev/null | awk '{print $2}')$'\n'
+  fi
+
+  files=$(echo "$files" | rg -v '^\s*$' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sort -u)
+  
+  if [[ -z "$files" ]]; then
+    echo "no changes" >&2
+    return 1
+  fi
+
+  if $dry; then
+    echo "would add:"
+  else
+    echo "$files" | xargs -r git add $force
+    echo "added:"
+  fi
+  
+  echo "$files" | while IFS= read -r file; do
+    [[ -n "$file" ]] && printf "    %s\n" "$file"
+  done
 }
 
 commit() {
-  git commit -m "$@"
+  local msg="$*"
+  git commit -m "$msg"
 }
 
 push() {
@@ -595,7 +609,7 @@ co() {
 }
 
 sha256() {
-  # compute sha256 sum of a file or string if file is not found
+  # Compute sha256 sum of a file or string if file is not found
   local cmd;
   local cut;
   cmd='openssl dgst -sha256 -r'
@@ -611,12 +625,6 @@ rl() {
   done
 }
 
-# md() {
-#   for name in "$@"; do
-#     mkdir -p "$name"
-#   done
-# }
-
 dirof() {
   for name in "$@"; do
     dirname "$(command -v "$name")"
@@ -624,11 +632,10 @@ dirof() {
 }
 
 zdot() {
-  $EDITOR $DOTFILES/(.*(conf|fig|ore|env|rc|file)|*.zsh)
+  $EDITOR "$DOTFILES/(.*(conf|fig|ore|env|rc|file)|*.zsh)"
 }
 
 here() {
-  # $EDITOR "$(pwd)"
   dirname `readlink -f $0`
 }
 
@@ -679,11 +686,11 @@ quietly() {
   done
 }
 
-# stdout() {
-#   cmd=$1
-#   shift 1
-#   $cmd $* &> /dev/stdout | less
-# }
+stdout() {
+  cmd=$1
+  shift 1
+  $cmd $* &> /dev/stdout | less
+}
 
 note() {
   local fname=~/self.notes/notes
@@ -747,10 +754,6 @@ processing() {
   JAVA_HOME=$oldHome
 }
 
-# transopts() {
-#   trans -R
-# }
-
 frep() {
   local root=$1
   local patt=$2
@@ -777,8 +780,6 @@ progrep() {
 
 name_all() {
   local name=$1
-  # args=( "${@[@/$1]}" )
-  # unset "$@[1]"
   local args=( ${@[@]:2} )
   for pth in $args; do 
     mv "$pth" "$(namespacer "$name")"
@@ -823,30 +824,23 @@ __plat() {
 }
 
 plat() {
-  # sudo
   __plat | column -ts:
 }
 
 linkhere() {
-  [[ -z "$@" ]] && items="$(p)"
-  [[ -n "$@" ]] && items=$@
-  # for name in $(p); do
+  [ -z "$@" ] && items="$(p)"
+  [ -n "$@" ] && items=$@
   for name in $items; do
-    [[ -f "$name" ]] && ln -f "$name" .
+    [ -f "$name" ] && ln -f "$name" .
   done
 }
 
-# printf "%s\n" "0x4f4c4c" >> colors.txt
 
 east() {
   for arg in "$@"; do
-    [[ -f "$arg" ]] && bat "$arg" && printf "end of \"%s\"\n" "$arg"
+    [ -f "$arg" ] && bat "$arg" && printf "end of \"%s\"\n" "$arg"
   done
 }
-
-# killfl() {
-#   kill -9 "$(pidof FL64.exe)"
-# }
 
 fl() {
   local pids="$(pgrep FL64\.exe)"
@@ -880,11 +874,9 @@ goup() {
   local groot=$(go env GOROOT) && [[ -z $groot ]] && echo "$0: go root not found" && return 1
   cd "$groot" && echo "cd $groot"
   bckp "$groot" && echo "backup in $groot-bckp"
-  # (git stash && git pull && git stash pop) || echo "$0: bad stash or pull" && cd "$origin" && return 1
   git stash
   git pull
   git stash pop
-  # echo "$0: bad stash or pull" && cd "$origin" && return 1
   cd "$groot/src" && echo "cd \"$groot/src\""
   export GOROOT_BOOTSTRAP=$groot-bckp
   chmod +x ./make.bash
@@ -909,13 +901,6 @@ package() {
     echo "$0 $name" > "$file"
   done
 }
-
-# # $DOTDIR/functions.zh
-# cfg() {
-#   setopt no_nomatch # ignore empty glob results
-#   $EDITOR {$DOTDIR,$DOTDIR/helix}/\{.*\(conf\|fig\|ore\|env\|rc\|file\|toml\),*\.\(zsh\|toml\)\} 2> /dev/null
-#   unsetopt no_nomatch
-# }
 
 cfg() {
   setopt no_nomatch # ignore empty glob results
@@ -963,7 +948,6 @@ rjustify() {
 fetch() {
   local count=0
   for url in "$@"; do
-    # echo "Trying to fetch $url..."
     while ! wget -q "$url"; do
       echo "Failed to fetch ${url##*/}."
       count=1
@@ -1067,12 +1051,6 @@ switch() {
 }
 
 
-# reload-pa() {
-#   # reload PulseAudio
-#   pacmd unload-module module-udev-detect && pacmd load-module module-udev-detect
-# }
-
-
 gofiles() {
   find . -name "*.go" ! -name "*_string.go" ! -name "*_templ.go"
 }
@@ -1092,13 +1070,17 @@ cheat() {
 }
 
 
-hostip() {
-  # return the IP of the host of the given urls
+ipof() {
+  if [ $# = 0 ]; then
+    printf "local:  %s\n" "$(ip addr show | awk '/^\s+inet\s/{print $2}' | tail -n1)"
+    printf "remote: %s\n" "$(curl ipecho.net/plain 2>/dev/null)"
+    return
+  fi
+  # Return the IP of the host of the given urls
   for arg in "$@"; do
     ping -q -c1 -t1 $arg | tr -d '()' | awk '/^PING/{print $3}'
   done
 }
-
 
 gouch() {
   for arg in "$@"; do
@@ -1112,19 +1094,17 @@ flatline() {
 }
 
 nuke() {
-  local pth
-  pth="`pwd`"
+  local pth="`pwd`"
   cd .. && $(command -v rm) -r "$pth"
 }
 
 nukef() {
-  local pth
-  pth="`pwd`"
+  local pth="`pwd`"
   cd .. && $(command -v rm) -rf "$pth"
 }
 
 mass() {
-  du -sh (.|)* 2> /dev/null | sort -h
+  du -sh (.|)* 2>/dev/null | sort -h
 }
 
 weigh() {
@@ -1134,9 +1114,10 @@ weigh() {
 }
 
 gcd() {
-  local name
-  name="$(basename $1)"
-  git clone "$1" && cd "$name"
+  local depth='--depth=1'
+  [ "$1" = "-d" ] && depth='' && shift
+  local name="$(basename "$1")"
+  git clone $depth "$1" && cd "$name"
 }
 
 project() {
@@ -1183,7 +1164,7 @@ gf() {
 }
 
 frc() {
-  # get the frame rate and codec of a given video
+  # Get the frame rate and codec of a given video
   for name in "$@"; do 
     ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,r_frame_rate -of default=noprint_wrappers=1:nokey=1 "$name" | tr '\n' ' ' && echo
   done
@@ -1236,6 +1217,12 @@ trans() {
   done
 }
 
+tunes() {
+  for dir in "$@"; do
+    eval "ls $dir/**.($MUSIC_FORMATS)" | tr '\n' '\0' | xargs -0I{} echo {}
+  done
+}
+
 play() {
   local verbose
   if [ "$1" = "v" ] || [ "$1" = "-v" ]; then
@@ -1266,6 +1253,49 @@ play() {
   # For arguments, shuffle them and play in single instance
   local args=("$@")
   mpv $verbose --no-resume-playback --no-audio-display $shuffle "${args[@]}"
+}
+
+sshplay() {
+    # local ssh_host="$USER@$(ip addr show | awk '/^\s+inet\s/{print $2}' | tail -1)"  # CHANGE THIS
+    local ssh_host="hp17"  # CHANGE THIS
+    local verbose=""
+    local shuffle=true
+    
+    # Parse flags
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            v|-v)
+                verbose="-v"
+                shift
+                ;;
+            -s|--shuffle)
+                shuffle=true
+                shift
+                ;;
+            -n|--no-shuffle)
+                shuffle=false
+                shift
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+    
+    # Build find command based on your original logic
+    local find_cmd='find $(echo "$PLAYPATH" | tr ":" " ") -type f \( -name "*.flac" -o -name "*.mp3" -o -name "*.m4a" -o -name "*.ogg" -o -name "*.opus" -o -name "*.wav" -o -name "*.aif" \)'
+    
+    if [ "$shuffle" = true ]; then
+        find_cmd="$find_cmd | shuf"
+    fi
+    
+    # Stream files over SSH
+    ssh "$ssh_host" "$find_cmd" | while read -r file; do
+        if [ -n "$file" ]; then
+            echo "Streaming: $file"
+            ssh "$ssh_host" "cat '$file'" | mpv $verbose --no-resume-playback --no-audio-display -
+        fi
+    done
 }
 
 sample() {
@@ -1338,7 +1368,7 @@ symlinkDialogue() {
 gg() {
   (( $# )) || { echo "usage: gg pat1 [pat2..]" >&2; return 1 }
 
-  # first arg seeds the file list
+  # First arg seeds the file list
   local files
   files=(${(f)"$(rg -l "$1")"})
   shift
@@ -1351,7 +1381,7 @@ gg() {
 }
 
 goclean() {
-  # clean go's caches and re-fetch dependencies
+  # Clean go's caches and re-fetch dependencies
   local origin="$(pwd)"
   ([ "$1" = "l" ] || [ "$1" = "-l" ] || [ "$1" = "log" ] || [ "$1" = "--log" ]) && du -sh "$HOME/(.|)*" 2> /dev/null | sort -h 
   go clean -x -{test,fuzz,mod}cache
@@ -1390,3 +1420,4 @@ upyet() {
 kff() {
   ps -ef | grep '[f]irefox' | awk '{print $2}' | xargs -I{} kill -9 {}
 }
+

@@ -1,39 +1,19 @@
-#!/usr/bin/env -S zsh
-
 export DOTFILES=$HOME/.dotfiles
+export ZDOTDIR="$DOTFILES"
+PATH="$PATH:$DOTFILES/scripts:$HOME/.local/bin:$HOME/go/bin"
+[ -z "$CLONEDIR" ] && export CLONEDIR=$HOME/gitclone/clones
 
 
 [[ -z $DOTFILES ]] && echo "\$DOTFILES is undefined" && exit 1
 
-if [ ! -d ~/.config ]; then
-    if [ -e ~/.config ]; then
-        echo "$HOME/.config exists and is not a directory" >&2
-        exit 1
-    else
-        mkdir $HOME/.config
-    fi
-fi
-
 source "$DOTFILES/functions.zsh"
 
-
-export ROOT=/data/data/com.termux/files
-
-export PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$HOME/.local/bin:$HOME/go/bin"
-
-for name in "$DOTFILES/scripts"/*; do
-    [ -x "$name" ] || continue
-    target="$ROOT/usr/bin/$(basename "$name")"
-    symlinkDialogue "$name" "$target"
-done
-
-symlinkDialogue "$DOTFILES/glow" "$HOME/.config/glow"
-
-symlinkDialogue "$DOTFILES/helix" "$HOME/.config/helix"
-
+symlinkDialogue $HOME/.{dotfiles,config}/helix
+symlinkDialogue $HOME/.{dotfiles,config}/glow
+symlinkDialogue $HOME/.{dotfiles,termux}/boot
 
 [ ! -e "$HOME/.config/cheat/cheatsheets" ] && mkdir -p "$HOME/.config/cheat/cheatsheets"
-symlinkDialogue "$DOTFILES/personal" "$HOME/.config/cheat/cheatsheets/personal"
+symlinkDialogue ~/.{dotfiles,config/cheat/cheatsheets}/personal
 
 for item in $DOTFILES/.*; do 
   [ -f "$item" ] || continue
@@ -41,30 +21,33 @@ for item in $DOTFILES/.*; do
   symlinkDialogue "$item" "$target"
 done
 
-_rm() {
-  for arg in "$@"; do 
-    [[ -d "$arg" ]] && rm -rf "$arg"
-    [[ -L "$arg" ]] && rm "$arg"
-  done
-}
-
-if [ -z "$CLONEDIR" ]; then
-  export CLONEDIR=$HOME/gitclone/clones
-else
-  mkdir -p $CLONEDIR
-fi
+for name in "$DOTFILES/scripts"/*; do
+    [ -x "$name" ] || continue
+    target="$TERMUX__PREFIX/bin/$(basename "$name")"
+    symlinkDialogue "$name" "$target"
+done
 
 if [[ -n "$(command -v pkg)" ]]; then
   pkg update && pkg upgrade
 
-  pkg install -y openssh zsh{,-completions} tmux helix direnv ripgrep jq termux-services perl glow bat clang || return 1
-  _rm "$DOTFILES/fast-syntax-highlighting" && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$DOTFILES/zsh-syntax-highlighting" 
-  _rm "$DOTFILES/zsh-autosuggestions" && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions "$DOTFILES/zsh-autosuggestions" 
-  # _rm "$HOME/.tmux/plugins" && git clone --depth=1 https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+  pkg install -y openssh fzf zsh tmux helix direnv ripgrep jq termux-services perl glow bat clang fd || return 1
+
+  export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
+  mkdir -p "$ZSH_PLUGINS"
+  for name in zsh-{autosuggestions,syntax-highlighting}; do
+    [ ! -e "$DOTFILES/$name" ] && git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" && source "$ZSH_PLUGINS/$name/$name.zsh"
+  done
+  symlinkDialogue "$ZSH_PLUGINS" "$TERMUX__ROOTFS_DIR/usr/share/zsh/plugins"
+
+  export TMUX_PLUGINS="$HOME/.tmux/plugins"
+  mkdir -p "$TMUX_PLUGINS"
+  [ ! -e "$TMUX_PLUGINS" ] && git clone --depth=1 "https://github.com/tmux-plugins/tpm" "$TMUX_PLUGINS/tpm"
 
 else
   echo "pkg is not available. Make sure you have the package manager for termux installed." && return 1
 fi
+
+export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
 
 echo reloading shell
 reload

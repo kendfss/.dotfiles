@@ -1,9 +1,6 @@
-export SRC=/media/$USER/OLLA
+SRC=/media/$USER/OLLA
 export DOTFILES=$HOME/.dotfiles
 
-
-[[ -z $SRC ]] && echo "\$SRC is undefined" && exit 1
-[[ -z $DOTFILES ]] && echo "\$DOTFILES is undefined" && exit 1
 
 [[ ! -d $DOTFILES ]] && cp -r $SRC/.dotfiles "$(dirname $DOTFILES)"
 
@@ -89,3 +86,5 @@ if [[ -n $(command -v apt) ]]; then
 else
   echo "apt is not installed" && return 1
 fi
+
+export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
