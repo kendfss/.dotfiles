@@ -1,6 +1,52 @@
-local last_id = nil
+function listdir(directory)
+	local i, t, popen = 0, {}, io.popen
+	local pfile = popen('ls -1a "' .. directory .. '"')
+	if pfile then
+		for filename in pfile:lines() do
+			i = i + 1
+			t[i] = filename
+		end
+		pfile:close()
+	end
+	return t
+end
 
+function split(inputstr, sep)
+	if sep == nil then
+		sep = "%s"
+	end
+	local t = {}
+	for str in string.gmatch(inputstr, "([^" .. sep .. "]+)") do
+		table.insert(t, str)
+	end
+	return t
+end
+
+function base_name(path)
+	parts = split(path, "/")
+	return parts[parts.len()]
+end
+
+function on_path(name)
+	local path = os.getenv("PATH")
+	local parts = split(path, ":")
+	for dir in parts do
+		local items = listdir(dir)
+		for item in items do
+			base = base_name(item)
+			if base == name then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+local last_id = nil
 function notify_track()
+	if !on_path("notify-send") then
+		return
+	end
 	local path = mp.get_property("path") or ""
 	local title = mp.get_property("media-title") or ""
 	local id = path .. "|" .. title

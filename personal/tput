@@ -1,0 +1,6 @@
+# get dimensions of current terminal
+```bash
+tput cols              # width
+tput lines             # height
+tput cols lines        # both
+```
