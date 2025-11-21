@@ -44,7 +44,7 @@ end
 
 local last_id = nil
 function notify_track()
-	if !on_path("notify-send") then
+	if not on_path("notify-send") then
 		return
 	end
 	local path = mp.get_property("path") or ""
