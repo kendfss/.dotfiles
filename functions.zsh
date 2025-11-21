@@ -923,11 +923,25 @@ forever() {
 
 
 p() {
-  xclip -o -selection clipboard
+  if [ -n "$(command -v xclip)" ]; then
+    xclip -o -selection clipboard
+  elif [ -n "$(command -v termux-clipboard-get)" ]; then
+    termux-clipboard-get
+  else
+    echo no clipboard getter found
+    return 1
+  fi
 }
 
 c() {
-  xclip -i -selection clipboard
+  if [ -n "$(command -v xclip)" ]; then
+    xclip -i -selection clipboard
+  elif [ -n "$(command -v termux-clipboard-set)" ]; then
+    termux-clipboard-set
+  else
+    echo no clipboard getter found
+    return 1
+  fi
 }
 
 throw() {
