@@ -1,6 +1,6 @@
 function listdir(directory)
 	local i, t, popen = 0, {}, io.popen
-	local pfile = popen('ls -1a "' .. directory .. '"')
+	local pfile = popen('ls -1a "' .. directory .. '" 2>/dev/null')
 	if pfile then
 		for filename in pfile:lines() do
 			i = i + 1
@@ -23,17 +23,17 @@ function split(inputstr, sep)
 end
 
 function base_name(path)
-	parts = split(path, "/")
-	return parts[parts.len()]
+	local parts = split(path, "/")
+	return parts[#parts] -- Fixed: use # operator instead of .len
 end
 
 function on_path(name)
-	local path = os.getenv("PATH")
+	local path = os.getenv("PATH") or ""
 	local parts = split(path, ":")
-	for dir in parts do
+	for _, dir in ipairs(parts) do -- Fixed: use ipairs and proper iteration
 		local items = listdir(dir)
-		for item in items do
-			base = base_name(item)
+		for _, item in ipairs(items) do -- Fixed: use ipairs and proper iteration
+			local base = base_name(item) -- Fixed: declare base as local
 			if base == name then
 				return true
 			end
@@ -47,14 +47,16 @@ function notify_track()
 	if not on_path("notify-send") then
 		return
 	end
+
 	local path = mp.get_property("path") or ""
-	local title = mp.get_property("media-title") or ""
-	local id = path .. "|" .. title
+	local media_title = mp.get_property("media-title") or ""
+	local id = path .. "|" .. media_title
 
 	if id == last_id then
 		return
 	end
 	last_id = id
+
 	-- Try different property names for metadata
 	local title = mp.get_property("media-title")
 		or mp.get_property("metadata/title")
@@ -71,10 +73,13 @@ function notify_track()
 	local year = mp.get_property("metadata/date")
 		or mp.get_property("metadata/YEAR")
 		or mp.get_property("metadata/originaldate")
-		or "Unknown Year"
+		or ""
 
 	-- Build notification
-	local message = string.format("Artist: %s\nAlbum: %s\nYear: %s", artist, album, year)
+	local message = string.format("Artist: %s\nAlbum: %s", artist, album)
+	if year ~= "" then
+		message = message .. "\nYear: " .. year
+	end
 
 	-- Escape for shell
 	title = title:gsub('"', '\\"'):gsub("`", "\\`")
