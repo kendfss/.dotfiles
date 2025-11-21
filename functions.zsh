@@ -820,7 +820,7 @@ __plat() {
   printf "Board:\t%s\n" "$(sudo dmidecode | grep "Product Name:" | cut -d " " -f3- | tail -n 1)"
   printf "Kernel:\t%s\n" "$(uname -r)"
   printf "NetCtl:\t%s\n" "$(lspci | grep "Network controller" | cut -d " " -f4-)"
-  printf "Processor:\t%sx %s\n" "$(cat /proc/cpuinfo | grep 'process' | wc -l)" "$(cat /proc/cpuinfo | grep 'name' | uniq | cut -d" " -f3-)"
+  printf "Processor:\t%sx %s\n" "$(grep 'process' /proc/cpuinfo | wc -l)" "$(grep 'name' /proc/cpuinfo | uniq | cut -d" " -f3-)"
 }
 
 plat() {
