@@ -77,7 +77,10 @@ tpb() {
 }
 
 tcb() {
-  [ -n "$TERMUX__PREFIX" ] && tmux save-buffer - | termux-clipboard-set || return
+  if [ -n "$TERMUX__PREFIX" ]; then
+    tmux save-buffer - | termux-clipboard-set
+    return
+  fi
   tmux save-buffer - | xclip -i -selection clipboard
 }
 
