@@ -1,0 +1,92 @@
+#!/bin/env zsh
+
+
+local verbose=""
+[[ "$1" == "-v" ]] && verbose="-v" && shift
+
+local ssh_host="$1"
+[ -z "$ssh_host" ] && ssh_host="hp17"
+
+
+# Get playlist using null-separated output to handle spaces
+local playlist
+playlist=$(ssh "$ssh_host" '
+PLAYPATH="/home/kendfss/Music:/home/kendfss/.local/share/nicotine/downloads:/music:/mnt/Elements/drive:/mnt/Elements/music"
+echo "$PLAYPATH" | tr ":" "\n" | while IFS= read -r dir; do
+    [ -d "$dir" ] && find "$dir" -type f \( -name "*.mp3" -o -name "*.flac" -o -name "*.wav" -o -name "*.m4a" -o -name "*.ogg" -o -name ".opus" \) -print0 2>/dev/null
+done | shuf -z
+')
+
+# Read null-separated files into array
+local files=()
+while IFS= read -r -d '' file; do
+    files+=("$file")
+done < <(printf '%s' "$playlist")
+
+if [ ${#files[@]} -eq 0 ]; then
+    echo "No files found" >&2
+    return 1
+fi
+
+echo "Playlist loaded with ${#files[@]} songs"
+echo ''
+echo "Each song will play fully, then auto-continue after 3 seconds"
+echo ''
+echo "Press q to interrupt playback, Ctrl+C to quit, or space to pause, at any time\n"
+
+local auto_continue=true
+local timeout=3
+
+for ((i=1; i<=$#files; i++)); do
+    echo ''
+    local next=''
+    local prev=''
+    local file="${files[i]}"
+    local title="$(basename "$file")"
+    [ $i -gt 0 ] && prev="$(basename "${files[i-1]}")"
+    [[ $(( i + 1 )) -le ${#files} ]] && next="$(basename "${files[i+1]}")"
+    echo "🎵 $title"
+    # Play the file
+    if ! ssh "$ssh_host" "cat \"$file\"" | mpv $verbose --no-resume-playback --no-audio-display -; then
+        echo "Error playing $file, continuing..."
+        continue
+    fi
+    # Check if user wants to quit
+    if [ $auto_continue = true ]; then
+        local note=$(cat <<EOF
+Next song in ${timeout} seconds...
+Enter
+    return to play "$next"
+    q      to quit
+    p      to play "$prev" again
+    r      to restart "$title"
+EOF
+)
+        echo ''
+        echo "$note"
+        if read -t $timeout; then
+            case "${=REPLY}" in
+                q|Q)
+                    echo "Quitting..."
+                    break
+                    ;;
+                p|P|'<')
+                    echo "playing previous track"
+                    (( i-- ))
+                    (( i-- ))
+                    ;;
+                r|R)
+                    echo "restarting $(basename "$file")"
+                    (( i-- ))
+                    ;;
+                *)
+                    echo "Playing next song..."
+                    ;;
+            esac
+        else
+            echo "Auto-continuing..."
+        fi
+    fi
+done
+
+echo "Playback finished"
