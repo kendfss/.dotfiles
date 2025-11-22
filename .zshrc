@@ -50,7 +50,7 @@ local CACHEDIR=$DOTFILES/cache                # for storing files like history a
 # https://zsh.sourceforge.io/Doc/Release/Options.html
 # ZSH History
     history() { fc -fl 1 | sk -me; }
-    HISTFILE=$CACHEDIR/history                 # Keep our home directory neat by keeping the histfile somewhere else
+    HISTFILE=$CACHEDIR/history                  # Keep our home directory neat by keeping the histfile somewhere else
     SAVEHIST=10000                              # Big history
     HISTSIZE=10000                              # Big history
     setopt EXTENDED_HISTORY                     # Include more information about when the command was executed, etc
@@ -152,9 +152,6 @@ fi
 if [ -d "$ZSH_PLUGINS" ]; then
     [ ! -d "$TERMUX__PREFIX" ] && source "$ZSH_PLUGINS/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
     source "$ZSH_PLUGINS/zsh-autosuggestions/zsh-autosuggestions.zsh"
-    # for name in zsh-{autosuggestions,syntax-highlighting}; do
-    #     source "$ZSH_PLUGINS/$name/$name.zsh"
-    # done
 fi
 
 [[ $- != *i* ]] && return

@@ -51,7 +51,12 @@ if [[ -n "$(command -v pkg)" ]]; then
     cd "$origin"
     exit 1
   fi
-  # [ ! -e "$TMUX_PLUGINS" ] && git clone --depth=1 "https://github.com/tmux-plugins/tpm" "$TMUX_PLUGINS/tpm"
+
+  export BASH_PLUGINS="$DOTFILES/bash-plugins"
+  mkdir -p "$BASH_PLUGINS"
+  git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git "$DOTFILES/bash-plugins/ble.sh"
+  make -C "$BASH_PLUGINS/ble.sh"
+  source "$BASH_PLUGINS/ble.sh/out/ble.sh"
 
 else
   echo "pkg is not available. Make sure you have the package manager for termux installed." && return 1
