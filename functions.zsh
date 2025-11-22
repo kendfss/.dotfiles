@@ -1510,3 +1510,8 @@ kff() {
   ps -ef | grep '[f]irefox' | awk '{print $2}' | xargs -I{} kill -9 {}
 }
 
+reissue() {
+  local version="$(git tag | tail -1)"
+  [ -n "$1" ] && version="$1"
+  git tag -d "$version" && git push origin :refs/tags/"$version" && git tag "$version" && git push origin "$version"
+}
