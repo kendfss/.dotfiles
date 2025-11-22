@@ -3,7 +3,7 @@
 
 [user]
 	name  = kendfss
-	email = kenneth@kendfss.xyz
+	email = k3ndfss@gmail.com
 
 [alias]
     ignore  = update-index --assume-unchanged
@@ -26,5 +26,5 @@
 [http]
 	cookiefile = ~/.gitcookies
 
-# [url "ssh://git@github.com/"]
-	# insteadOf = https://github.com/
+[credential]
+	helper = store
