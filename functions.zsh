@@ -1515,3 +1515,9 @@ reissue() {
   [ -n "$1" ] && version="$1"
   git tag -d "$version" && git push origin :refs/tags/"$version" && git tag "$version" && git push origin "$version"
 }
+
+assume() {
+  for name in "$@"; do 
+    sudo setfacl -m u:$(whoami):rwx
+  done
+}
