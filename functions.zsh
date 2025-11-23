@@ -1518,6 +1518,6 @@ reissue() {
 
 assume() {
   for name in "$@"; do 
-    sudo setfacl -m u:$(whoami):rwx
+    sudo setfacl -m u:$(whoami):rwx "$name"
   done
 }
