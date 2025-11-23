@@ -1,3 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/sh
+# prevent locking/sleeping
+termux-wake-lock
 # start ssh service
 sshd
