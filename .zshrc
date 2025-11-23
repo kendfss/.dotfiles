@@ -23,10 +23,10 @@ local CACHEDIR=$DOTFILES/cache                # for storing files like history a
 # Completion
     autoload -Uz compinit && compinit
     zstyle ':completion:*' menu select
+    source $DOTFILES/aliases.zsh                         # Load aliases. Done in a seperate file to keep this from getting too long and ugly
     source $DOTFILES/functions.zsh                       # Load misc functions. Done in a seperate file to keep this from getting too long and ugly
     source $DOTFILES/keybindings.zsh                       # Load misc functions. Done in a seperate file to keep this from getting too long and ugly
     [[ -z SKIPPROFILE ]] && source $DOTFILES/.zprofile   # Setup our profile post-login
-    source $DOTFILES/aliases.zsh                         # Load aliases. Done in a seperate file to keep this from getting too long and ugly
     source $DOTFILES/spectrum.zsh                        # Make nice colors available
     source $DOTFILES/prompts.zsh                         # Setup our PS1, PS2, etc.
 

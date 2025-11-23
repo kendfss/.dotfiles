@@ -1519,3 +1519,7 @@ assume() {
     sudo setfacl -m u:$(whoami):rwx "$name"
   done
 }
+
+peek() {
+  sk -em --preview 'bat -p {}'
+}
