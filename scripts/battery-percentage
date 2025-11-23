@@ -1,8 +1,11 @@
 #!/bin/env zsh
 
+local percentage
 if [ -x "$(command -v termux-battery-status)" ]; then
-	termux-battery-status | jq .percentage | rg '\d+' || exit 1
+	percentage="$(termux-battery-status | jq .percentage | rg '\d+')"
 else
-	cat /sys/class/power_supply/BAT0/capacity || exit 1
+	percentage="$(cat /sys/class/power_supply/BAT0/capacity)"
 fi
+
+[ -n percentage ] && printf "%d%%" "$percentage"
 
