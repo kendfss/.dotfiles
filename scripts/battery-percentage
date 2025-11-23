@@ -7,5 +7,5 @@ else
 	percentage="$(cat /sys/class/power_supply/BAT0/capacity)"
 fi
 
-[ -n percentage ] && printf "%d%%" "$percentage"
+[ -n percentage ] && printf "%d%%\n" "$percentage"
 
