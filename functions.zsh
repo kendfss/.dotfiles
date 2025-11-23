@@ -680,10 +680,8 @@ fext() {
 
 quietly() {
   local cmd=$1
-  shift 1
-  for arg in "$@"; do
-    $cmd "$arg" &> /dev/null &
-  done
+  shift
+  $cmd $* &>/dev/null &
 }
 
 stdout() {
