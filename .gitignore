@@ -7,6 +7,7 @@ tmp/
 pending/
 tst/
 tst
+*-bckp
 *-bckp[0-9]
 *.bckp[0-9]
 *.bk
