@@ -1258,13 +1258,12 @@ play() {
     dirs="$(echo "$PLAYPATH" | tr ':' ' ')"
   fi
   for dir in "$dirs"; do
-    for file in "$(find "$dir" -type f  -name "*.flac" -o -name "*.mp3" -o -name "*.m4a" -o -name "*.ogg" -o -name "*.opus" -o -name "*.wav" -o -name "*.aif")"; do
+    while IFS= read -r -d '' file; do
       files+=("$file")
-    done
+    done < <(find "$dir" -type f \( -name "*.flac" -o -name "*.mp3" -o -name "*.m4a" -o -name "*.ogg" -o -name "*.opus" -o -name "*.wav" -o -name "*.aif" \) -print0)
   done
   [ ${#files[@]} -eq 0 ] && echo no files found >&2 && return 1
   [ $count = true ] && echo "$files" | wc -l && return
-  files="$(echo "$files" | tr '\n' '\0')"
   mpv $verbose --no-resume-playback --no-audio-display $shuffle "${files[@]}"
 }
 
