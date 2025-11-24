@@ -1249,8 +1249,8 @@ play() {
       '-s'|'--shuffle') shuffle='--shuffle' && shift;;
       '-c'|'--count') count=true && shift;;
       '-l'|'--list') list=true && shift;;
-      *.(wav|mp3|flac|aac|m4a|ogg|opus|aiff|aif)) files+=("$arg") && shift;;
-      *) dirs+=("$arg") && shift;;
+      *.(wav|mp3|flac|aac|m4a|ogg|opus|aiff|aif)) files+=("$(realpath "$arg")") && shift;;
+      *) dirs+=("$(realpath "$arg")") && shift;;
     esac
   done
   [ $list = true ] && exts ** && return
@@ -1260,7 +1260,7 @@ play() {
   for dir in "$dirs"; do
     while IFS= read -r -d '' file; do
       files+=("$file")
-    done < <(find "$dir" -type f \( -name "*.flac" -o -name "*.mp3" -o -name "*.m4a" -o -name "*.ogg" -o -name "*.opus" -o -name "*.wav" -o -name "*.aif" \) -print0)
+    done < <(find "$dir" -type f \( -iname "*.flac" -o -iname "*.mp3" -o -iname "*.m4a" -o -iname "*.ogg" -o -iname "*.opus" -o -iname "*.wav" -o -iname "*.aif" -iname "*.aiff" \) -print0)
   done
   [ ${#files[@]} -eq 0 ] && echo no files found >&2 && return 1
   [ $count = true ] && echo "$files" | wc -l && return
