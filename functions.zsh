@@ -1500,7 +1500,7 @@ upyet() {
     sleep 10
   done
   local msg="Internet connection is up!"
-  notify-send -t 60000 "$msg" 
+  [ -x "$(command -v notify-send)" ] && notify-send -t 60000 "$msg" 
   echo $msg
 }
 
