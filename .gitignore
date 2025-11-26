@@ -1,4 +1,5 @@
 *.log
+bug.md
 ble.sh/
 mpv/scripts/*.so
 CRUSH.md
