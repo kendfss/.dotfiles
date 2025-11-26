@@ -2,7 +2,11 @@
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR="$DOTFILES"
 PATH="$PATH:$HOME/dartsdk/dart-sdk/bin:$DOTFILES/scripts"
-export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music:/mnt/Elements/drive:/mnt/Elements/music"
+if [ -d "$TERMUX__PREFIX" ]; then
+    export PLAYPATH="$HOME/storage/music"
+else
+    export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music:/mnt/Elements/drive:/mnt/Elements/music"
+fi
 export MUSIC_FORMATS="mp3|m4a|wav|flac|ogg|aif|aiff|opus"
 
 [[ -z "$(command -v which)" ]] && alias which="command -v"
