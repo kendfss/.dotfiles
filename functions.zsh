@@ -234,7 +234,8 @@ function web_search() {
 function open_command() {
   # Use generalized open command
   emulate -L zsh
-  setopt shwordsplit
+  # setopt shwordsplit
+  setopt localoptions shwordsplit
  
   local open_cmd
  
@@ -901,9 +902,9 @@ package() {
 }
 
 cfg() {
-  setopt no_nomatch # ignore empty glob results
+  setopt localoptions no_nomatch # ignore empty glob results
   $EDITOR {$DOTDIR,$DOTDIR/helix}/{.*(conf|fig|ore|env|rc|file|toml),*.(zsh|toml)} 2> /dev/null
-  unsetopt no_nomatch
+  # unsetopt no_nomatch
 }
 
 absmod() {
@@ -1236,35 +1237,45 @@ tunes() {
 }
 
 play() {
-  local verbose
-  local shuffle
-  local dirs=( )
-  local files=( )
-  local list=false
-  local count=false
-  while [ $# -gt 0 ]; do
-    local arg="$1"
-    case "$arg" in
-      '-v'|'--verbose') verbose='-v' &&shift;;
-      '-s'|'--shuffle') shuffle='--shuffle' && shift;;
-      '-c'|'--count') count=true && shift;;
-      '-l'|'--list') list=true && shift;;
-      *.(wav|mp3|flac|aac|m4a|ogg|opus|aiff|aif)) files+=("$(realpath "$arg")") && shift;;
-      *) dirs+=("$(realpath "$arg")") && shift;;
-    esac
-  done
-  [ $list = true ] && exts ** && return
-  if [ 0 = ${#files[@]} ] && [ 0 = ${#dirs} ]; then
-    dirs="$(echo "$PLAYPATH" | tr ':' ' ')"
-  fi
-  for dir in "$dirs"; do
-    while IFS= read -r -d '' file; do
-      files+=("$file")
-    done < <(find "$dir" -type f \( -iname "*.flac" -o -iname "*.mp3" -o -iname "*.m4a" -o -iname "*.ogg" -o -iname "*.opus" -o -iname "*.wav" -o -iname "*.aif" -iname "*.aiff" \) -print0)
-  done
-  [ ${#files[@]} -eq 0 ] && echo no files found >&2 && return 1
-  [ $count = true ] && echo "$files" | wc -l && return
-  mpv $verbose --no-resume-playback --no-audio-display $shuffle "${files[@]}"
+    local verbose
+    local shuffle
+    local dirs=()
+    local files=()
+    local list=false
+    local count=false
+    
+    while [ $# -gt 0 ]; do
+        local arg="$1"
+        case "$arg" in
+            '-v'|'--verbose') verbose='-v' && shift ;;
+            '-s'|'--shuffle') shuffle='--shuffle' && shift ;;
+            '-c'|'--count') count=true && shift ;;
+            '-l'|'--list') list=true && shift ;;
+            *.(wav|mp3|flac|aac|m4a|ogg|opus|aiff|aif)) 
+                files+=("$(realpath "$arg")") && shift ;;
+            *) dirs+=("$(realpath "$arg")") && shift ;;
+        esac
+    done
+    
+    [ $list = true ] && exts ** && return
+    
+    if [ 0 = ${#files[@]} ] && [ 0 = ${#dirs[@]} ]; then
+        dirs=(${(@s;:;)PLAYPATH})
+    fi
+    
+    for dir in "${dirs[@]}"; do
+        dir=$(realpath "$dir")
+        
+        # Single find command for all files recursively
+        while IFS= read -r -d '' file; do
+            files+=("$file")
+        done < <(find "$dir" -type f \( -iname "*.flac" -o -iname "*.mp3" -o -iname "*.m4a" -o -iname "*.ogg" -o -iname "*.opus" -o -iname "*.wav" -o -iname "*.aif" -o -iname "*.aiff" \) -print0 2>/dev/null)
+    done
+    
+    [ $count = true ] && echo ${#files[@]} && return
+    [ ${#files[@]} -eq 0 ] && echo no files found >&2 && return 1
+    
+    mpv $verbose --no-resume-playback --no-audio-display $shuffle -- "${files[@]}"
 }
 
 sample() {
