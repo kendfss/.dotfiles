@@ -76,6 +76,15 @@ tpb() {
   tmux save-buffer -
 }
 
+twb() {
+  if [ -d "$TERMUX__PREFIX" ]; then
+    termux-clipboard-get | tmux load-buffer -
+  else
+    xclip -i -selection clipboard | tmux load-buffer -
+  fi
+}
+
+
 tcb() {
   if [ -n "$TERMUX__PREFIX" ]; then
     tmux save-buffer - | termux-clipboard-set
@@ -938,7 +947,7 @@ c() {
   elif [ -n "$(command -v termux-clipboard-set)" ]; then
     termux-clipboard-set
   else
-    echo no clipboard getter found
+    echo no clipboard setter found
     return 1
   fi
 }
@@ -1257,7 +1266,7 @@ play() {
         esac
     done
     
-    [ $list = true ] && exts ** && return
+    [[ $list == true ]] && exts ** && return
     
     if [ 0 = ${#files[@]} ] && [ 0 = ${#dirs[@]} ]; then
         dirs=(${(@s;:;)PLAYPATH})
@@ -1271,7 +1280,7 @@ play() {
         done < <(find "$dir" -type f \( -iname "*.flac" -o -iname "*.mp3" -o -iname "*.m4a" -o -iname "*.ogg" -o -iname "*.opus" -o -iname "*.wav" -o -iname "*.aif" -o -iname "*.aiff" \) -print0 2>/dev/null)
     done
     
-    [ $count = true ] && echo ${#files[@]} && return
+    [[ $count == true ]] && echo ${#files[@]} && return
     [ ${#files[@]} -eq 0 ] && echo no files found >&2 && return 1
     
     mpv $verbose --no-resume-playback --no-audio-display $shuffle -- "${files[@]}"
@@ -1305,175 +1314,210 @@ sample() {
 }
 
 symlinkDialogue() {
-    local source="$1"
-    local target="$2"
-    local sudo
-    [ -x "$(which sudo 2>/dev/null)" ] && sudo="$(which sudo)"
-    
-    # Validate source exists
-    if [ ! -e "$source" ] && [ ! -L "$source" ]; then
-        echo "Error: Source '$source' does not exist" >&2
-        return 2
+  local real=false
+  local movable=false
+  local removable=false
+  for ((i=0;i<$#;i++)); do
+    case "${argv[$i]}" in
+      '-r'|'--real') real=true && shift && ((i--));;
+      *) continue;;
+    esac
+  done
+  local source="$1"
+  local target="$2"
+  # Validate we have both args
+  if [ -z "$source" ] || [ -z "$target" ]; then
+    echo "Usage: symlinkDialogue [-r|--real] <source> <target>" >&2
+    return 1
+  fi    
+  # Resolve if requested
+  if [[ "$real" == true ]]; then
+    source="$(realpath "$source" 2>/dev/null)" || { echo "Error: Cannot resolve source '$source'" >&2; return 2; }
+    target="$(realpath "$target" 2>/dev/null)" || { echo "Error: Cannot resolve target '$target'" >&2; return 2; }
+  fi
+  local equal=false
+  local sudo=""
+  command -v sudo &>/dev/null && sudo="sudo"
+  
+  # Validate source exists
+  if [ ! -e "$source" ] && [ ! -L "$source" ]; then
+    echo "Error: Source '$source' does not exist" >&2
+    return 2
+  fi
+  
+  # Case 1: Target doesn't exist - simple creation
+  if [ ! -e "$target" ] && [ ! -L "$target" ]; then
+    $sudo ln -s "$source" "$target" && printf 'Linked %s -> %s\n' "$source" "$target"
+    return $?
+  fi
+  
+  # Case 2: Target is already the correct symlink
+  if [ -L "$target" ]; then
+    local current_link
+    current_link="$(readlink "$target")"
+    if [ "$current_link" = "$source" ] || [ "$current_link" = "$(realpath "$(readlink "$source")")" ]; then
+      echo "Symlink already correct: $target -> $source"
+      return 0
     fi
-    
-    # Case 1: Target doesn't exist - simple creation
-    if [ ! -e "$target" ] && [ ! -L "$target" ]; then
-        $sudo ln -s "$source" "$target" && printf 'Linked %s -> %s\n' "$source" "$target"
+  fi
+  
+  # Detailed target analysis
+  local target_type="unknown"
+  local target_details=()
+  
+  if [ -L "$target" ]; then
+    target_type="symlink"
+    target_details+=("points to: $(readlink "$target")")
+    { [ "$(readlink "$target")" = "$source" ] || [ "$(realpath "$(readlink "$target")")" = "$source" ]; } && equal=true
+  elif [ -d "$target" ]; then
+    target_type="directory"
+    target_details+=("children: $(ls -1 "$target" 2>/dev/null | wc -l)")
+    target_details+=("descendants: $(($(find "$target" -maxdepth 1 -printf '%p\n' | wc -l) - 1))")
+  elif [ -f "$target" ]; then
+    local hashCount="$(openssl dgst -sha256 -r "$target" "$source" 2>/dev/null| awk '{print $1}' | sort -u | wc -l)"
+    [ "$hashCount" = "1" ] && equal=true
+    target_type="regular file"
+    local target_size_bytes=$(stat -c%s "$target" 2>/dev/null)
+    local source_size_bytes=$(stat -c%s "$source" 2>/dev/null)
+    local target_size="$(numfmt --to=iec-i --suffix=B "$target_size_bytes" 2>/dev/null || echo "$target_size_bytes B")"
+    local source_size="$(numfmt --to=iec-i --suffix=B "$source_size_bytes" 2>/dev/null || echo "$source_size_bytes B")"
+    local size_message="size: $target_size"
+    if [ "$target_size_bytes" -gt "$source_size_bytes" ]; then
+      size_message="$size_message (bigger)"
+    elif [ "$target_size_bytes" -lt "$source_size_bytes" ]; then
+      size_message="$size_message (smaller)"
+    else
+      size_message="$size_message (same size)"
+    fi
+    target_details+=("$size_message")
+    target_details+=("lines: $(wc -l < "$target" 2>/dev/null || echo "N/A")")
+    target_details+=("hash: $(openssl dgst -sha256 -r "$target" | awk '{print $1}')")
+  elif [ -x "$target" ]; then
+    local hashCount="$(openssl dgst -sha256 -r "$target" "$source" 2>/dev/null| awk '{print $1}' | sort -u | wc -l)"
+    [ "$hashCount" = "1" ] && equal=true
+    local target_size_bytes=$(stat -c%s "$target" 2>/dev/null)
+    local target_size="$(numfmt --to=iec-i --suffix=B "$target_size_bytes" 2>/dev/null || echo "$target_size_bytes B")"
+    target_details+=("size: $target_size")
+  elif [ -b "$target" ]; then
+    target_type="block device"
+  elif [ -c "$target" ]; then
+    target_type="character device"
+  elif [ -p "$target" ]; then
+    target_type="named pipe"
+  elif [ -S "$target" ]; then
+    target_type="socket"
+  fi
+  
+  [[ $equal == true ]] && echo "skipping 'ln -s $source $target' because the source and target were proven equal" && return
+  # Conflict handling - exhaustive analysis
+  echo "Conflict: $target already exists" >&2
+  
+  # Permissions and ownership
+  target_details+=("permissions: $(stat -c "%A %U:%G" "$target" 2>/dev/null || ls -la "$target" | cut -d' ' -f1,3,4)")
+  
+  # Display conflict details
+  echo "  Type: $target_type" >&2
+  for detail in "${target_details[@]}"; do
+    echo "  $detail" >&2
+  done
+  echo "  Desired: symlink pointing to $source" >&2
+  
+  # Interactive resolution with multiple options
+  echo >&2
+  echo "Resolution options:" >&2
+  echo "  o) Overwrite with new symlink" >&2
+  echo "  b) Backup existing and create symlink" >&2
+  if [ "$target_type" = "directory" ] || [ "$target_type" = "regular file" ]; then
+    echo "  m) Move existing to ${target}.old" >&2
+    movable=true
+  fi
+  if [ "$target_type" = "symlink" ]; then
+    echo "  r) Remove current symlink" >&2
+    removable=true
+  fi
+  echo "  s) Skip (do nothing)" >&2
+  echo "  i) Inspect target further" >&2
+  
+  while true; do
+    printf "Choose action [o/b/$([[ $movable == true ]] && echo m/)$([[ $removable == true ]] && echo r/)s/i]: " >&2
+    read -r response
+    case "$response" in
+      o|O)
+        $sudo ln -sf "$source" "$target" && echo "Overwritten: $target -> $source"
         return $?
-    fi
-    
-    # Case 2: Target is already the correct symlink
-    if [ -L "$target" ]; then
-        local current_link
-        current_link="$(readlink "$target")"
-        if [ "$current_link" = "$source" ]; then
-            echo "Symlink already correct: $target -> $source"
-            return 0
+        ;;
+      b|B)
+        local backup="${target}.backup.$(date +%s)"
+        if $sudo mv "$target" "$backup" 2>/dev/null; then
+            echo "Backed up to: $backup"
+            $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
+            return $?
+        else
+            echo "Error: Backup failed" >&2
+            continue
         fi
-    fi
-    
-    # Detailed target analysis
-    local target_type="unknown"
-    local target_details=()
-    
-    if [ -L "$target" ]; then
-        target_type="symlink"
-        target_details+=("points to: $(readlink "$target")")
-    elif [ -d "$target" ]; then
-        target_type="directory"
-        target_details+=("items: $(find "$target" -maxdepth 1 | wc -l | tr -d ' ')")
-    elif [ -f "$target" ]; then
-        local hashCount="$(openssl dgst -sha256 -r "$target" "$source" 2>/dev/null| awk '{print $1}' | uniq | wc -l)"
-        [ "$hashCount" = "1" ] && echo "$source and $target are hash-equivalent files!"
-        target_type="regular file"
-        target_details+=("size: $(du -h "$target" | cut -f1)")
-        target_details+=("lines: $(wc -l < "$target" 2>/dev/null || echo "N/A")")
-        target_details+=("hash: $(openssl dgst -sha256 -r "$target" | awk '{print $1}')")
-    elif [ -x "$target" ]; then
-        local hashCount="$(openssl dgst -sha256 -r "$target" "$source" 2>/dev/null| awk '{print $1}' | uniq | wc -l)"
-        [ "$hashCount" = "1" ] && echo "$source and $target are hash-equivalent executables!"
-        target_details+=("size: $(du -h "$target" | cut -f1)")
-    elif [ -b "$target" ]; then
-        target_type="block device"
-    elif [ -c "$target" ]; then
-        target_type="character device"
-    elif [ -p "$target" ]; then
-        target_type="named pipe"
-    elif [ -S "$target" ]; then
-        target_type="socket"
-    fi
-    
-    # Conflict handling - exhaustive analysis
-    echo "Conflict: $target already exists" >&2
-
-    # Permissions and ownership
-    target_details+=("permissions: $(stat -c "%A %U:%G" "$target" 2>/dev/null || ls -la "$target" | cut -d' ' -f1,3,4)")
-    
-    # Display conflict details
-    echo "  Type: $target_type" >&2
-    for detail in "${target_details[@]}"; do
-        echo "  $detail" >&2
-    done
-    echo "  Desired: symlink pointing to $source" >&2
-    
-    # Interactive resolution with multiple options
-    echo >&2
-    echo "Resolution options:" >&2
-    echo "  o) Overwrite with new symlink" >&2
-    echo "  b) Backup existing and create symlink" >&2
-    if [ "$target_type" = "directory" ] || [ "$target_type" = "regular file" ]; then
-        echo "  m) Move existing to ${target}.old" >&2
-    fi
-    if [ "$target_type" = "symlink" ]; then
-        echo "  r) Remove current symlink" >&2
-    fi
-    echo "  s) Skip (do nothing)" >&2
-    echo "  i) Inspect target further" >&2
-    
-    while true; do
-        printf "Choose action [o/b/m/r/s/i]: " >&2
-        read -r response
-        
-        case "$response" in
-            o|O)
-                $sudo ln -sf "$source" "$target" && echo "Overwritten: $target -> $source"
+        ;;
+      m|M)
+        if [ "$target_type" = "directory" ] || [ "$target_type" = "regular file" ]; then
+            local moved="${target}.old"
+            if $sudo mv "$target" "$moved" 2>/dev/null; then
+                echo "Moved existing to: $moved"
+                $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
                 return $?
-                ;;
-            b|B)
-                local backup="${target}.backup.$(date +%s)"
-                if $sudo mv "$target" "$backup" 2>/dev/null; then
-                    echo "Backed up to: $backup"
-                    $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
-                    return $?
-                else
-                    echo "Error: Backup failed" >&2
-                    continue
-                fi
-                ;;
-            m|M)
-                if [ "$target_type" = "directory" ] || [ "$target_type" = "regular file" ]; then
-                    local moved="${target}.old"
-                    if $sudo mv "$target" "$moved" 2>/dev/null; then
-                        echo "Moved existing to: $moved"
-                        $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
-                        return $?
-                    else
-                        echo "Error: Move failed" >&2
-                        continue
-                    fi
-                else
-                    echo "Invalid option for this file type" >&2
-                    continue
-                fi
-                ;;
-            r|R)
-                if [ "$target_type" = "symlink" ]; then
-                    if $sudo rm "$target" 2>/dev/null; then
-                        echo "Removed existing symlink"
-                        $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
-                        return $?
-                    else
-                        echo "Error: Removal failed" >&2
-                        continue
-                    fi
-                else
-                    echo "Invalid option for this file type" >&2
-                    continue
-                fi
-                ;;
-            s|S)
-                echo "Skipped: $target"
-                return 1
-                ;;
-            i|I)
-                echo "Inspecting $target:" >&2
-                $sudo ls -la "$target" >&2
-                if [ -f "$target" ] && command -v file >/dev/null 2>&1; then
-                    echo "File type: $(file "$target")" >&2
-                fi
-                echo >&2
+            else
+                echo "Error: Move failed" >&2
                 continue
-                ;;
-            *)
-                echo "Invalid option. Please choose o, b, m, r, s, or i." >&2
+            fi
+        else
+            echo "Invalid option for this file type" >&2
+            continue
+        fi
+        ;;
+      r|R)
+        if [ "$target_type" = "symlink" ]; then
+            if $sudo rm "$target" 2>/dev/null; then
+                echo "Removed existing symlink"
+                $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
+                return $?
+            else
+                echo "Error: Removal failed" >&2
                 continue
-                ;;
-        esac
-    done
+            fi
+        else
+            echo "Invalid option for this file type" >&2
+            continue
+        fi
+        ;;
+      s|S)
+        echo "Skipped: $target"
+        return 
+        ;;
+      i|I)
+        echo "Inspecting $target:" >&2
+        $sudo ls -la "$target" >&2
+        if [ -f "$target" ] && command -v file >/dev/null 2>&1; then
+            echo "File type: $(file "$target")" >&2
+        fi
+        echo >&2
+        continue
+        ;;
+      *)
+        echo "Invalid option. Please choose o, b, m, r, s, or i." >&2
+        continue
+        ;;
+    esac
+  done
 }
 
 gg() {
   (( $# )) || { echo "usage: gg pat1 [pat2..]" >&2; return 1 }
-
   # First arg seeds the file list
   local files
   files=(${(f)"$(rg -l "$1")"})
   shift
-
   for pat in "$@"; do
     files=(${(f)"$(rg -l "$pat" -- $files)"})
   done
-
   printf "%s\n" $files
 }
 
@@ -1533,3 +1577,31 @@ assume() {
 peek() {
   sk -em --preview 'bat -p {}'
 }
+
+changes() {
+  local outFile="$(date +'%Y%M%e-%T').changes"
+  local cached=''
+  local files=( )
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -c|--cached) cached='--cached'; shift;;
+      -o|--output) shift; outFile="$1"; shift;;
+      *)
+        if [ -f "$1" ]; then
+          files+=("$1")
+          shift
+        else
+          echo "'$1' isn't a file name or valid flag"
+          return 1
+        fi;;
+    esac
+  done
+  git diff $cached "${files[@]}" >! "$outFile" || return 1
+  local output=''
+  if output="$(crush run "don't modify anything! describe the changes in '$outFile', in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; update: blah, blah, blah; etc: ...;'")"; then
+    echo $output
+    echo $output | c
+  fi
+  rm "$outFile"
+}
+

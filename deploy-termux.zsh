@@ -11,10 +11,9 @@ source "$DOTFILES/functions.zsh" || { echo "couldn't source functions" && exit 1
 
 symlinkDialogue $HOME/.{dotfiles,config}/helix
 symlinkDialogue $HOME/.{dotfiles,config}/glow
+symlinkDialogue $HOME/.{dotfiles,config}/mpv
+symlinkDialogue $HOME/.{dotfiles,config}/cheat
 symlinkDialogue $HOME/.{dotfiles,termux}/boot
-
-[ ! -e "$HOME/.config/cheat/cheatsheets" ] && mkdir -p "$HOME/.config/cheat/cheatsheets"
-symlinkDialogue ~/.{dotfiles,config/cheat/cheatsheets}/personal
 
 for item in $DOTFILES/.*; do 
   [ -f "$item" ] || continue
@@ -37,9 +36,10 @@ if [[ -n "$(command -v pkg)" ]]; then
   mkdir -p "$ZSH_PLUGINS"
   symlinkDialogue "$ZSH_PLUGINS" "$TERMUX__ROOTFS_DIR/usr/share/zsh/plugins"
   for name in zsh-{autosuggestions,syntax-highlighting}; do
-    [ ! -e "$DOTFILES/$name" ] && git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" && source "$ZSH_PLUGINS/$name/$name.zsh"
+    [ ! -e "$ZSH_PLUGINS/$name" ] && git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" && source "$ZSH_PLUGINS/$name/$name.zsh"
   done
-
+  git clone https://github.com/psprint/zsh-sweep "$ZSH_PLUGINS/zsh-sweep" && source "$DOTFILES/.zshrc"
+  
   export TMUX_PLUGINS="$HOME/.tmux/plugins"
   local origin="$(pwd)"
   mkdir -p "$TMUX_PLUGINS"

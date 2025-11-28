@@ -56,3 +56,8 @@ services/*/supervise
 dist/
 helix/runtime/
 services/brightness/.brightness
+cheat/
+!cheat/cheatsheets/personal/**
+!cheat/conf.yml
+!cheat/README.md
+*.changes

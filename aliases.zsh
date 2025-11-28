@@ -1,11 +1,3 @@
-if [[ $(uname) -eq Linux ]]; then
-  [[ -d "$HOME/Android/Sdk" ]] && ANDROID_STUDIO_HOME=$HOME/Android/Sdk/android-studio
-  [[ -d "$ANDROID_STUDIO_HOME" ]] && alias anstu="$ANDROID_STUDIO_HOME/bin/studio.sh"
-  [[ -d "$HOME/Android" ]] && export ANDROID_SDK_ROOT="$HOME/Android/Sdk"
-  [[ -d "$ANDROID_SDK_ROOT" ]] && PATH="$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools"
-  export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/20.1.5948944"
-fi
-
 if [ -x "$(command -v sk)" ] && [ -x "$(command -v fzf)" ]; then
   echo "WARNING both fzf and skim/sk installed!"
 elif [ -x "$(command -v sk)" ]; then
@@ -68,5 +60,18 @@ alias lg="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%
 alias gc="git commit -m"
 alias gst="git status -sb"
 alias checkout="git checkout"
-export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
+# # Search running processes. Usage: psg <process_name>
+alias psg="ps aux $( [[ -n "$(uname -a | grep CYGWIN )" ]] && echo '-W') | grep -i $1"
+# Copy with a progress bar
+alias cpv="rsync -poghb --backup-dir=$TERMUX__PREFIX/tmp/rsync -e /dev/null --progress --" 
+alias lsa='ls -a'
+alias ll='ls -l'
+alias la='ls -la'
+alias md='mkdir -p'
+alias rd='rmdir'
+alias d='dirs -v | head -10'                      # List the last ten directories we've been to this session, no duplicates
+
+# [[ -z "$(command -v which)" ]] && alias which="command -v"
+# [[ -z "$(command -v mkdir)" ]] && alias mkdir="$TERMUX__ROOTFS_DIR/usr/bin/mkdir"
+
 
