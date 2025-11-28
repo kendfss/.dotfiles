@@ -1355,7 +1355,7 @@ symlinkDialogue() {
   if [ -L "$target" ]; then
     local current_link
     current_link="$(readlink "$target")"
-    if [ "$current_link" = "$source" ] || [ "$current_link" = "$(realpath "$(readlink "$source")")" ]; then
+    if [ "$current_link" = "$source" ] || [ "$current_link" = "$(realpath "$(readlink "$source" 2>/dev/null)" 2>/dev/null)" ]; then
       echo "Symlink already correct: $target -> $source"
       return 0
     fi
@@ -1368,7 +1368,7 @@ symlinkDialogue() {
   if [ -L "$target" ]; then
     target_type="symlink"
     target_details+=("points to: $(readlink "$target")")
-    { [ "$(readlink "$target")" = "$source" ] || [ "$(realpath "$(readlink "$target")")" = "$source" ]; } && equal=true
+    { [ "$(readlink "$target")" = "$source" ] || [ "$(realpath "$(readlink "$target" 2>/dev/null)" 2>/dev/null)" = "$source" ]; } && equal=true
   elif [ -d "$target" ]; then
     target_type="directory"
     target_details+=("children: $(ls -1 "$target" 2>/dev/null | wc -l)")
