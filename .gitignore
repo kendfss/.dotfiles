@@ -61,3 +61,4 @@ cheat/
 !cheat/conf.yml
 !cheat/README.md
 *.changes
+.zcompdump
