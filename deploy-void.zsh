@@ -64,7 +64,7 @@ if [[ -n "$(command -v xbps-install)" ]]; then
 
   sudo xbps-install -Syu
 
-  sudo xbps-install -y git zsh acl-progs rsync zsh zsh-doc tmux kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer skim clang-tools-extra lldb || exit 1
+  sudo xbps-install -y git zsh acl-progs rsync zsh zsh-doc tmux kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer skim clang-tools-extra lldb shellcheck || exit 1
   gochain
 
   export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
