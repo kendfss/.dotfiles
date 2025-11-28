@@ -12,10 +12,11 @@ reload() {
 source "$DOTFILES/keybindings.zsh"
 source "$DOTFILES/aliases.zsh"
 
-[ -d $HOME/.cargo ] && . "$HOME/.cargo/env"
+[ -d "$HOME/.cargo" ] && . "$HOME/.cargo/env"
 [ -x "$(command -v direnv)" ] && eval "$(direnv hook bash)"
 
-export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
+PATH="$(echo "$PATH" | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
+export PATH
 
 
 [[ $- != *i* ]] && return
