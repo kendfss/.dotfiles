@@ -1264,8 +1264,7 @@ play() {
     fi
     
     for dir in "${dirs[@]}"; do
-        dir=$(realpath "$dir")
-        
+        dir="$(realpath "$dir")"
         # Single find command for all files recursively
         while IFS= read -r -d '' file; do
             files+=("$file")
