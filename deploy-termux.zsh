@@ -36,9 +36,9 @@ if [[ -n "$(command -v pkg)" ]]; then
   mkdir -p "$ZSH_PLUGINS"
   symlinkDialogue "$ZSH_PLUGINS" "$TERMUX__ROOTFS_DIR/usr/share/zsh/plugins"
   for name in zsh-{autosuggestions,syntax-highlighting}; do
-    [ ! -e "$ZSH_PLUGINS/$name" ] && git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" && source "$ZSH_PLUGINS/$name/$name.zsh"
+    [[ ! -e "$ZSH_PLUGINS/$name" ]] && { git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" && source "$ZSH_PLUGINS/$name/$name.zsh"; }
   done
-  git clone https://github.com/psprint/zsh-sweep "$ZSH_PLUGINS/zsh-sweep" && source "$DOTFILES/.zshrc"
+  [[ ! -e "$ZSH_PLUGINS/zsh-sweep" ]] && { git clone https://github.com/psprint/zsh-sweep "$ZSH_PLUGINS/zsh-sweep" && source "$DOTFILES/.zshrc"; }
   
   export TMUX_PLUGINS="$HOME/.tmux/plugins"
   local origin="$(pwd)"
@@ -54,9 +54,7 @@ if [[ -n "$(command -v pkg)" ]]; then
 
   export BASH_PLUGINS="$DOTFILES/bash-plugins"
   mkdir -p "$BASH_PLUGINS"
-  git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git "$DOTFILES/bash-plugins/ble.sh"
-  make -C "$BASH_PLUGINS/ble.sh"
-  source "$BASH_PLUGINS/ble.sh/out/ble.sh"
+  [[ ! -e "$BASH_PLUGINS/ble.sh" ]] && { git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git "$BASH_PLUGINS/ble.sh" && make -C "$BASH_PLUGINS/ble.sh" && source "$BASH_PLUGINS/ble.sh/out/ble.sh"; }
 
 else
   echo "pkg is not available. Make sure you have the package manager for termux installed." && return 1
