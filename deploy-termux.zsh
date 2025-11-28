@@ -43,7 +43,7 @@ if [[ -n "$(command -v pkg)" ]]; then
   export TMUX_PLUGINS="$HOME/.tmux/plugins"
   local origin="$(pwd)"
   mkdir -p "$TMUX_PLUGINS"
-  if clone tmux-plugins/tpm; then
+  if git clone https://github.com/tmux-plugins/tpm "$TMUX_PLUGINS"; then
     symlinkDialogue "$(pwd)" "$TMUX_PLUGINS/tpm"
     cd "$origin"
   else
