@@ -33,6 +33,7 @@ purer/
 purity/
 .ssh/
 zsh-plugins/
+bash-plugins/
 *.trash
 *.tst
 # go.sum
