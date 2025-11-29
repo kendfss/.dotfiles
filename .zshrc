@@ -20,6 +20,8 @@ zstyle ':chpwd:*' recent-dirs-max 5
 
 export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
 
+[ -d "$TERMUX__PREFIX" ] && [ -z "$(pgrep sshd)" ] && [ -x "$(command -v sshd)" ] && { $DOTFILES/boot/sshd || echo unable to start sshd; }
+
 if [ -d "$DOTFILES/zsh-plugins" ]; then
     export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
 fi
