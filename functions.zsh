@@ -281,9 +281,34 @@ urlencode() {
     done
 }
 
-
 reload() {
+  local all=false
+  { [ "$1" = '-a' ] || [ "$1" = '--all' ]; } && all=true
+  if [ -n "$TMUX" ] && [ $all = true ]; then
+    local session=$(tmux display-message -p '#S')
+    while IFS= read -r pane; do
+      local pid=$(tmux display-message -t "$pane" -p '#{pane_pid}')
+      local child_cmd=$(ps -o cmd= $(ps --ppid "$pid" -o pid= 2>/dev/null) 2>/dev/null)
+      if ! echo "$child_cmd" | grep -qiE 'hx|less|man|more|fzf|sk|vim|nano'; then
+        tmux send-keys -t "$pane" -l 'exec $SHELL -l'
+      fi
+    done < <(tmux list-panes -t "$session" -a -F '#{session_name}:#{window_index}.#{pane_index}')
+    return
+  fi
   exec $SHELL -l
+}
+
+tmux-focus() {
+  local args=($(tmux display-message -p '#{session_name}'))
+  for arg in "$@"; do
+    args+=("$arg")
+  done
+  local sessions="$(tmux list-sessions | awk -F: '{print $1}')"
+  local i=${#args}
+  for session in "${args[@]}"; do
+    sessions="$(echo "$sessions" | grep -v "^$session$")"
+  done
+  echo "$sessions" | xargs -I{} tmux kill-session -t {}
 }
 
 bckp() {
@@ -1596,6 +1621,11 @@ changes() {
         fi;;
     esac
   done
+  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; update: blah, blah, blah; ...;'\n%s\n" "$(git diff $cached)")"
+  echo "$msg" | c
+  echo "$msg" | bat -pldiff --theme ansi
+  return
+  
   git diff $cached "${files[@]}" >! "$outFile" || return 1
   local output=''
   if output="$(crush run "don't modify anything! describe the changes in '$outFile', in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; update: blah, blah, blah; etc: ...;'")"; then
