@@ -329,7 +329,7 @@ bar() {
 }
 
 
-rename() {
+move() {
   local name=$(base)
   cd .. && mv "$name" "$1" && cd "$1" 
 }
