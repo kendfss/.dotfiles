@@ -561,6 +561,7 @@ commit() {
 }
 
 acp() {
+  [ "$1" = '-' ] && { { add && commit "$(p)" && push && return; } || { echo "failed: $?" && return 1; } }
   if [[ -z $1 ]]; then
     argv[1]=\.
   fi
