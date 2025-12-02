@@ -540,7 +540,7 @@ EOF
   
   if [[ -z "$files" ]]; then
     echo "no changes" >&2
-    return 1
+    return 
   fi
 
   if $dry; then
