@@ -85,6 +85,10 @@ twb() {
 }
 
 
+tsb() {
+  tmux save-buffer -
+}
+
 tcb() {
   if [ -n "$TERMUX__PREFIX" ]; then
     tmux save-buffer - | termux-clipboard-set
@@ -291,6 +295,8 @@ reload() {
       local child_cmd=$(ps -o cmd= $(ps --ppid "$pid" -o pid= 2>/dev/null) 2>/dev/null)
       if ! echo "$child_cmd" | grep -qiE 'hx|less|man|more|fzf|sk|vim|nano'; then
         tmux send-keys -t "$pane" -l 'exec $SHELL -l'
+        tmux send-keys -t "$pane" Enter
+        tmux send-keys -t "$pane" C-l
       fi
     done < <(tmux list-panes -t "$session" -a -F '#{session_name}:#{window_index}.#{pane_index}')
     return
@@ -1551,9 +1557,9 @@ goclean() {
   local origin="$(pwd)"
   ([ "$1" = "l" ] || [ "$1" = "-l" ] || [ "$1" = "log" ] || [ "$1" = "--log" ]) && du -sh "$HOME/(.|)*" 2> /dev/null | sort -h 
   go clean -x -{test,fuzz,mod}cache
-  for name in $CLONES/$USER/*; do
-    echo "$name"
-    [ -f "$name/go.mod" ] && cd "$name" && go mod tidy;
+  for name in $CLONES/$USER/**/go.mod; do
+    local dir="$(dirname "$name")"
+    echo "$dir" && cd "$dir" && go mod tidy;
     echo
   done
   ([ "$1" = "l" ] || [ "$1" = "-l" ] || [ "$1" = "log" ] || [ "$1" = "--log" ]) && du -sh "$HOME/(.|)*" 2> /dev/null | sort -h 

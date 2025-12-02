@@ -39,7 +39,7 @@ done
 if [[ -x "$(command -v xbps-install)" ]]; then
   sudo xbps-install -yu xbps || exit 1
   sudo xbps-install -Syu || exit 1
-  sudo xbps-install -Syu git zsh acl-progs rsync zsh tmux kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer skim clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist zathura{,-pdf-mupdf} pandoc psmisc lf coreutils mpv{,-mpris} playerctl nicotine+ lua-language-server StyLua taplo base-devel bat gcc make llvm || exit 1
+  sudo xbps-install -Syu git zsh acl-progs rsync zsh tmux kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer skim clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist zathura{,-pdf-mupdf} pandoc psmisc lf coreutils mpv{,-mpris} playerctl nicotine+ lua-language-server StyLua taplo base-devel bat gcc make llvm xkill xfce4-screenshooter || exit 1
 
   [ -x "$(command -v gochain)" ] && { gochain || { echo gochain exists but could not run it && exit 1; }; }
 	[[ "$(gh auth status | tr '[:upper:]' '[:lower:]')" != *"logged in"* ]] && { gh auth login || exit 1; }
