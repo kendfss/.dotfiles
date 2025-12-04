@@ -304,17 +304,57 @@ reload() {
   exec $SHELL -l
 }
 
-tmux-focus() {
-  local args=($(tmux display-message -p '#{session_name}'))
-  for arg in "$@"; do
-    args+=("$arg")
+focus() {
+  local args=(  )
+  local panes=false
+  local windows=false
+  local sessions=false
+  local eliminate_current=false
+  local dry=false
+  for arg in "$@"; do 
+    case "$arg" in
+      '--panes') panes=true;;
+      '--windows') windows=true;;
+      '--sessions') sessions=true;;
+      '--dry-run') dry=true;;
+      '--eliminate-current') eliminate_current=true;;
+      --*) echo "unrecognized flag: $arg"; return 1;;
+      -*)
+        local found=false
+        [[ "$arg" == *"p"* ]] && panes=true             && found=true && arg="$(echo "$arg" | sed "s/p//g")"
+        [[ "$arg" == *"w"* ]] && windows=true           && found=true && arg="$(echo "$arg" | sed "s/w//g")"
+        [[ "$arg" == *"s"* ]] && sessions=true          && found=true && arg="$(echo "$arg" | sed "s/s//g")"
+        [[ "$arg" == *"d"* ]] && dry=true               && found=true && arg="$(echo "$arg" | sed "s/d//g")"
+        [[ "$arg" == *"e"* ]] && eliminate_current=true && found=true && arg="$(echo "$arg" | sed "s/e//g")"
+
+        ([ "$arg" = "-" ] && [ $found = true ]) && continue
+        echo "unrecognized flag(s): $arg"
+        return 1
+        ;;
+      *) args+=("$arg");;
+    esac
   done
-  local sessions="$(tmux list-sessions | awk -F: '{print $1}')"
-  local i=${#args}
-  for session in "${args[@]}"; do
-    sessions="$(echo "$sessions" | grep -v "^$session$")"
+  local count=0
+  [ $panes = true ]    && ((count++))
+  [ $windows = true ]  && ((count++))
+  [ $sessions = true ] && ((count++))
+  [ $count -ne 1 ]     && echo "must choose ONE of  --panes (-p), --windows (-w), or --sessions (-s)" && return 1
+  local keyword="${panes:+pane}${windows:+window}${sessions:+session}"
+  if [ $eliminate_current = false ]; then
+    args+=("$(tmux display-message -p "#{${keyword}_id}" | sed 's/[^\d]//g')")
+  fi
+  local list="$(tmux list-"${keyword}s" | awk -F: '{print $1}')"
+  [ -n "$list" ] || { echo "couldn't find ${keyword}s"; return 1; }
+  for item in "${args[@]}"; do
+    list="$(echo "$list" | grep -v "^$item$")"
   done
-  echo "$sessions" | xargs -I{} tmux kill-session -t {}
+  if [ $dry = true ]; then
+    printf "would close the following ${keyword}s:\n\t%s\n" "$(echo "$list" | sed 's/^/    /')"
+    return $?
+  else
+    echo "$list" | xargs -I{} tmux kill-$keyword -t {}
+    return $?
+  fi
 }
 
 bckp() {
@@ -561,7 +601,7 @@ commit() {
 }
 
 acp() {
-  [ "$1" = '-' ] && { { add && commit "$(p)" && push && return; } || { echo "failed: $?" && return 1; } }
+  [ "$1" = '-' ] && { { add && commit "$(p)" && push && return; } || { echo "failed: $?" && return 1; }; }
   if [[ -z $1 ]]; then
     argv[1]=\.
   fi
@@ -1642,3 +1682,8 @@ changes() {
   rm "$outFile"
 }
 
+xq() {
+  for arg in "$@"; do
+    xbps query -Rs $arg | rg "] $arg-"
+  done
+}
