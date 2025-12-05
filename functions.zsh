@@ -341,7 +341,7 @@ focus() {
   [ $windows = true ]  && keyword=window  && format='#{window_index}' && ((count++)) 
   [ $sessions = true ] && keyword=session && format='#S'              && ((count++)) 
   [ $count -ne 1 ]     && echo "must choose ONE of  --panes (-p), --windows (-w), or --sessions (-s)" >&2 && return 1
-  local current="$(tmux display-message -p "$format" | sed -E 's/[^0-9]//g')"
+  local current="$(tmux display-message -p "$format")"
   if [ $eliminate_current = false ]; then
     args+=("$current")
   fi
@@ -1672,7 +1672,7 @@ changes() {
         fi;;
     esac
   done
-  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; update: blah, blah, blah; ...;'\n%s\n" "$(git diff $cached)")"
+  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon%s\n" "$(git diff $cached)")"
   echo "$msg" | c
   echo "$msg" | bat -pldiff --theme ansi
   return
