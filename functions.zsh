@@ -86,7 +86,7 @@ twb() {
 
 
 tsb() {
-  tmux save-buffer -
+  tmux load-buffer -
 }
 
 tcb() {
