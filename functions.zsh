@@ -305,12 +305,12 @@ reload() {
 }
 
 focus() {
-  local args=(  )
+  local args=()
   local panes=false
   local windows=false
   local sessions=false
-  local eliminate_current=false
   local dry=false
+  local eliminate_current=false
   for arg in "$@"; do 
     case "$arg" in
       '--panes') panes=true;;
@@ -318,42 +318,46 @@ focus() {
       '--sessions') sessions=true;;
       '--dry-run') dry=true;;
       '--eliminate-current') eliminate_current=true;;
-      --*) echo "unrecognized flag: $arg"; return 1;;
+      --*) echo "unrecognized flag: $arg" >&2; return 1;;
       -*)
         local found=false
-        [[ "$arg" == *"p"* ]] && panes=true             && found=true && arg="$(echo "$arg" | sed "s/p//g")"
-        [[ "$arg" == *"w"* ]] && windows=true           && found=true && arg="$(echo "$arg" | sed "s/w//g")"
-        [[ "$arg" == *"s"* ]] && sessions=true          && found=true && arg="$(echo "$arg" | sed "s/s//g")"
-        [[ "$arg" == *"d"* ]] && dry=true               && found=true && arg="$(echo "$arg" | sed "s/d//g")"
-        [[ "$arg" == *"e"* ]] && eliminate_current=true && found=true && arg="$(echo "$arg" | sed "s/e//g")"
-
-        ([ "$arg" = "-" ] && [ $found = true ]) && continue
-        echo "unrecognized flag(s): $arg"
+        arg="${arg//-/}"
+        [[ "$arg" == *"p"* ]] && panes=true             && found=true && arg="${arg//p/}"
+        [[ "$arg" == *"w"* ]] && windows=true           && found=true && arg="${arg//w/}"
+        [[ "$arg" == *"s"* ]] && sessions=true          && found=true && arg="${arg//s/}"
+        [[ "$arg" == *"d"* ]] && dry=true               && found=true && arg="${arg//d/}"
+        [[ "$arg" == *"e"* ]] && eliminate_current=true && found=true && arg="${arg//e/}"
+        ([ -z "$arg" ] && [ $found = true ]) && continue
+        echo "unrecognized flag(s): $arg" >&2
         return 1
         ;;
       *) args+=("$arg");;
     esac
   done
   local count=0
-  [ $panes = true ]    && ((count++))
-  [ $windows = true ]  && ((count++))
-  [ $sessions = true ] && ((count++))
-  [ $count -ne 1 ]     && echo "must choose ONE of  --panes (-p), --windows (-w), or --sessions (-s)" && return 1
-  local keyword="${panes:+pane}${windows:+window}${sessions:+session}"
+  local keyword=""
+  local format=""
+  [ $panes = true ]    && keyword=pane    && format='#P'              && ((count++)) 
+  [ $windows = true ]  && keyword=window  && format='#{window_index}' && ((count++)) 
+  [ $sessions = true ] && keyword=session && format='#S'              && ((count++)) 
+  [ $count -ne 1 ]     && echo "must choose ONE of  --panes (-p), --windows (-w), or --sessions (-s)" >&2 && return 1
+  local current="$(tmux display-message -p "$format" | sed -E 's/[^0-9]//g')"
   if [ $eliminate_current = false ]; then
-    args+=("$(tmux display-message -p "#{${keyword}_id}" | sed 's/[^\d]//g')")
+    args+=("$current")
   fi
   local list="$(tmux list-"${keyword}s" | awk -F: '{print $1}')"
-  [ -n "$list" ] || { echo "couldn't find ${keyword}s"; return 1; }
+  [ -n "$list" ] || { echo "couldn't find ${keyword}s" >&2; return 1; }
   for item in "${args[@]}"; do
     list="$(echo "$list" | grep -v "^$item$")"
   done
-  if [ $dry = true ]; then
-    printf "would close the following ${keyword}s:\n\t%s\n" "$(echo "$list" | sed 's/^/    /')"
-    return $?
-  else
-    echo "$list" | xargs -I{} tmux kill-$keyword -t {}
-    return $?
+  printf "current $keyword is: $current\nthis would close: %s\n" "$(echo "${=list}" | sed 's/[[:space:]]/, /g')"
+  if [ $dry = false ]; then
+    printf "sure? [Y|n]: "  
+    read -r response
+    case "$response" in
+      [yY]|[yY][eE][sS]|'') echo "$list" | xargs -I{} tmux kill-$keyword -t {}; return $?;;
+      *) return;;
+    esac
   fi
 }
 
@@ -1359,7 +1363,7 @@ play() {
 }
 
 sample() {
-  [ "$1" = "-h" ] && echo "usage: $0 [dir/path - default .] [duration_in_seconds - default 180]" >/dev/stderr && return 0
+  [ "$1" = "-h" ] && echo "usage: $0 [dir/path - default .] [duration_in_seconds - default 180]" >&2 && return 0
   local preview path secs target response fileMode;
   [ "$1" = "-p" ] && preview=true && shift
   path="$(pwd)"
