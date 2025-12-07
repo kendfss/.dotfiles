@@ -1710,3 +1710,33 @@ xr() {
   fi
   return $?
 }
+
+lines() {
+  local files=()
+  local dirs=()
+  for arg in "$@"; do
+    [ -L "$arg" ] && arg="$(realpath "$arg")"
+    if [ -f "$arg" ]; then
+      files+=("$arg")
+      continue
+    fi
+    if [ -d "$arg" ]; then
+      dirs+=("$arg")
+      continue
+    fi
+    printf "'%s' is not a file or directory\n" "$arg" >&2
+    return 1
+  done
+  if [ ${#dirs[@]} -eq 0 -a ${#files[@]} -eq 0 ]; then
+    dirs=("$(pwd)")
+  fi
+  for dir in "${dirs[@]}"; do
+    for name in $dir/(.|)*; do
+      [ -f "$name" ] && files+=("$name")
+    done
+  done
+  files=("${(@fu)files}")  # (f) use newline as separator, (u) unique
+  for file in "${files[@]}"; do
+    printf "%s: %'d lines\n" "$file" "$(wc -l < "$file")"
+  done
+}
