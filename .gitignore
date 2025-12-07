@@ -56,6 +56,9 @@ services/*/supervise
 .secrets
 dist/
 helix/runtime/
+!helix/runtime/queries/go/**
+!helix/runtime/queries/python/**
+!helix/runtime/queries/markdown/**
 services/brightness/.brightness
 cheat/
 !cheat/cheatsheets/personal/**

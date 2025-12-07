@@ -36,7 +36,7 @@ if [ -d "$ZSH_PLUGINS" ]; then
 fi
 
 [[ $- != *i* ]] && return
-if [ -z "$TMUX" ] && [ -z "$SSH_TTY" ] && [ -z "$SSH_CONNECTION" ]; then
+if [ -z "$TMUX" ] && [ -z "$NO_TMUX" ] && [ -z "$SSH_TTY" ] && [ -z "$SSH_CONNECTION" ]; then
     exec tmux
 fi
 

@@ -293,7 +293,7 @@ reload() {
     while IFS= read -r pane; do
       local pid=$(tmux display-message -t "$pane" -p '#{pane_pid}')
       local child_cmd=$(ps -o cmd= $(ps --ppid "$pid" -o pid= 2>/dev/null) 2>/dev/null)
-      if ! echo "$child_cmd" | grep -qiE 'hx|less|man|more|fzf|sk|vim|nano'; then
+      if ! echo "$child_cmd" | grep -qiE 'weechat|hx|less|man|more|fzf|sk|vim|nano'; then
         tmux send-keys -t "$pane" -l 'exec $SHELL -l'
         tmux send-keys -t "$pane" Enter
         tmux send-keys -t "$pane" C-l
@@ -418,13 +418,19 @@ surl() {
 
 clone() {
   local depth="--depth=1"
+  local dev=""
   if [[ "$1" == "-d" ]]; then
     depth=""
     shift 1
   fi
+  [ $# -eq 0 ] && echo no args received && return 1
   if [[ $1 != *"/"* ]]; then
-    local dev="$1"
+    dev="$1"
     shift 1
+  fi
+  if [ $# -eq 0 ]; then
+    argv=("$dev")
+    dev="$USER"
   fi
   for repo in "$@"; do
     if [[ $repo == *"/"* ]]; then
@@ -1690,4 +1696,17 @@ xq() {
   for arg in "$@"; do
     xbps query -Rs $arg | rg "] $arg-"
   done
+}
+
+xi() {
+  sudo xbps-install -Su $*
+}
+
+xr() {
+  if [ $# = 0 ]; then
+    sudo xbps-remove -yoO
+  else
+    sudo xbps-remove $*
+  fi
+  return $?
 }
