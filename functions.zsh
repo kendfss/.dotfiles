@@ -9,17 +9,38 @@ goc() {
     go doc -u -all | bat -Pplgo --theme ansi;;
   '-u')
     shift
+    local count=0
     for arg in "$@"; do
-      go doc -u $arg | bat -Pplgo --theme ansi
+      local blob="$(go doc -u "$arg" >&1)"
+      local blob_length="$(echo "$blob" | wc -l)"
+      if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
+        blob="$(echo "$blob" | tail -$(($blob_length - 1)))"
+      fi
+      echo "$blob" | bat -Pplgo --theme ansi
+      ((count++))
     done;;
   '-all')
     shift
+    local count=0
     for arg in "$@"; do
-      go doc -all $arg | bat -Pplgo --theme ansi
+      local blob="$(go doc -all "$arg" >&1)"
+      local blob_length="$(echo "$blob" | wc -l)"
+      if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
+        blob="$(echo "$blob" | tail -$(($blob_length - 1)))"
+      fi
+      echo "$blob" | bat -Pplgo --theme ansi
+      ((count++))
     done;;
   *)
+    local count=0
     for arg in "$@"; do
-      go doc "$arg" | bat -Pplgo --theme ansi
+      local blob="$(go doc "$arg" >&1)"
+      local blob_length="$(echo "$blob" | wc -l)"
+      if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
+        blob="$(echo "$blob" | tail -$(($blob_length - 1)))"
+      fi
+      echo "$blob" | bat -Pplgo --theme ansi
+      ((count++))
     done;;
   esac
 }
@@ -1678,7 +1699,7 @@ changes() {
         fi;;
     esac
   done
-  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon%s\n" "$(git diff $cached)")"
+  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; impl: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon%s\n" "$(git diff $cached)")"
   echo "$msg" | c
   echo "$msg" | bat -pldiff --theme ansi
   return
