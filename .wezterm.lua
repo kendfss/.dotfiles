@@ -36,8 +36,8 @@ config.selection_word_boundary = " \t\n{}[]()\"'"
 -- Leader key
 config.leader = nil
 
-config.keys = nil
 -- Keybindings
+config.disable_default_key_bindings = true
 config.keys = {
 	-- Font sizing
 	{ key = "Equal", mods = "CTRL", action = wezterm.action.IncreaseFontSize },
@@ -104,6 +104,23 @@ config.keys = {
 				"80%",
 				"-E",
 				"hx ~/.dotfiles/.tmux.conf && tmux source-file ~/.dotfiles/.tmux.conf && tmux display 'tmux conf reloaded!'",
+			}
+			wezterm.run_child_process(cmd)
+		end),
+	},
+	{
+		key = ".",
+		mods = "ALT",
+		action = wezterm.action_callback(function(window, pane)
+			local cmd = {
+				"tmux",
+				"display-popup",
+				"-w",
+				"80%",
+				"-h",
+				"80%",
+				"-E",
+				"cd $HOME/.dotfiles && hx $(read -r files && eval \"echo $files\" | sed 's/^\\([^~]\\)/~\\/.dotfiles\\/\\1/')",
 			}
 			wezterm.run_child_process(cmd)
 		end),
