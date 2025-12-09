@@ -10,11 +10,18 @@ goc() {
   '-u')
     shift
     local count=0
+    local head=""
     for arg in "$@"; do
       local blob="$(go doc -u "$arg" >&1)"
-      local blob_length="$(echo "$blob" | wc -l)"
-      if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
-        blob="$(echo "$blob" | tail -$(($blob_length - 1)))"
+      local blob_head="$(echo "$blob" | head -1)"
+      if [[ "$blob_head" != "$head" ]]; then
+        head="$blob_head"
+        count=0
+      else
+        local blob_length="$(echo "$blob" | wc -l)"
+        if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
+          blob="$(echo "$blob" | tail -$(($blob_length - 1)))"
+        fi
       fi
       echo "$blob" | bat -Pplgo --theme ansi
       ((count++))
@@ -1714,7 +1721,7 @@ changes() {
         fi;;
     esac
   done
-  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; impl: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon%s\n" "$(git diff $cached)")"
+  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; impl: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon. when there are multiple changes, of the same type (ie add|fix|etc), to a bloc|function|script|etc put those changes in parentheses and put that block/function/script/file name before those parentheses\n%s\n" "$(git diff $cached)")"
   echo "$msg" | c
   echo "$msg" | bat -pldiff --theme ansi
   return
