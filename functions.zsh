@@ -1450,6 +1450,9 @@ symlinkDialogue() {
   
   # Case 1: Target doesn't exist - simple creation
   if [ ! -e "$target" ] && [ ! -L "$target" ]; then
+    local target_dir="$(dirname "$target")"
+    [ ! -e "$target_dir" ] && mkdir -p "$target_dir"
+    [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
     $sudo ln -s "$source" "$target" && printf 'Linked %s -> %s\n' "$source" "$target"
     return $?
   fi
@@ -1510,6 +1513,9 @@ symlinkDialogue() {
   elif [ -S "$target" ]; then
     target_type="socket"
   fi
+local target_dir="$(dirname "$target")"
+[ ! -e "$target_dir" ] && mkdir -p "$target_dir"
+[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
   
   [[ $equal == true ]] && echo "skipping 'ln -s $source $target' because the source and target were proven equal" && return
   # Conflict handling - exhaustive analysis
@@ -1545,6 +1551,9 @@ symlinkDialogue() {
     printf "Choose action [o/b/$([[ $movable == true ]] && echo m/)$([[ $removable == true ]] && echo r/)s/i]: " >&2
     read -r response
     case "$response" in
+      local target_dir="$(dirname "$target")"
+      [ ! -e "$target_dir" ] && mkdir -p "$target_dir"
+      [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
       o|O)
         $sudo ln -sf "$source" "$target" && echo "Overwritten: $target -> $source"
         return $?
@@ -1552,6 +1561,9 @@ symlinkDialogue() {
       b|B)
         local backup="${target}.backup.$(date +%s)"
         if $sudo mv "$target" "$backup" 2>/dev/null; then
+          local target_dir="$(dirname "$target")"
+          [ ! -e "$target_dir" ] && mkdir -p "$target_dir"
+          [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
             echo "Backed up to: $backup"
             $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
             return $?
@@ -1564,6 +1576,9 @@ symlinkDialogue() {
         if [ "$target_type" = "directory" ] || [ "$target_type" = "regular file" ]; then
             local moved="${target}.old"
             if $sudo mv "$target" "$moved" 2>/dev/null; then
+              local target_dir="$(dirname "$target")"
+              [ ! -e "$target_dir" ] && mkdir -p "$target_dir"
+              [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
                 echo "Moved existing to: $moved"
                 $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
                 return $?
@@ -1579,6 +1594,9 @@ symlinkDialogue() {
       r|R)
         if [ "$target_type" = "symlink" ]; then
             if $sudo rm "$target" 2>/dev/null; then
+              local target_dir="$(dirname "$target")"
+              [ ! -e "$target_dir" ] && mkdir -p "$target_dir"
+              [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
                 echo "Removed existing symlink"
                 $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
                 return $?
@@ -1715,7 +1733,7 @@ changes() {
 
 xq() {
   for arg in "$@"; do
-    xbps query -Rs $arg | rg "] $arg-"
+    xbps query -Rs $arg | rg "$(printf '] (\w+(-)?)*%s((-)?\w+)*-' "$arg")"
   done
 }
 
@@ -1759,5 +1777,38 @@ lines() {
   files=("${(@fu)files}")  # (f) use newline as separator, (u) unique
   for file in "${files[@]}"; do
     printf "%s: %'d lines\n" "$file" "$(wc -l < "$file")"
+  done
+}
+
+tag() {
+  local artist=''
+  local album=''
+  local title=''
+  local year=''
+  local files=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      '-a'|'--artist') shift && artist="-metadata artist='$1'" && shift && continue;;
+      '-l'|'--album') shift && album="-metadata album='$1'" && shift && continue;;
+      '-t'|'--title') shift && title="-metadata title='$1'" && shift && continue;;
+      '-y'|'--year') shift && year="-metadata year='$1'" && shift && continue;;
+      -*) echo "unrecognized flag: $1" >&2 && return 1;;
+      *)
+        [ -f "$1" ] && files+=("$1") && shift && continue
+        echo "file not found: $1" >&2 && return 1;;
+    esac
+  done
+  if [ -n "$title" -a ${#files[@]} -gt 1 ]; then
+    printf "setting title of more than one file to %s. sure? [yN] " "$title"
+    read -r response
+    case "${=response}" in
+      [yY]|[yY][eE][sS]) :;;
+      *) return 0;;
+    esac
+  fi
+  for file in "${files[@]}"; do
+    local temp="$(mktemp)"
+    ffmpeg -i "$file" $artist $album $title $year -codec copy "$temp" || return $?
+    mv "$temp" "$file" || { local code=$? && echo "failed cleanup: $file" >&2 && return $code; }
   done
 }

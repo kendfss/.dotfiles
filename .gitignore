@@ -66,3 +66,4 @@ cheat/
 !cheat/README.md
 *.changes
 .zcompdump
+.zcompcache

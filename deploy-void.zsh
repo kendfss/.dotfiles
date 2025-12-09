@@ -14,24 +14,25 @@ PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$HOME/.local/bin:$HOME/go/bin"
 for name in "$DOTFILES"/scripts/*; do
     [ -x "$name" ] || continue
     target="/usr/bin/$(basename "$name")"
-    symlinkDialogue "$name" "$target"
+    symlinkDialogue "$name" "$target" || exit $?
 done
 for name in "$DOTFILES"/services/*; do
     [ -d "$name" ] || continue
     local base="$(basename "$name")"
-    symlinkDialogue "$name" "/etc/sv/$base"
-    symlinkDialogue "$name" "/var/service/$base"
+    symlinkDialogue "$name" "/etc/sv/$base"      || exit $?
+    symlinkDialogue "$name" "/var/service/$base" || exit $?
 done
-symlinkDialogue $HOME/.{dotfiles,config}/glow
-symlinkDialogue $HOME/.{dotfiles,config}/mpv
-symlinkDialogue $HOME/.{dotfiles,config}/kitty
-symlinkDialogue $HOME/.{dotfiles,config}/helix
-symlinkDialogue $HOME/.{dotfiles,config}/cheat
+symlinkDialogue $HOME/.{dotfiles,config}/glow        || exit $?
+symlinkDialogue $HOME/.{dotfiles,config}/mpv         || exit $?
+symlinkDialogue $HOME/.{dotfiles,config}/kitty       || exit $?
+symlinkDialogue $HOME/.{dotfiles,config}/helix       || exit $?
+symlinkDialogue $HOME/.{dotfiles,config}/cheat       || exit $?
+symlinkDialogue $HOME/.{dotfiles,/etc}/ly/config.ini || exit $?
 
 for item in "$DOTFILES"/.*; do 
   [ -f "$item" ] || continue
   local target="$HOME/$(basename "$item")"
-  symlinkDialogue "$item" "$target"
+  symlinkDialogue "$item" "$target" || exit $?
 done
 
 [[ -z "$CLONEDIR" ]] && export CLONEDIR=$HOME/gitclone/clones && { mkdir -p $CLONEDIR || { echo "was not able to create \"\$CLONEDIR=$CLONEDIR\"" && exit 1; }; }
@@ -43,7 +44,7 @@ if [[ -x "$(command -v xbps-install)" ]]; then
 
   [ -x "$(command -v gochain)" ] && { gochain || { echo gochain exists but could not run it && exit 1; }; }
 	[[ "$(gh auth status | tr '[:upper:]' '[:lower:]')" != *"logged in"* ]] && { gh auth login || exit 1; }
-  symlinkDialogue {/usr/lib/mpv-mpris,~/.config/mpv/scripts}/mpris.so
+  symlinkDialogue {/usr/lib/mpv-mpris,~/.config/mpv/scripts}/mpris.so || exit $?
 
   echo here
   export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
@@ -52,7 +53,7 @@ if [[ -x "$(command -v xbps-install)" ]]; then
     [[ ! -e "$ZSH_PLUGINS/$name" ]] && { git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" && source "$ZSH_PLUGINS/$name/$name.zsh"; }
   done
   [[ ! -e "$ZSH_PLUGINS/zsh-sweep" ]] && { { git clone https://github.com/psprint/zsh-sweep "$ZSH_PLUGINS/zsh-sweep" && source "$DOTFILES/.zshrc"; } || exit 1; }
-  symlinkDialogue "$ZSH_PLUGINS" "/usr/share/zsh/plugins"
+  symlinkDialogue "$ZSH_PLUGINS" "/usr/share/zsh/plugins" || exit $?
   
   export TMUX_PLUGINS="$HOME/.tmux/plugins"
   mkdir -p "$TMUX_PLUGINS"

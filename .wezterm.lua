@@ -2,8 +2,14 @@ local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 
 -- Font
-config.font = wezterm.font("Cascadia Code PL", { weight = "Bold" })
-config.font_size = 11.0
+-- config.font = wezterm.font("Cascadia Code PL", { weight = "Bold" })
+config.font = wezterm.font("Iosevka Term Slab", { weight = "ExtraBlack" })
+config.font = wezterm.font("Iosevka Term Slab Extended", { weight = "ExtraBlack" })
+config.font = wezterm.font("Iosevka Term Extended", { weight = "ExtraBlack" })
+-- config.font = wezterm.font("Iosevka Term", { weight = "ExtraBlack" })
+config.font_size = 12.0
+config.cell_width = 0.8
+config.line_height = 0.9
 -- config.harfbuzz_features = { "calt=1", "clig=1", "liga=1" } -- ligatures enabled
 
 -- Window and UI

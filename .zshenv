@@ -10,6 +10,7 @@
   export DEVELOPER=$USER
   export GOPATH="$HOME/go"
   export WORKSPACE="$HOME/workspace"
+  export FLPROJECTS="$HOME/Documents/Image-Line/FL Studio/Projects"
   export VIDEOS=$HOME/$([[ $(uname) -eq Linux ]] && echo Videos || echo Movies)
   export MUSIC=$HOME/Music
   export NOTES=$HOME/self.notes

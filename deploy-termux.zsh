@@ -10,22 +10,22 @@ PATH="$PATH:$DOTFILES/scripts:$HOME/.local/bin:$HOME/go/bin"
 
 source "$DOTFILES/functions.zsh" || { echo "couldn't source functions" && exit 1; }
 
-symlinkDialogue $HOME/.{dotfiles,config}/helix
-symlinkDialogue $HOME/.{dotfiles,config}/glow
-symlinkDialogue $HOME/.{dotfiles,config}/mpv
-symlinkDialogue $HOME/.{dotfiles,config}/cheat
-symlinkDialogue $HOME/.{dotfiles,termux}/boot
+symlinkDialogue $HOME/.{dotfiles,config}/helix || exit $?
+symlinkDialogue $HOME/.{dotfiles,config}/glow  || exit $?
+symlinkDialogue $HOME/.{dotfiles,config}/mpv   || exit $?
+symlinkDialogue $HOME/.{dotfiles,config}/cheat || exit $?
+symlinkDialogue $HOME/.{dotfiles,termux}/boot  || exit $?
 
 for item in $DOTFILES/.*; do 
   [ -f "$item" ] || continue
   target="$HOME/$(basename "$item")"
-  symlinkDialogue "$item" "$target"
+  symlinkDialogue "$item" "$target" || exit $?
 done
 
 for name in "$DOTFILES/scripts"/*; do
     [ -x "$name" ] || continue
     target="$TERMUX__PREFIX/bin/$(basename "$name")"
-    symlinkDialogue "$name" "$target"
+    symlinkDialogue "$name" "$target" || exit $?
 done
 
 if [[ -n "$(command -v pkg)" ]]; then
@@ -35,7 +35,7 @@ if [[ -n "$(command -v pkg)" ]]; then
 
   export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
   mkdir -p "$ZSH_PLUGINS"
-  symlinkDialogue "$ZSH_PLUGINS" "$TERMUX__ROOTFS_DIR/usr/share/zsh/plugins"
+  symlinkDialogue "$ZSH_PLUGINS" "$TERMUX__ROOTFS_DIR/usr/share/zsh/plugins" || exit $?
   for name in zsh-{autosuggestions,syntax-highlighting}; do
     [[ ! -e "$ZSH_PLUGINS/$name" ]] && { git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" && source "$ZSH_PLUGINS/$name/$name.zsh"; }
   done
@@ -45,7 +45,7 @@ if [[ -n "$(command -v pkg)" ]]; then
   local origin="$(pwd)"
   mkdir -p "$TMUX_PLUGINS"
   { [ ! -e "$CLONEDIR/tmux-plugins/tpm" ] && { clone tmux-plugins/tpm || { echo "couldn't clone tmux-plugins/tpm"; exit 1; }; }; } || cd "$CLONEDIR/tmux-plugins/tpm"
-  { symlinkDialogue "$(pwd)" "$TMUX_PLUGINS/tpm" && cd "$origin"; } || exit 1
+  { symlinkDialogue "$(pwd)" "$TMUX_PLUGINS/tpm" && cd "$origin"; } || exit $?
 
   export BASH_PLUGINS="$DOTFILES/bash-plugins"
   mkdir -p "$BASH_PLUGINS"
