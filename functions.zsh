@@ -1551,9 +1551,6 @@ local target_dir="$(dirname "$target")"
     printf "Choose action [o/b/$([[ $movable == true ]] && echo m/)$([[ $removable == true ]] && echo r/)s/i]: " >&2
     read -r response
     case "$response" in
-      local target_dir="$(dirname "$target")"
-      [ ! -e "$target_dir" ] && mkdir -p "$target_dir"
-      [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
       o|O)
         $sudo ln -sf "$source" "$target" && echo "Overwritten: $target -> $source"
         return $?
