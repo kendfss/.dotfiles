@@ -6,21 +6,38 @@ goc() {
   '')
     go doc -u | bat -Pplgo --theme ansi;;
   '-ua')
-    go doc -u -all | bat -Pplgo --theme ansi;;
-  '-u')
     shift
     local count=0
     local head=""
     for arg in "$@"; do
-      local blob="$(go doc -u "$arg" >&1)"
-      local blob_head="$(echo "$blob" | head -1)"
+      local blob="$(go doc -u -all "$arg")"
+      local blob_head="$(echo "$blob" | sed -n 1p)"
       if [[ "$blob_head" != "$head" ]]; then
         head="$blob_head"
         count=0
       else
         local blob_length="$(echo "$blob" | wc -l)"
         if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
-          blob="$(echo "$blob" | tail -$(($blob_length - 1)))"
+          blob="$(echo "$blob" | sed '1d')"
+        fi
+      fi
+      echo "$blob" | bat -Pplgo --theme ansi
+      ((count++))
+    done;;
+  '-u')
+    shift
+    local count=0
+    local head=""
+    for arg in "$@"; do
+      local blob="$(go doc -u "$arg")"
+      local blob_head="$(echo "$blob" | sed -n 1p)"
+      if [[ "$blob_head" != "$head" ]]; then
+        head="$blob_head"
+        count=0
+      else
+        local blob_length="$(echo "$blob" | wc -l)"
+        if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
+          blob="$(echo "$blob" | sed '1d')"
         fi
       fi
       echo "$blob" | bat -Pplgo --theme ansi
@@ -29,22 +46,36 @@ goc() {
   '-all')
     shift
     local count=0
+    local head=""
     for arg in "$@"; do
-      local blob="$(go doc -all "$arg" >&1)"
-      local blob_length="$(echo "$blob" | wc -l)"
-      if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
-        blob="$(echo "$blob" | tail -$(($blob_length - 1)))"
+      local blob="$(go doc -all "$arg")"
+      local blob_head="$(echo "$blob" | sed -n 1p)"
+      if [[ "$blob_head" != "$head" ]]; then
+        head="$blob_head"
+        count=0
+      else
+        local blob_length="$(echo "$blob" | wc -l)"
+        if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
+          blob="$(echo "$blob" | sed '1d')"
+        fi
       fi
       echo "$blob" | bat -Pplgo --theme ansi
       ((count++))
     done;;
   *)
     local count=0
+    local head=""
     for arg in "$@"; do
-      local blob="$(go doc "$arg" >&1)"
-      local blob_length="$(echo "$blob" | wc -l)"
-      if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
-        blob="$(echo "$blob" | tail -$(($blob_length - 1)))"
+      local blob="$(go doc "$arg")"
+      local blob_head="$(echo "$blob" | sed -n 1p)"
+      if [[ "$blob_head" != "$head" ]]; then
+        head="$blob_head"
+        count=0
+      else
+        local blob_length="$(echo "$blob" | wc -l)"
+        if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
+          blob="$(echo "$blob" | sed '1d')"
+        fi
       fi
       echo "$blob" | bat -Pplgo --theme ansi
       ((count++))
@@ -1721,7 +1752,7 @@ changes() {
         fi;;
     esac
   done
-  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; impl: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon. when there are multiple changes, of the same type (ie add|fix|etc), to a bloc|function|script|etc put those changes in parentheses and put that block/function/script/file name before those parentheses\n%s\n" "$(git diff $cached)")"
+  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; impl: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon. when there are multiple changes, of the same type (ie add|fix|etc), to a bloc|function|script|etc put those changes in parentheses and put that block/function/script/file name before those parentheses (ie: fix: funcX(blah, blah), fileX(blah, blah, blah); update: funcY blah, fileY(blah, blah blah); etc: ...;)\n%s\n" "$(git diff $cached)")"
   echo "$msg" | c
   echo "$msg" | bat -pldiff --theme ansi
   return
@@ -1733,6 +1764,27 @@ changes() {
     echo $output | c
   fi
   rm "$outFile"
+}
+
+review() {
+  local maxdepth="-maxdepth 1"
+  local exts=()
+  [ $# -eq 0 ] && exts+=("go")
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -w|--walk) maxdepth="" && shift && continue;;
+      -*) echo "unrecognized flag: $1" >&2 && return 1;;
+      *) exts+=("$1") && shift && continue;;
+    esac
+  done
+  echo "review the following files for bugs, simplifications, and architectural/dependency improvements:"
+  for ext in "${exts[@]}"; do
+    find . -type f -iname "*.$ext" ${=maxdepth} 2>/dev/null | while read -r file; do
+      echo "// $file"
+      cat "$file"
+      echo
+    done
+  done
 }
 
 xq() {

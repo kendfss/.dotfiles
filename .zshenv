@@ -36,7 +36,7 @@ dirof_() {
   done
 }
 
-export RUST_BACKTRACE=1
+export RUST_BACKTRACE=full
 
 export PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/bin:$TERMUX__ROOTFS_DIR/bin:$TERMUX__ROOTFS_DIR/usr/sbin:$TERMUX__ROOTFS_DIR/sbin:$TERMUX__ROOTFS_DIR/usr/local/bin"
 
