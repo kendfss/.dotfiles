@@ -23,5 +23,8 @@ bindkey "^[[3~" delete-char
 # bindkey '^[[3;3~' backward-kill-word
 bindkey '^[[3;3~' kill-word
 
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey '^e' edit-command-line
 
 

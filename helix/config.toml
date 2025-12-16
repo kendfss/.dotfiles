@@ -20,7 +20,7 @@ true-color      = true
 [editor.auto-save]
 focus-lost          = true
 after-delay.enable  = true
-after-delay.timeout = 300000
+after-delay.timeout = 3000
 
 [editor.statusline]
 left      = ['mode', 'spinner']

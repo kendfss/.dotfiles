@@ -40,7 +40,7 @@ done
 if [[ -x "$(command -v xbps-install)" ]]; then
   sudo xbps-install -yu xbps || exit 1
   sudo xbps-install -Syu || exit 1
-  sudo xbps-install -Syu git zsh acl-progs rsync zsh tmux kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer skim clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist zathura{,-pdf-mupdf} pandoc psmisc lf coreutils mpv{,-mpris} playerctl nicotine+ lua-language-server StyLua taplo base-devel bat gcc make llvm xkill xfce4-screenshooter || exit 1
+  sudo xbps-install -Syu git zsh acl-progs rsync zsh tmux kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer skim clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist zathura{,-pdf-mupdf} pandoc psmisc lf coreutils mpv{,-mpris} playerctl nicotine+ lua-language-server StyLua taplo base-devel bat gcc make llvm xkill xfce4-screenshooter delta || exit $?
 
   [ -x "$(command -v gochain)" ] && { gochain || { echo gochain exists but could not run it && exit 1; }; }
 	[[ "$(gh auth status | tr '[:upper:]' '[:lower:]')" != *"logged in"* ]] && { gh auth login || exit 1; }
@@ -61,7 +61,7 @@ if [[ -x "$(command -v xbps-install)" ]]; then
   
   type -p curl >/dev/null || (sudo xbps-install -Syu curl)
   
-  sudo xbps-install -Syu python3{,-{sqlparse,wheel,numpy,Pillow,PyAudio,attrs,audioread,binaryornot,bitarray,boolean.py,click,dill,google-{auth{-{httplib2,oauthlib},},api-{core,python-client}},httpx,requests,language-server,path,pandas,pathtools,pip,pipenv,pipx,platformdirs,re-assert,send2trash,tabulate,virtualenv,argcomplete,click,jedi,parsing,parso,userpath,yaml}}
+  sudo xbps-install -Syu python3{,-{sqlparse,wheel,numpy,Pillow,PyAudio,attrs,audioread,binaryornot,bitarray,boolean.py,click,dill,google-{auth{-{httplib2,oauthlib},},api-{core,python-client}},httpx,requests,language-server,path,pandas,pathtools,pip,pipenv,pipx,platformdirs,re-assert,send2trash,tabulate,virtualenv,argcomplete,click,jedi,parsing,parso,userpath,yaml}} || exit $?
   
 	[[ -z "$(command -v npm)" ]] && { { sudo xbps-install -Syu nodejs && sudo npm i -g {bash,awk,yaml}-language-server deno; } || { echo "couldn't install node and npm isn't available" && exit 1; }; }
 	

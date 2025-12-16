@@ -1752,24 +1752,14 @@ changes() {
         fi;;
     esac
   done
-  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; impl: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon. when there are multiple changes, of the same type (ie add|fix|etc), to a bloc|function|script|etc put those changes in parentheses and put that block/function/script/file name before those parentheses (ie: fix: funcX(blah, blah), fileX(blah, blah, blah); update: funcY blah, fileY(blah, blah blah); etc: ...;)\n%s\n" "$(git diff $cached)")"
+  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; impl: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon. when there are multiple changes, of the same type (ie add|fix|etc), to a bloc|function|script|etc put those changes in parentheses and put that block/function/script/file name before those parentheses (ie: fix: funcX(blah, blah), fileX(blah, blah, blah); update: funcY blah, fileY(blah, blah blah); etc: ...;). when stating dependencies just say the name and developer - omit the repository host (ie github.com/kendfss/but -> kendfss/but; golang.org/x/net -> x/net). never include dependencies of dependencies unless they have been updated\n%s\n" "$(git diff $cached)")"
   echo "$msg" | c
-  echo "$msg" | bat -pldiff --theme ansi
-  return
-  
-  git diff $cached "${files[@]}" >! "$outFile" || return 1
-  local output=''
-  if output="$(crush run "don't modify anything! describe the changes in '$outFile', in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; update: blah, blah, blah; etc: ...;'")"; then
-    echo $output
-    echo $output | c
-  fi
-  rm "$outFile"
+  echo "$msg" | delta
 }
 
 review() {
   local maxdepth="-maxdepth 1"
   local exts=()
-  [ $# -eq 0 ] && exts+=("go")
   while [ $# -gt 0 ]; do
     case "$1" in
       -w|--walk) maxdepth="" && shift && continue;;
@@ -1777,6 +1767,7 @@ review() {
       *) exts+=("$1") && shift && continue;;
     esac
   done
+  [ $# -eq 0 ] && exts+=("go")
   echo "review the following files for bugs, simplifications, and architectural/dependency improvements:"
   for ext in "${exts[@]}"; do
     find . -type f -iname "*.$ext" ${=maxdepth} 2>/dev/null | while read -r file; do
@@ -1793,8 +1784,23 @@ xq() {
   done
 }
 
+xqi() {
+  for arg in "$@"; do
+    xbps query -Rs $arg | rg "$(printf '\*] (\w+(-)?)*%s((-)?\w+)*-' "$arg")"
+  done
+}
+
 xi() {
-  sudo xbps-install -Su $*
+  local args=()
+  local update=""
+  while [ $# -gt 0 ]; do
+    if [ "$1" = "-u" ]; then
+      update="-u" && shift && continue
+    else
+      args+=("$1") && shift && continue
+    fi
+  done
+  sudo xbps-install -S $update ${args[@]}
 }
 
 xr() {
