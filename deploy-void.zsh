@@ -22,12 +22,14 @@ for name in "$DOTFILES"/services/*; do
     symlinkDialogue "$name" "/etc/sv/$base"      || exit $?
     symlinkDialogue "$name" "/var/service/$base" || exit $?
 done
-symlinkDialogue $HOME/.{dotfiles,config}/glow        || exit $?
-symlinkDialogue $HOME/.{dotfiles,config}/mpv         || exit $?
-symlinkDialogue $HOME/.{dotfiles,config}/kitty       || exit $?
-symlinkDialogue $HOME/.{dotfiles,config}/helix       || exit $?
-symlinkDialogue $HOME/.{dotfiles,config}/cheat       || exit $?
-symlinkDialogue $HOME/.{dotfiles,/etc}/ly/config.ini || exit $?
+
+symlinkDialogue $HOME/.{dotfiles,config}/glow                 || exit $?
+symlinkDialogue $HOME/.{dotfiles,config}/mpv                  || exit $?
+symlinkDialogue $HOME/.{dotfiles,config}/kitty                || exit $?
+symlinkDialogue $HOME/.{dotfiles,config}/cheat                || exit $?
+symlinkDialogue $HOME/.{dotfiles,/etc}/ly/config.ini          || exit $?
+symlinkDialogue $HOME/.{dotfiles,config}/helix                || exit $?
+symlinkDialogue {$HOME/.dotfiles/config,/.config}/helix       || exit $?
 
 for item in "$DOTFILES"/.*; do 
   [ -f "$item" ] || continue

@@ -1590,15 +1590,18 @@ local target_dir="$(dirname "$target")"
     read -r response
     case "$response" in
       o|O)
+        local target_dir="$(dirname "$target")"
+        [ ! -e "$target_dir" ] && $sudo mkdir -p "$target_dir"
+        [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
         $sudo ln -sf "$source" "$target" && echo "Overwritten: $target -> $source"
         return $?
         ;;
       b|B)
+        local target_dir="$(dirname "$target")"
+        [ ! -e "$target_dir" ] && $sudo mkdir -p "$target_dir"
+        [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
         local backup="${target}.backup.$(date +%s)"
         if $sudo mv "$target" "$backup" 2>/dev/null; then
-          local target_dir="$(dirname "$target")"
-          [ ! -e "$target_dir" ] && mkdir -p "$target_dir"
-          [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
             echo "Backed up to: $backup"
             $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
             return $?
@@ -1609,11 +1612,11 @@ local target_dir="$(dirname "$target")"
         ;;
       m|M)
         if [ "$target_type" = "directory" ] || [ "$target_type" = "regular file" ]; then
+            local target_dir="$(dirname "$target")"
+            [ ! -e "$target_dir" ] && $sudo mkdir -p "$target_dir"
+            [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
             local moved="${target}.old"
             if $sudo mv "$target" "$moved" 2>/dev/null; then
-              local target_dir="$(dirname "$target")"
-              [ ! -e "$target_dir" ] && mkdir -p "$target_dir"
-              [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
                 echo "Moved existing to: $moved"
                 $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
                 return $?
@@ -1628,10 +1631,10 @@ local target_dir="$(dirname "$target")"
         ;;
       r|R)
         if [ "$target_type" = "symlink" ]; then
+            local target_dir="$(dirname "$target")"
+            [ ! -e "$target_dir" ] && $sudo mkdir -p "$target_dir"
+            [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
             if $sudo rm "$target" 2>/dev/null; then
-              local target_dir="$(dirname "$target")"
-              [ ! -e "$target_dir" ] && mkdir -p "$target_dir"
-              [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
                 echo "Removed existing symlink"
                 $sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
                 return $?
