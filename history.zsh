@@ -11,7 +11,7 @@ history() {
   done
   return $code
 }
-  
+
 HISTFILE="$CACHEDIR/history"                  # Keep our home directory neat by keeping the histfile somewhere else
 SAVEHIST=10000                              # Big history
 HISTSIZE=10000                              # Big history

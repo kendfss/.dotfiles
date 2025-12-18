@@ -63,7 +63,7 @@ p = 'paste_clipboard_before'
 a = ['save_selection', 'select_all', ':clipboard-yank', 'jump_backward']
 t = ['find_till_char', 'change_selection_noyank']
 T = ['till_prev_char', 'change_selection_noyank']
-l = ['extend_line', 'trim_selections', ':clipboard-yank']
+l = ['save_selection', 'extend_line', 'trim_selections', ':clipboard-yank', 'jump_backward']
 x = { x = [':clipboard-yank', "delete_selection_noyank"], l = ['extend_line', ':clipboard-yank', 'delete_selection_noyank'] }
 
 [keys.normal.p]

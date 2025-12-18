@@ -126,7 +126,21 @@ config.keys = {
 				"-h",
 				"80%",
 				"-E",
-				"cd $HOME/.dotfiles && hx $(read -r files && eval \"echo $files\" | sed 's/^\\([^~]\\)/~\\/.dotfiles\\/\\1/')",
+				[[
+            cd $HOME/.dotfiles;
+            if command -v sk >/dev/null 2>&1; then
+          		fuzzy_finder=sk
+            elif command -v fzf >/dev/null 2>&1; then
+            	fuzzy_finder=fzf
+            else
+                echo "Error: Neither sk nor fzf found." >&2
+            fi
+            choices=$(git ls-files | $fuzzy_finder -mt index --tac --bind="tab:toggle")
+            if [ ! $? = 0 ]; then
+            	exit $?
+            fi
+            hx "${=choices[@]}"
+        ]],
 			}
 			wezterm.run_child_process(cmd)
 		end),
