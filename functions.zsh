@@ -2,85 +2,55 @@
 autoload -Uz add-zsh-hook
 
 goc() {
-  case $1 in
-  '')
-    go doc -u | bat -Pplgo --theme ansi;;
-  '-ua')
-    shift
-    local count=0
-    local head=""
-    for arg in "$@"; do
-      local blob="$(go doc -u -all "$arg")"
-      local blob_head="$(echo "$blob" | sed -n 1p)"
-      if [[ "$blob_head" != "$head" ]]; then
-        head="$blob_head"
-        count=0
-      else
-        local blob_length="$(echo "$blob" | wc -l)"
-        if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
-          blob="$(echo "$blob" | sed '1d')"
-        fi
+  local change_dir=''
+  local all=''
+  local case=''
+  local cmd=''
+  local http=''
+  local short=''
+  local source=''
+  local unexported=''
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      '') go doc -u | bat -Pplgo --theme ansi; return $?;;
+      '-C'|'--change-dir') shift && change_dir="-C $1" && shift && continue;;
+      '-a'|'-all'|'--all') all='-all' && shift && continue;;
+      '-cmd'|'--cmd') cmd='-cmd' && shift && continue;;
+      '-c'|'--case') case='-c' && shift && continue;;
+      '-http'|'--http') http='-http' && shift && continue;;
+      '-short'|'--short') short='-short' && shift && continue;;
+      '-s'|'-src'|'--src') src='-src' && shift && continue;;
+      '-u'|'--unexported') unexported='-u' && shift && continue;;
+      --*) echo "unrecognized flag: $arg" >&2; return 1;;
+      -*)
+        local found=false
+        local arg="${1//-/}"
+        [[ "$arg" == *"a"* ]] && all='-all' && found=true && arg="${arg//a/}"
+        [[ "$arg" == *"c"* ]] && case='-c' && found=true && arg="${arg//c/}"
+        [[ "$arg" == *"u"* ]] && unexported='-u' && found=true && arg="${arg//u/}"
+        [[ "$arg" == *"s"* ]] && source='-src' && found=true && arg="${arg//s/}"
+        ([ -z "$arg" ] && [ $found = true ]) && shift && continue
+        return 1;;
+      *) break;;
+    esac
+  done
+  local count=0
+  local head=""
+  for arg in "$@"; do
+    local blob="$(go doc $change_dir $all $case $cmd $http $short $source $unexported "$arg")"
+    local blob_head="$(echo "$blob" | sed -n 1p)"
+    if [[ "$blob_head" != "$head" ]]; then
+      head="$blob_head"
+      count=0
+    else
+      local blob_length="$(echo "$blob" | wc -l)"
+      if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
+        blob="$(echo "$blob" | sed '1d')"
       fi
-      echo "$blob" | bat -Pplgo --theme ansi
-      ((count++))
-    done;;
-  '-u')
-    shift
-    local count=0
-    local head=""
-    for arg in "$@"; do
-      local blob="$(go doc -u "$arg")"
-      local blob_head="$(echo "$blob" | sed -n 1p)"
-      if [[ "$blob_head" != "$head" ]]; then
-        head="$blob_head"
-        count=0
-      else
-        local blob_length="$(echo "$blob" | wc -l)"
-        if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
-          blob="$(echo "$blob" | sed '1d')"
-        fi
-      fi
-      echo "$blob" | bat -Pplgo --theme ansi
-      ((count++))
-    done;;
-  '-all')
-    shift
-    local count=0
-    local head=""
-    for arg in "$@"; do
-      local blob="$(go doc -all "$arg")"
-      local blob_head="$(echo "$blob" | sed -n 1p)"
-      if [[ "$blob_head" != "$head" ]]; then
-        head="$blob_head"
-        count=0
-      else
-        local blob_length="$(echo "$blob" | wc -l)"
-        if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
-          blob="$(echo "$blob" | sed '1d')"
-        fi
-      fi
-      echo "$blob" | bat -Pplgo --theme ansi
-      ((count++))
-    done;;
-  *)
-    local count=0
-    local head=""
-    for arg in "$@"; do
-      local blob="$(go doc "$arg")"
-      local blob_head="$(echo "$blob" | sed -n 1p)"
-      if [[ "$blob_head" != "$head" ]]; then
-        head="$blob_head"
-        count=0
-      else
-        local blob_length="$(echo "$blob" | wc -l)"
-        if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
-          blob="$(echo "$blob" | sed '1d')"
-        fi
-      fi
-      echo "$blob" | bat -Pplgo --theme ansi
-      ((count++))
-    done;;
-  esac
+    fi
+    echo "$blob" | bat -Pplgo --theme ansi
+    ((count++))
+  done
 }
 
 poc() {
