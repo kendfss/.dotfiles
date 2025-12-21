@@ -1,0 +1,4 @@
+#/bin/zsh
+
+ps -ef | grep '[f]irefox' | awk '{print $2}' | xargs -I{} kill -9 {}
+

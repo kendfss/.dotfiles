@@ -30,7 +30,9 @@ goc() {
         [[ "$arg" == *"u"* ]] && unexported='-u' && found=true && arg="${arg//u/}"
         [[ "$arg" == *"s"* ]] && source='-src' && found=true && arg="${arg//s/}"
         ([ -z "$arg" ] && [ $found = true ]) && shift && continue
-        return 1;;
+        echo "unrecognized flag(s): $arg" >&2
+        return 1
+        ;;
       *) break;;
     esac
   done
@@ -1687,10 +1689,6 @@ upyet() {
   echo $msg
 }
 
-kff() {
-  ps -ef | grep '[f]irefox' | awk '{print $2}' | xargs -I{} kill -9 {}
-}
-
 reissue() {
   local version="$(git tag | tail -1)"
   [ -n "$1" ] && version="$1"
@@ -1846,4 +1844,34 @@ tag() {
     ffmpeg -i "$file" $artist $album $title $year -codec copy "$temp" || return $?
     mv "$temp" "$file" || { local code=$? && echo "failed cleanup: $file" >&2 && return $code; }
   done
+}
+
+gmt() {
+  go mod tidy
+}
+
+gmi() {
+  go mod init "$REPO_HOST/$USER/$(basename "$(pwd)")"
+}
+
+grab() {
+  for arg in "$@"; do
+    local name="$(namespacer "$(basename "$(echo "$arg" | cut -d'?' -f1)")")"
+    curl "$arg" -o "$name" 2>/dev/null && echo "$name"
+  done
+}
+
+clean() {
+  local blob="$1"
+  shift
+  if (( $# & 1 != 1 )); then
+    echo "must have an even number of (pattern replacement) argument pairs"
+    return 1
+  fi
+  local sed=""
+  while [ $# -gt 0 ]; do
+    sed+="s/$1/$2/g;"
+    shift 2
+  done
+  echo "$blob" | sed $sed
 }
