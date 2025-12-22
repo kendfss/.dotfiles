@@ -10,11 +10,16 @@ PATH="$PATH:$DOTFILES/scripts:$HOME/.local/bin:$HOME/go/bin"
 
 source "$DOTFILES/functions.zsh" || { echo "couldn't source functions" && exit 1; }
 
-symlinkDialogue $HOME/.{dotfiles,config}/helix || exit $?
-symlinkDialogue $HOME/.{dotfiles,config}/glow  || exit $?
-symlinkDialogue $HOME/.{dotfiles,config}/mpv   || exit $?
-symlinkDialogue $HOME/.{dotfiles,config}/cheat || exit $?
-symlinkDialogue $HOME/.{dotfiles,termux}/boot  || exit $?
+for name in "$DOTFILES/.config"/*; do
+  [ -d "$name" ] || continue
+  local base="$(basename "$name")"
+  symlinkDialogue "$name" "$HOME/.config/$base" || exit $?
+done
+# symlinkDialogue $HOME/.{dotfiles,config}/helix || exit $?
+# symlinkDialogue $HOME/.{dotfiles,config}/glow  || exit $?
+# symlinkDialogue $HOME/.{dotfiles,config}/mpv   || exit $?
+# symlinkDialogue $HOME/.{dotfiles,config}/cheat || exit $?
+# symlinkDialogue $HOME/.{dotfiles,termux}/boot  || exit $?
 
 for item in $DOTFILES/.*; do 
   [ -f "$item" ] || continue

@@ -70,9 +70,10 @@ recover() {
 
 ext() {
   for arg in "$@"; do
-    [ -f "$arg" ] && local base="$(basename "$arg")" && local ext="${base##*.}"
-    [ "$ext" = "$base" ] && ext=""
-    echo "$ext";
+    [ ! -f "$arg" ] && continue
+    { local base="$(basename "$arg")" && local ext="${base##*.}"; } || return $?
+    [ "$ext" = "$base" ] && continue
+    echo "$ext"
   done
 }
 

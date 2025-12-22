@@ -86,6 +86,7 @@ export MUSIC_FORMATS="mp3|m4a|wav|flac|ogg|aif|aiff|opus"
 
 export WORDCHARS=${WORDCHARS//[&+;\-_\/=.]}
 
-
+export SKIM_DEFAULT_OPTIONS="-mt index --bind='tab:toggle,alt-a:select-all,alt-d:deselect-all'"
+export FZF_DEFAULT_OPTS="$SKIM_DEFAULT_OPTIONS"
 
 export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"

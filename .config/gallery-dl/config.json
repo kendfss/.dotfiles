@@ -1,0 +1,30 @@
+{
+  "extractor": {
+    "base-directory": "~/gallery-dl/",
+
+    "#": "set global archive file for all extractors",
+    "archive": "~/gallery-dl/archive.sqlite3",
+    "archive-pragma": ["journal_mode=WAL", "synchronous=NORMAL"],
+
+    "path-restrict": {
+      "\\": "_",
+      "/": "-",
+      "|": "_",
+      ":": "_",
+      "*": "_",
+      "?": "_",
+      "\"": "_",
+      "<": "_",
+      ">": "_"
+    },
+
+    "browser": "firefox",
+    "bluesky": {
+      "filename": "{post_id}_{num}.{extension}"
+    },
+    "ytdl": {
+      "enabled": true,
+      "module": "yt-dlp"
+    }
+  }
+}
