@@ -1,0 +1,16 @@
+#!/bin/sh 
+
+# Read JSON blobparse its signature from stdin and parse its signature with jq
+jq '
+  def get_type($val):
+    if $val | type == "array" then
+      { type: "array", elements: (if ($val | length) > 0 then get_type($val[0]) else "unknown" end) }
+    elif $val | type == "object" then
+      { type: "object", fields: (reduce ($val | keys[]) as $k ({}; . + { ($k): get_type($val[$k]) })) }
+    else
+      { type: ($val | type) }
+    end;
+
+  get_type(.)
+'
+

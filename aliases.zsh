@@ -1,11 +1,16 @@
+unalias run-help
+autoload run-help
+
 if [ -x "$(command -v sk)" ] && [ -x "$(command -v fzf)" ]; then
   echo "WARNING both fzf and skim/sk installed!"
 elif [ -x "$(command -v sk)" ]; then
   alias skim=sk
   alias fzf=sk
+  source <(sk --shell zsh)
 elif [ -x "$(command -v fzf)" ]; then
   alias skim=fzf
   alias sk=fzf
+  source <(fzf --zsh)
 else
   echo "neither fzf or skim are installed"
 fi

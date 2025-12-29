@@ -4,10 +4,10 @@
 CACHEDIR="$DOTFILES/cache"                # for storing files like history and zcompdump 
 [ ! -e "$CACHEDIR" ] && mkdir "$CACHEDIR"
 history() {
-  local output="$(fc -fl 1 | sk -met index --tac)"
+  local output="$(fc -flt '' | sk -m -e --tiebreak index --tac)"
   local code=$?
   echo "$output" | while read line; do
-    echo "${${(s: :)line}[4,-1]}"
+    echo "${${(s: :)line}[2,-1]}"
   done
   return $code
 }

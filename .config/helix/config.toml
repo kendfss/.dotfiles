@@ -146,6 +146,7 @@ z         = ['delete_char_forward', 'move_next_word_end', 'move_prev_word_start'
 '|'       = { '|' = 'shell_pipe', '\' = 'shell_pipe_to', '$' = 'shell_keep_pipe', '!' = 'shell_insert_output', 1 = 'shell_append_output' }
 S-left    = 'goto_previous_buffer'
 S-right   = 'goto_next_buffer'
+'A-;'     = 'remove_primary_selection'
 A-w       = ':w!'
 A-S-w     = [':write-all!', ':write-all!', 'normal_mode']
 A-c       = ':clipboard-yank'

@@ -135,7 +135,7 @@ config.keys = {
             else
                 echo "Error: Neither sk nor fzf found." >&2
             fi
-            choices=$(git ls-files | $fuzzy_finder -mt index --tac --bind="tab:toggle")
+            choices=$(git ls-files | $fuzzy_finder -m --tiebreak index --tac --bind="tab:toggle")
             if [ ! $? = 0 ]; then
             	exit $?
             fi

@@ -132,7 +132,12 @@ tcb() {
 
 take() {
   # Make a directory and cd into it
-  mkdir -p $1 && cd $1
+  local mkdir="$(command -v mkdir)"
+  local code=$?
+  [ -z "$mkdir" ] && echo "couldn't find mkdir" >&2 && return $code
+  for arg in "$@"; do
+    $mkdir -p $1 && cd $1
+  done
 }
 alias mcd=take
 
@@ -394,16 +399,22 @@ focus() {
 }
 
 bckp() {
+  local force=false
+  [ "$1" = "-f" -o "$1" = "--force"] && force=true && shift
   local origin=$(pwd)
   local old=$1
   if [[ -z "$old" ]]; then
     old="../$(basename "$(pwd)")"
   fi
   local new="$old-$0"
-  [[ -d $new ]] && echo "already exists" && return 1
-  [[ -f $new ]] && echo "already exists" && return 1
-  [[ -d $old ]] && cp -rf "$old/" "$new" && cd "$origin" && echo "backed up $old to $new"
-  [[ -f $old ]] && cp "$old" "$new" && cd "$origin" && echo "backed up $old to $new"
+  if [ $force = false ]; then
+    [ -e "$new" ] && echo "already exists" >&2 && return 1
+  else
+    [ -f "$new" ] && rm -f "$new"
+    [ -d "$new" ] && rm -rf "$new"
+  fi
+  [[ -d "$old" ]] && cp -rf "$old/" "$new" && cd "$origin" && echo "backed up $old to $new"
+  [[ -f "$old" ]] && cp "$old" "$new" && cd "$origin" && echo "backed up $old to $new"
 }
 
 blank() {
@@ -469,6 +480,8 @@ clone() {
       dev=$(basename "$(dirname "$repo")")
     fi
     repo=$(basename "$repo")
+    local pth="$CLONEDIR/$dev/$repo"
+    [ -d "$pth" ] && echo "already have '$dev/$repo'" >&2 && cd "$pth" && continue
     echo "cloning $dev/$repo"
     take "$CLONEDIR/$dev" && git clone $depth "$REPO_HOST/$dev/$repo" "$repo" && cd "$repo" 
   done
@@ -739,7 +752,11 @@ sha256() {
   cmd='openssl dgst -sha256 -r'
   cut='cut -d " " -f 1'
   for name in "$@"; do
-    ([ -f "$name" ] && openssl dgst -sha256 -r "$name" | cut -d" " -f1) || echo "$name" |  openssl dgst -sha256 -r | cut -d" " -f1
+    if [ -f "$name" ]; then
+      openssl dgst -sha256 -r "$name" | cut -d" " -f1
+      continue
+    fi
+    echo "$name" |  openssl dgst -sha256 -r | cut -d" " -f1
   done
 }
 
