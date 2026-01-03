@@ -19,11 +19,11 @@ fn() {
   fi
   local pipeline='.[].meanings[] | select(.partOfSpeech == %s) | .synonyms[]'
   local def;
-  for pos in $(echo "$result" | jq -r '.[].meanings[] | "\(.partOfSpeech)"' | sort | uniq); do
+  for pos in $(echo "$result" | jq -r '.[].meanings[] | "\(.partOfSpeech)"' | sort -u); do
     local part=$(echo "$result" | jq -r "$(printf "$pipeline" \"$pos\")")
     local entry=''
     if [ -n "$part" ]; then
-      local part=$(echo "$part" | tr ' ' '-' | tr '\n' ' ')
+      local part=$(echo "$part" | tr ' ' '-' | sort -u | tr '\n' ' ')
       local part="${part// \\n}"
       local entry="$pos" && for term in $part; do entry="$(printf "%s\n\t%s" "$entry" "$term")"; done
     fi
@@ -32,9 +32,10 @@ fn() {
       [ -z "$def" ] && def="$entry"
     fi
   done
-  [ -z "$def" ] && def="no results"
-  [ -z $echo ] && notify-send -t 60000 "$word -" "$def" && return
+  [ -z "$def" ] && def="no results" && code=1
+  [ -z $echo ] && notify-send -t 60000 "$word -" "$def" && return 
   echo "$def"
+  return $code
 }
 
 fn "$@"

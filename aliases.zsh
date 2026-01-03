@@ -1,5 +1,8 @@
 unalias run-help
 autoload run-help
+alias help=run-help
+alias .="cd $DOTFILES"
+alias sed="sed -E"
 
 if [ -x "$(command -v sk)" ] && [ -x "$(command -v fzf)" ]; then
   echo "WARNING both fzf and skim/sk installed!"

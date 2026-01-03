@@ -14,8 +14,8 @@ name             = "go"
 scope            = "source.go"
 auto-format      = true
 file-types       = ["go", "kage"]
-formatter        = { command = "zsh", args = ["-c", 'gofumpt | goimports -local "github.com/kendfss/$(basename $PWD)"'] }
-language-servers = ["gopls", "lsp-ai", "golangci-lint-lsp"]
+language-servers = ["gopls", "golangci-lint-lsp"]
+formatter        = { command = "fmtgo" }
 
 [language-server.golangci-lint-lsp]
 command = "golangci-lint-langserver"
@@ -164,4 +164,8 @@ name        = "yaml"
 scope       = "source.yaml"
 file-types  = ["yaml", "yml"]
 formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "yaml"] }
+auto-format = true
+
+[[language]]
+name        = "c"
 auto-format = true

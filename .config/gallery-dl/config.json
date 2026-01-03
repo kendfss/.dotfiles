@@ -24,6 +24,9 @@
     "bluesky": {
       "filename": "{post_id}_{num}.{extension}"
     },
+    "instagram": {
+      "filename": "{post_id}_{num}.{extension}"
+    },
     "ytdl": {
       "enabled": true,
       "module": "yt-dlp"

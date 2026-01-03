@@ -24,7 +24,7 @@
 
 # Python/UV related
   VIRTUAL_ENV=$HOME/.venv
-  [ -d $VIRTUAL_ENV ] && export VIRTUAL_ENV && source $VIRTUAL_ENV/bin/activate
+  [ -d "$VIRTUAL_ENV" ] && export VIRTUAL_ENV && source "$VIRTUAL_ENV/bin/activate"
 
 export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.cache/dart-sdk/bin:$HOME/.cache/vscode/bin:$DOTFILES/scripts"
 export DICTAPI="https://api.dictionaryapi.dev/api/v2/entries/en_GB"
@@ -89,4 +89,4 @@ export WORDCHARS=${WORDCHARS//[&+;\-_\/=.]}
 export SKIM_DEFAULT_OPTIONS="-m --tiebreak index --bind='tab:toggle,alt-a:select-all,alt-d:deselect-all'"
 export FZF_DEFAULT_OPTS="$SKIM_DEFAULT_OPTIONS"
 
-export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
+export PATH="$(echo "$PATH" | sed 's/::/:/g' | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"

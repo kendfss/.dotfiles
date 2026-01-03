@@ -68,3 +68,4 @@ services/brightness/.brightness
 *.changes
 .zcompdump
 .zcompcache
+*.go.md

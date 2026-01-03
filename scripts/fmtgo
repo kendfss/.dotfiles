@@ -1,0 +1,29 @@
+#!/bin/sh
+
+
+modpath="$REPO_HOST/$USER/$(basename "$PWD")"
+
+
+if [ $# = 0 ]; then
+    input=$(cat) # Capture all stdin
+
+    output=$(printf '%s' "$input" | gofumpt -e)
+    code=$?
+    [ $code = 0 ] || { printf '%s' "$input" && echo gofumpt failed >&2 && exit $code; }
+
+    final=$(printf '%s' "$output" | goimports -e -local "$modpath")
+    code=$?
+    [ $code = 0 ] || { printf '%s' "$output" && echo goimports failed >&2 && exit $code; }
+
+    printf '%s\n' "$final"
+else
+    output=$(gofumpt -e "$@")
+    code=$?
+    [ $code = 0 ] || { echo gofumpt failed >&2 && exit $code; }
+
+    final=$(printf '%s' "$output" | goimports -e -local "$modpath")
+    code=$?
+    [ $code = 0 ] || { echo goimports failed >&2 && exit $code; }
+
+    printf '%s\n' "$final"
+fi
