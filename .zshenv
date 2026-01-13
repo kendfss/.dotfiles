@@ -1,35 +1,37 @@
 # Set important shell variables
-  export EDITOR=hx                            # Set default editor
-  export PAGER=less                           # Set default pager
-  export LESS="-R"                            # Set the default options for less 
-  export LANG="en_GB.UTF-8"                   # I'm not sure who looks at this, but I know it's good to set in general
-  export GOFMT=gofumpt
-  export CLONEDIR=$HOME/gitclone/clones
-  export CLONES=$HOME/gitclone/clones
-  export REPO_HOST=https://github.com
-  export DEVELOPER=$USER
-  export GOPATH="$HOME/go"
-  export WORKSPACE="$HOME/workspace"
-  export FLPROJECTS="$HOME/Documents/Image-Line/FL Studio/Projects"
-  export VIDEOS=$HOME/$([[ $(uname) -eq Linux ]] && echo Videos || echo Movies)
-  export MUSIC=$HOME/Music
-  export NOTES=$HOME/self.notes
-  export POSTS=$NOTES/posts
-  export HARDWARECLOCK=localtime
-  export DOTFILES=$HOME/.dotfiles
-  export CONFIG=$HOME/.config
-  if [ -x "$(command -v clang)" ]; then
-    export CC="$(which clang)"
-  fi
+export EDITOR=hx                            # Set default editor
+export VISUAL=hx                            # Set default editor
+export PAGER=less                           # Set default pager
+export LESS="-R"                            # Set the default options for less 
+export LANG="en_GB.UTF-8"                   # I'm not sure who looks at this, but I know it's good to set in general
+export GOFMT=gofumpt
+export CLONEDIR=$HOME/gitclone/clones
+export CLONES=$HOME/gitclone/clones
+export REPO_HOST=https://github.com
+export DEVELOPER=$USER
+export GOPATH="$HOME/go"
+export WORKSPACE="$HOME/workspace"
+export FLPROJECTS="$HOME/Documents/Image-Line/FL Studio/Projects"
+export VIDEOS="$HOME/$({ [ "$(uname)" = "Linux" ] && echo Videos; } || echo Movies)"
+export MUSIC=$HOME/Music
+export NOTES=$HOME/self.notes
+export POSTS=$NOTES/posts
+export HARDWARECLOCK=localtime
+export DOTFILES=$HOME/.dotfiles
+export ZDOTDIR="$DOTFILES"
+export CONFIG=$HOME/.config
+
+if [ -x "$(command -v clang)" ]; then
+  CC="$(which clang)" && export CC
+fi
 
 # Python/UV related
-  VIRTUAL_ENV=$HOME/.venv
-  [ -d "$VIRTUAL_ENV" ] && export VIRTUAL_ENV && source "$VIRTUAL_ENV/bin/activate"
+[ -d "$HOME/.venv" ] && export VIRTUAL_ENV=$HOME/.venv && source "$HOME"/.venv/bin/activate
 
 export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.cache/dart-sdk/bin:$HOME/.cache/vscode/bin:$DOTFILES/scripts"
 export DICTAPI="https://api.dictionaryapi.dev/api/v2/entries/en_GB"
 
-dirof_() {
+_dirof() {
   for name in "$@"; do
     pth=$(dirname "$(command -v "$name")")
     echo "$pth"
@@ -46,8 +48,8 @@ if [[ $(uname) = Darwin ]]; then
 fi
 
 if [[ -x $(command -v node) ]]; then
-    export PATH="$PATH:$(dirof_ node)"
-    export PATH="$PATH:$(dirof_ npm)"
+    export PATH="$PATH:$(_dirof node)"
+    export PATH="$PATH:$(_dirof npm)"
 fi
 
 [ -d /usr/local/go/bin ] && export PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/local/go/bin"
@@ -74,8 +76,7 @@ fi
 [ -d "$TERMUX__ROOTFS_DIR" ] && export PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/local/bin:$TERMUX__ROOTFS_DIR/usr/bin"
 [ -d "$HOME/.elan" ] && export PATH="$PATH:$HOME/.elan/bin"
 
-export DOTFILES=$HOME/.dotfiles
-export ZDOTDIR="$DOTFILES"
+
 PATH="$PATH:$HOME/dartsdk/dart-sdk/bin:$DOTFILES/scripts"
 if [ -d "$TERMUX__PREFIX" ]; then
     export PLAYPATH="$HOME/storage/music"
@@ -84,7 +85,7 @@ else
 fi
 export MUSIC_FORMATS="mp3|m4a|wav|flac|ogg|aif|aiff|opus"
 
-export WORDCHARS=${WORDCHARS//[&+;\-_\/=.]}
+export WORDCHARS=${WORDCHARS//[&+;\-_\/=.\|]}
 
 export SKIM_DEFAULT_OPTIONS="-m --tiebreak index --bind='tab:toggle,alt-a:select-all,alt-d:deselect-all'"
 export FZF_DEFAULT_OPTS="$SKIM_DEFAULT_OPTIONS"

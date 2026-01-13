@@ -156,12 +156,16 @@ config.keys = {
 	-- Leader key bindings
 	{ key = "c", mods = "CTRL|SHIFT", action = wezterm.action.SpawnTab("CurrentPaneDomain") },
 	{ key = "x", mods = "CTRL|SHIFT", action = wezterm.action.CloseCurrentPane({ confirm = true }) },
+
+	-- -- Pass through Alt+Arrow keys to the terminal
+	-- { key = "LeftArrow", mods = "ALT", action = wezterm.action.SendKey({ key = "LeftArrow", mods = "ALT" }) },
+	-- { key = "RightArrow", mods = "ALT", action = wezterm.action.SendKey({ key = "RightArrow", mods = "ALT" }) },
 }
 
 config.hyperlink_rules = {
 	-- Default URL pattern
 	{
-		regex = [[\b\w+://[\w.-]+\.[a-z]{2,15}\S*\b]],
+		regex = [[\b\w+(-\w+)*://[\w.-]+(\.[a-z]{2,15})?\S*\b]],
 		format = "$0",
 	},
 	-- GitHub issues/PRs

@@ -1,21 +1,29 @@
-unalias run-help
-autoload run-help
-alias help=run-help
+if [[ "$SHELL" = *"zsh" ]]; then
+  [[ "$(type run-help)" = *"alias"* ]] && unalias run-help
+  autoload run-help
+  alias help=run-help
+fi
+
 alias .="cd $DOTFILES"
+alias ~="cd $HOME"
 alias sed="sed -E"
+alias upper='tr "[:lower:]" "[:upper:]"' 
+alias lower='tr "[:upper:]" "[:lower:]"' 
+alias words='tr -cs "[:alpha:]" "\n"'
+alias freqs='sort | uniq -c | sort -n'
 
 if [ -x "$(command -v sk)" ] && [ -x "$(command -v fzf)" ]; then
-  echo "WARNING both fzf and skim/sk installed!"
+  echo "WARNING both fzf and skim/sk installed!" >&2
 elif [ -x "$(command -v sk)" ]; then
   alias skim=sk
   alias fzf=sk
   source <(sk --shell zsh)
 elif [ -x "$(command -v fzf)" ]; then
-  alias skim=fzf
-  alias sk=fzf
+  skim() { fzf "$@"; }
+  sk() { fzf "$@"; }
   source <(fzf --zsh)
 else
-  echo "neither fzf or skim are installed"
+  echo "neither fzf or skim are installed" >&2
 fi
 
 if ! command -v rg &>/dev/null; then
@@ -31,7 +39,7 @@ alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of com
 alias pull='git pull'
 alias push='git push'
 alias zt=zathura
-alias pt=ptpython
+alias pt=ptipython
 alias lst="ls --time=ctime"
 alias treec="tree | c && p"
 alias cl="clear; ls"

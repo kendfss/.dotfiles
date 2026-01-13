@@ -14,16 +14,14 @@ expand-or-complete-with-dots() {
 zle -N expand-or-complete-with-dots
 bindkey "^I" expand-or-complete-with-dots
 
-# bindkey "^H" kill-word
 bindkey "^[[1;3C" forward-word
 bindkey "^[[1;3D" backward-word
 bindkey "^[[1~" beginning-of-line
 bindkey "^[[4~" end-of-line
 bindkey "^[[3~" delete-char
-# bindkey '^[[3;3~' backward-kill-word
 bindkey '^[[3;3~' kill-word
 
-autoload -U edit-command-line
+[[ $0 = *"zsh" ]] && autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '^e' edit-command-line
 

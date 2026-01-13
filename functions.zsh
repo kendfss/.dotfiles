@@ -21,7 +21,7 @@ goc() {
       '-short'|'--short') short='-short' && shift && continue;;
       '-s'|'-src'|'--src') src='-src' && shift && continue;;
       '-u'|'--unexported') unexported='-u' && shift && continue;;
-      --*) echo "unrecognized flag: $arg" >&2; return 1;;
+      --*) echo "unrecognized flag: $1" >&2; return 1;;
       -*)
         local found=false
         local arg="${1//-/}"
@@ -38,19 +38,20 @@ goc() {
   done
   local count=0
   local head=""
+  local arg
   for arg in "$@"; do
     local blob="$(go doc $change_dir $all $case $cmd $http $short $source $unexported "$arg")"
-    local blob_head="$(echo "$blob" | sed -n 1p)"
+    local blob_head="$(printf '%s\n' "$blob" | sed -n 1p)"
     if [[ "$blob_head" != "$head" ]]; then
       head="$blob_head"
       count=0
     else
-      local blob_length="$(echo "$blob" | wc -l)"
+      local blob_length="$(printf '%s\n' "$blob" | wc -l)"
       if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
-        blob="$(echo "$blob" | sed '1d')"
+        blob="$(printf '%s\n' "$blob" | sed '1d')"
       fi
     fi
-    echo "$blob" | bat -Pplgo --theme ansi
+    printf '%s\n' "$blob" | bat -Pplgo --theme ansi
     ((count++))
   done
 }
@@ -105,7 +106,9 @@ _() {
 }
 
 tpb() {
-  tmux save-buffer -
+  output=$(tmux save-buffer -)
+  [[ "$output" = *"\n" ]] && printf '%s' "$output" && return
+  [ -n "$output" ] && printf '%s\n' "$output"
 }
 
 twb() {
@@ -330,7 +333,7 @@ reload() {
     while IFS= read -r pane; do
       local pid=$(tmux display-message -t "$pane" -p '#{pane_pid}')
       local child_cmd=$(ps -o cmd= $(ps --ppid "$pid" -o pid= 2>/dev/null) 2>/dev/null)
-      if ! echo "$child_cmd" | grep -qiE 'weechat|hx|less|man|more|fzf|sk|vim|nano'; then
+      if ! echo "$child_cmd" | grep -qiE 'weechat|hx|less|man|more|fzf|sk|vim|nano|yt-dlp|gallery-dl|youtube-dl|cleanup|dupes'; then
         tmux send-keys -t "$pane" -l 'exec $SHELL -l'
         tmux send-keys -t "$pane" Enter
         tmux send-keys -t "$pane" C-l
@@ -1043,7 +1046,7 @@ package() {
 
 cfg() {
   setopt localoptions no_nomatch # ignore empty glob results
-  $EDITOR {$DOTDIR,$DOTDIR/helix}/{.*(conf|fig|ore|env|rc|file|toml),*.(zsh|toml)} 2> /dev/null
+  $EDITOR {$DOTDIR,$DOTDIR/helix}/{.*(conf|fig|ore|env|rc|file|toml|lua),*.(zsh|toml)} 2> /dev/null
   # unsetopt no_nomatch
 }
 
@@ -1062,14 +1065,18 @@ forever() {
 
 
 p() {
+  local output
   if [ -n "$(command -v xclip)" ]; then
-    xclip -o -selection clipboard
+    output=$(xclip -o -selection clipboard)
   elif [ -n "$(command -v termux-clipboard-get)" ]; then
-    termux-clipboard-get
+    output=$(termux-clipboard-get)
   else
     echo no clipboard getter found
     return 1
   fi
+  
+  printf '%s' "$output"
+  [[ -n $output && $output != *$'\n' ]] && printf '\n'
 }
 
 c() {
@@ -1324,50 +1331,63 @@ frc() {
 }
 
 trans() {
-  local rate=()
-  for arg in "$@"; do
-    case "$1" in
-      '-h'|'--help'|'help'|'') 
-        printf "%s is a video transcoder\nusage: %s [flag] VIDEO_FILES...\n\t-h, --help\tprint this message\n\t-r, --rate\tframerate of output videos\n" "${0##*/}" "${0##*/}"
-        return 0
-        ;;
-      '-r'|'--rate'|'rate') 
-        if [ -z "$2" ]; then
-          echo "${0##*/}: -r flag requires a frame rate value" >&2
-          return 1
-        fi
-        rate=(-r "$2")
-        shift 2
-        ;;
-      *) break;;
-    esac
-  done
+	local rate=()
+	for arg in "$@"; do
+		case "$1" in
+		'-h' | '--help' | 'help' | '')
+			printf "%s is a video transcoder\nusage: %s [flag] VIDEO_FILES...\n\t-h, --help\tprint this message\n\t-r, --rate\tframerate of output videos\n" "${0##*/}" "${0##*/}"
+			return 0
+			;;
+		'-r' | '--rate' | 'rate')
+			if [ -z "$2" ]; then
+				echo "${0##*/}: -r flag requires a frame rate value" >&2
+				return 1
+			fi
+			rate=(-r "$2")
+			shift 2
+			;;
+		*) break ;;
+		esac
+	done
+	[ "$#" -eq "0" ] && echo "${0##*/}: no input path(s) specified" >&2 && return 1
 
-  [ "$#" -eq "0" ] && echo "${0##*/}: no input path(s) specified" >&2 && return 1
-  
-  for name in "$@"; do
-    [ ! -f "$name" ] && echo "${0##*/}: '$name' is not a valid file" >&2 && continue
+	for name in "$@"; do
+		[ ! -f "$name" ] && echo "${0##*/}: '$name' is not a valid file" >&2 && continue
+		local ext="${name##*.}"
+		local base="${name%.*}"
+		local new="$(namespacer "${base}.mp4")"
 
-    local ext="${name##*.}"
-    local base="${name%.*}"  # Simpler than sed
-    local new="$(namespacer "${base}.mp4")"  # Added dot before mp4
-    
-    echo "Transcoding: $(basename "$name")"
-    if ! SVT_LOG=0 ffmpeg -hide_banner -loglevel error -stats -i "$name" -c:v libsvtav1 "${rate[@]}" -crf 20 -preset 2 "$new"; then
-      rm -f "$new"
-      echo "${0##*/}: transcoding failed for '$name'" >&2
-      return 1
-    fi
-    
-    local orig_size=$(du -b "$name" | cut -f1)
-    local new_size=$(du -b "$new" | cut -f1)
-    
-    if [ "$new_size" -lt "$orig_size" ]; then
-      rm "$name" && echo "✔ Kept transcoded file (saved $(( (orig_size - new_size) / 1024 )) KB)"
-    else
-      rm "$new" && echo "✗ Kept original ($orig_size bytes) file because transcoded ($new_size bytes) was larger"
-    fi
-  done
+		echo "Transcoding: $(basename "$name")"
+
+		# Probe original audio bitrate to avoid upscaling
+		local orig_audio_br=$(ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 "$name" 2>/dev/null)
+		local audio_opts=(-c:a aac -b:a 128k)
+
+		# If original audio is lower quality, match it instead
+		if [ -n "$orig_audio_br" ] && [ "$orig_audio_br" -lt 128000 ]; then
+			audio_opts=(-c:a aac -b:a "${orig_audio_br}")
+		fi
+
+		# Scale to 720p only if larger (maintains aspect ratio, ensures even dimensions)
+		if ! SVT_LOG=0 ffmpeg -hide_banner -loglevel error -stats -i "$name" \
+			-c:v libsvtav1 "${rate[@]}" -crf 20 -preset 2 \
+			-vf "scale=-2:'min(720,ih)'" \
+			"${audio_opts[@]}" \
+			"$new"; then
+			rm -f "$new"
+			echo "${0##*/}: transcoding failed for '$name'" >&2
+			return 1
+		fi
+
+		local orig_size=$(du -b "$name" | cut -f1)
+		local new_size=$(du -b "$new" | cut -f1)
+
+		if [ "$new_size" -lt "$orig_size" ]; then
+			rm "$name" && echo "✔ Kept transcoded file (saved $(((orig_size - new_size) / 1024)) KB)"
+		else
+			rm "$new" && echo "✗ Kept original ($orig_size bytes) file because transcoded ($new_size bytes) was larger"
+		fi
+	done
 }
 
 tunes() {
@@ -1741,7 +1761,7 @@ changes() {
         fi;;
     esac
   done
-  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; impl: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon. when there are multiple changes, of the same type (ie add|fix|etc), to a bloc|function|script|etc put those changes in parentheses and put that block/function/script/file name before those parentheses (ie: fix: funcX(blah, blah), fileX(blah, blah, blah); update: funcY blah, fileY(blah, blah blah); etc: ...;). when stating dependencies just say the name and developer - omit the repository host (ie github.com/kendfss/but -> kendfss/but; golang.org/x/net -> x/net). never include dependencies of dependencies unless they have been updated\n%s\n" "$(git diff $cached)")"
+  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon. when there are multiple changes, of the same type (ie add|fix|etc), to a block|function|script|etc put those changes in parentheses and put that block/function/script/file name before those parentheses (ie: fix: funcX(blah, blah), fileX(blah, blah, blah); update: funcY blah, fileY(blah, blah blah); etc: ...;). when stating dependencies just say the name and developer - omit the repository host (ie github.com/kendfss/but -> kendfss/but; golang.org/x/net -> x/net). never include dependencies of dependencies unless they have been updated\ninstead of giving each micro-detail: where possible, try to organize changes into cohesive units/features/fixes but don't consolidate modifications of different types like additions and fixes to the same file/scope\nwith regard to types, adhere to the following conventions: add->new functionality added to a function/file/class. fix->correcting bugs in the code/spelling. rm->removals of functions/types/data. update->elaborations/removals of natural language (ie comments/documentation)\nif you find that other types are necessary include them at will but explain them in (a) separate paragraph(s)%s\n" "$(git diff $cached $files)")"
   echo "$msg" | c
   echo "$msg" | delta
 }
@@ -1769,7 +1789,7 @@ review() {
 
 xq() {
   for arg in "$@"; do
-    xbps query -Rs $arg | rg "$(printf '] (\w+(-)?)*%s((-)?\w+)*-' "$arg")"
+    xbps query -Rs $arg | rg "$(printf '] (\w+(-)?)*%s((-)?\w+)*-' "$arg")" | rg "$arg"
   done
 }
 
@@ -1893,3 +1913,43 @@ clean() {
   done
   echo "$blob" | sed $sed
 }
+
+save() {
+  local dir=$(mktemp -d)
+  echo "dir: $dir" >&2
+  for name in "$@"; do
+    mv -- "$name" "$dir/"
+  done
+  local items="$(ls -1)"
+  if [ -z "$items" ]; then
+    echo "No items to delete. Restoring..." >&2
+    find "$dir" -maxdepth 1 -mindepth 1 -exec mv {} . \; && rm -rf "$dir"
+    return $?
+	fi
+  printf "would delete:\n%s\n" "$items"
+  printf "[yN]: "
+  read -r resp
+  case "$resp" in
+    (y | Y | yes | Yes) echo "$items" | while IFS= read -r name; do
+          [ -d "$name" ] && rm -rf -- "$name" || rm -f -- "$name"
+        done ;;
+		(*) echo "Cancelled. Restoring items..." >&2
+      find "$dir" -maxdepth 1 -mindepth 1 -exec mv {} . \; && rm -rf "$dir"
+      return $? ;;
+  esac
+  find "$dir" -maxdepth 1 -mindepth 1 -exec mv {} . \;
+  rm -rf "$dir"
+  return $?
+}
+
+dsu() {
+  local name
+  [ $# -gt 0 ] && {
+    for name in "$@"; do
+    	du -sh "$name"/{.?,}* 2> /dev/null | sort -h
+    done
+    return $?
+	}
+	du -sh {.?,}* 2> /dev/null | sort -h
+}
+

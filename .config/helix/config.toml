@@ -103,6 +103,7 @@ p     = ":buffer-previous"
 n     = ":buffer-next"
 
 [keys.normal.d]
+a   = ['select_all', "delete_selection"]
 e   = ['extend_next_word_end', 'delete_selection_noyank']
 l   = ['extend_line', 'delete_selection_noyank', 'move_line_up', 'goto_line_end']
 d   = 'delete_selection_noyank'

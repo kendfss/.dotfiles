@@ -1,16 +1,43 @@
-#!/bin/sh 
+#!/bin/sh
 
-# Read JSON blobparse its signature from stdin and parse its signature with jq
+# Read JSON blob from stdin and parse its signature with jq
 jq '
-  def get_type($val):
+  def analyze_type($val):
     if $val | type == "array" then
-      { type: "array", elements: (if ($val | length) > 0 then get_type($val[0]) else "unknown" end) }
+      if ($val | length) == 0 then
+        { kind: "array", type: "empty" }
+      else
+        # Collect types of all elements
+        ($val | map(analyze_type(.))) as $element_types |
+        
+        # Try to find a common type
+        ($element_types | group_by(.type) | max_by(length) | first) as $most_common |
+        
+        # Check if all elements have the same type
+        ($element_types | unique | length == 1) as $all_same |
+        
+        if $all_same then
+          {
+            kind: "array",
+            type: $most_common.type,
+            signature: $most_common
+          }
+        else
+          {
+            kind: "array",
+            type: "mixed",
+            signatures: $element_types
+          }
+        end
+      end
     elif $val | type == "object" then
-      { type: "object", fields: (reduce ($val | keys[]) as $k ({}; . + { ($k): get_type($val[$k]) })) }
+      {
+        kind: "object",
+        fields: ($val | to_entries | map({key: .key, value: analyze_type(.value)}) | from_entries)
+      }
     else
       { type: ($val | type) }
     end;
-
-  get_type(.)
+  
+  analyze_type(.)
 '
-
