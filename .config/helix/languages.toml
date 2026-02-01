@@ -169,3 +169,8 @@ auto-format = true
 [[language]]
 name        = "c"
 auto-format = true
+
+[[language]]
+name        = "bash"
+auto-format = true
+formatter   = { command = 'shfmt', args = ["-s", "-ci"] }

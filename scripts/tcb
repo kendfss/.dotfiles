@@ -1,0 +1,7 @@
+#!/bin/env zsh
+
+if [ -n "$TERMUX__PREFIX" ]; then
+	tmux save-buffer - | termux-clipboard-set
+	return
+fi
+tmux save-buffer - | xclip -i -selection clipboard

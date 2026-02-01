@@ -1,0 +1,9 @@
+#!/bin/env sh
+
+if ! command -v bat >/dev/null 2>&1; then
+    command man "$@"
+    exit $?
+fi
+
+[ ! -x "$(command -v bat)" ] && { man "$@"; exit $?; }
+col -bx < "$@" | bat -lman 

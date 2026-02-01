@@ -1,12 +1,12 @@
 #!/bin/env zsh
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR="$DOTFILES"
+local code
+mkdir -p "$HOME/.config" || { code=$? && echo "couldn't make ~/.config directory" && exit $code; }
 
-mkdir -p "$HOME/.config" || { echo "couldn't make ~/.config directory" && exit $?; }
+source "$DOTFILES/functions.zsh" || { code=$? && echo "couldn't source functions" && exit $code; }
 
-source "$DOTFILES/functions.zsh" || { echo "couldn't source functions" && exit $?; }
-
-[ -z "$(which xbps)" ] && { { curl -sL "https://github.com/kendfss/xbps/releases/latest/download/xbps_linux_$(uname -m).tar.gz" | tar -xz -O xbps | sudo tee /usr/bin/xbps >/dev/null && sudo chmod +x /usr/bin/xbps && echo "personal xbps successfully installed"; } || echo couldn\'t install personal xbps && exit $?; } || echo personal xbps already installed
+[ -z "$(which xbps)" ] && { { curl -sL "https://github.com/kendfss/xbps/releases/latest/download/xbps_linux_$(uname -m).tar.gz" | tar -xz -O xbps | sudo tee /usr/bin/xbps >/dev/null && sudo chmod +x /usr/bin/xbps && echo "personal xbps successfully installed"; } || code=$? && echo couldn\'t install personal xbps && exit $code; } || echo personal xbps already installed
 
 source "$DOTFILES/functions.zsh"
 
@@ -33,12 +33,7 @@ for name in "$DOTFILES/etc"/*; do
   [ "$base" = "ly" ] && continue
   symlinkDialogue "$name" "/etc/$base" || exit $?
 done
-symlinkDialogue {$DOTFILES,}/etc/ly/config.ini          || exit $?
-# symlinkDialogue $HOME/.{dotfiles,config}/glow                 || exit $?
-# symlinkDialogue $HOME/.{dotfiles,config}/mpv                  || exit $?
-# symlinkDialogue $HOME/.{dotfiles,config}/kitty                || exit $?
-# symlinkDialogue $HOME/.{dotfiles,config}/cheat                || exit $?
-# symlinkDialogue $HOME/.{dotfiles,config}/helix                || exit $?
+symlinkDialogue {$DOTFILES,}/etc/ly/config.ini || exit $?
 
 for item in "$DOTFILES"/.*; do 
   [ -f "$item" ] || continue
@@ -46,17 +41,30 @@ for item in "$DOTFILES"/.*; do
   symlinkDialogue "$item" "$target" || exit $?
 done
 
-[[ -z "$CLONEDIR" ]] && export CLONEDIR=$HOME/gitclone/clones && { mkdir -p $CLONEDIR || { echo "was not able to create \"\$CLONEDIR=$CLONEDIR\"" && exit $?; }; }
+[[ -z "$CLONEDIR" ]] && export CLONEDIR=$HOME/gitclone/clones && { mkdir -p $CLONEDIR || { code=$? && echo "was not able to create \"\$CLONEDIR=$CLONEDIR\"" && exit $code; }; }
+
+lines() {
+  for arg in "$@"; do
+    echo "$arg"
+  done
+}
 
 if [[ -x "$(command -v xbps-install)" ]]; then
   sudo xbps-install -yu xbps || exit $?
   sudo xbps-install -Syu || exit $?
-  sudo xbps-install -Syu git zsh acl-progs rsync zsh tmux kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer skim clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist zathura{,-pdf-mupdf} pandoc psmisc lf coreutils mpv{,-mpris} playerctl nicotine+ lua-language-server StyLua taplo base-devel bat gcc make llvm xkill xfce4-screenshooter delta gallery-dl lsof ntfs-3g || exit $?
+  local packages=( )
+  local package
+  lines git zsh acl-progs rsync zsh tmux kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer skim clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist zathura{,-pdf-mupdf} pandoc psmisc lf coreutils mpv{,-mpris} playerctl nicotine+ lua-language-server StyLua taplo base-devel bat gcc make llvm xkill xfce4-screenshooter delta gallery-dl lsof ntfs-3g uv | while read -r package; do
+    where $package && continue
+    packages+=("$package")
+  done
+  [ ${#packages} -gt 0 ] && { sudo xbps-install -Syu $packages || exit $?; }
 
 	[[ "$(gh auth status | tr '[:upper:]' '[:lower:]')" != *"logged in"* ]] && { gh auth login || exit $?; }
 
-  go install github.com/Parutix/json2go@latest || exit $?
+  which json2go || go install github.com/Parutix/json2go@latest || exit $?
 
+  test -d "$HOME/.venv" || { test -e "$HOME/.venv" && echo "$HOME/.venv exists but isn't a directory" >&2 && exit 1; } || uv venv "$HOME/.venv" || exit $?
   uv pip install {i,pt}python send2trash click dill filetype || exit $?
   # sudo xbps-install -Syu python3{,-{sqlparse,wheel,numpy,Pillow,PyAudio,attrs,audioread,binaryornot,bitarray,boolean.py,click,dill,google-{auth{-{httplib2,oauthlib},},api-{core,python-client}},httpx,requests,language-server,path,pandas,pathtools,pip,pipenv,pipx,platformdirs,re-assert,send2trash,tabulate,virtualenv,argcomplete,click,jedi,parsing,parso,userpath,yaml}} || exit $?
 
@@ -89,7 +97,7 @@ if [[ -x "$(command -v xbps-install)" ]]; then
   
 	[[ ! -x "$(command -v tree-sitter-cli)" ]] && sudo xbps-install -Syu tree-sitter
 else
-  echo "xbps-install is not available. Make sure you have the package manager for Void Linux installed." && return $?
+  echo "xbps-install is not available. Make sure you have the package manager for Void Linux installed." && exit 1
 fi
 
 export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"

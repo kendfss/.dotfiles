@@ -1,0 +1,5 @@
+#!/bin/env zsh
+
+output=$(tmux save-buffer -)
+[[ $output == *"\n" ]] && printf '%s' "$output" && return
+[ -n "$output" ] && printf '%s\n' "$output"

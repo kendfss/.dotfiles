@@ -1,75 +1,79 @@
 # https://zsh.sourceforge.io/Doc/Release/Conditional-Expressions.html
 autoload -Uz add-zsh-hook
 
-goc() {
-  local change_dir=''
-  local all=''
-  local case=''
-  local cmd=''
-  local http=''
-  local short=''
-  local source=''
-  local unexported=''
-  while [ $# -gt 0 ]; do
-    case "$1" in
-      '') go doc -u | bat -Pplgo --theme ansi; return $?;;
-      '-C'|'--change-dir') shift && change_dir="-C $1" && shift && continue;;
-      '-a'|'-all'|'--all') all='-all' && shift && continue;;
-      '-cmd'|'--cmd') cmd='-cmd' && shift && continue;;
-      '-c'|'--case') case='-c' && shift && continue;;
-      '-http'|'--http') http='-http' && shift && continue;;
-      '-short'|'--short') short='-short' && shift && continue;;
-      '-s'|'-src'|'--src') src='-src' && shift && continue;;
-      '-u'|'--unexported') unexported='-u' && shift && continue;;
-      --*) echo "unrecognized flag: $1" >&2; return 1;;
-      -*)
-        local found=false
-        local arg="${1//-/}"
-        [[ "$arg" == *"a"* ]] && all='-all' && found=true && arg="${arg//a/}"
-        [[ "$arg" == *"c"* ]] && case='-c' && found=true && arg="${arg//c/}"
-        [[ "$arg" == *"u"* ]] && unexported='-u' && found=true && arg="${arg//u/}"
-        [[ "$arg" == *"s"* ]] && source='-src' && found=true && arg="${arg//s/}"
-        ([ -z "$arg" ] && [ $found = true ]) && shift && continue
-        echo "unrecognized flag(s): $arg" >&2
-        return 1
-        ;;
-      *) break;;
-    esac
-  done
-  local count=0
-  local head=""
-  local arg
-  for arg in "$@"; do
-    local blob="$(go doc $change_dir $all $case $cmd $http $short $source $unexported "$arg")"
-    local blob_head="$(printf '%s\n' "$blob" | sed -n 1p)"
-    if [[ "$blob_head" != "$head" ]]; then
-      head="$blob_head"
-      count=0
-    else
-      local blob_length="$(printf '%s\n' "$blob" | wc -l)"
-      if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
-        blob="$(printf '%s\n' "$blob" | sed '1d')"
-      fi
-    fi
-    printf '%s\n' "$blob" | bat -Pplgo --theme ansi
-    ((count++))
-  done
-}
+# goc() {
+#   local change_dir=''
+#   local all=''
+#   local case=''
+#   local cmd=''
+#   local http=''
+#   local short=''
+#   local source=''
+#   local unexported=''
+#   while [ $# -gt 0 ]; do
+#     case "$1" in
+#       '') go doc -u | bat -Pplgo --theme ansi; return $?;;
+#       '-C'|'--change-dir') shift && change_dir="-C $1" && shift && continue;;
+#       '-a'|'-all'|'--all') all='-all' && shift && continue;;
+#       '-cmd'|'--cmd') cmd='-cmd' && shift && continue;;
+#       '-c'|'--case') case='-c' && shift && continue;;
+#       '-http'|'--http') http='-http' && shift && continue;;
+#       '-short'|'--short') short='-short' && shift && continue;;
+#       '-s'|'-src'|'--src') source='-src' && shift && continue;;
+#       '-u'|'--unexported') unexported='-u' && shift && continue;;
+#       --*) echo "unrecognized flag: $1" >&2; return 1;;
+#       -*)
+#         local found=false
+#         local arg="${1//-/}"
+#         [[ "$arg" == *"a"* ]] && all='-all' && found=true && arg="${arg//a/}"
+#         [[ "$arg" == *"c"* ]] && case='-c' && found=true && arg="${arg//c/}"
+#         [[ "$arg" == *"u"* ]] && unexported='-u' && found=true && arg="${arg//u/}"
+#         [[ "$arg" == *"s"* ]] && source='-src' && found=true && arg="${arg//s/}"
+#         ([ -z "$arg" ] && [ $found = true ]) && shift && continue
+#         echo "unrecognized flag(s): $arg" >&2
+#         return 1
+#         ;;
+#       *) break;;
+#     esac
+#   done
+#   local count=0
+#   local head=""
+#   local arg
+#   for arg in "$@"; do
+#     local blob="$(go doc $change_dir $all $case $cmd $http $short $source $unexported "$arg")"
+#     local blob_head="$(printf '%s\n' "$blob" | sed -n 1p)"
+#     if [[ "$blob_head" != "$head" ]]; then
+#       head="$(printf "%s" "$blob_head")"
+#       [ "$count" -ne 0 ] && blob="$(printf "\n%s" "$blob")"
+#       count=0
+#     else
+#       local blob_length="$(printf '%s\n' "$blob" | wc -l)"
+#       if [ $count -gt 0 -a $((blob_length)) -gt 1 ]; then
+#         blob="$(printf '%s\n' "$blob" | sed 1d)"
+#       fi
+#     fi
+#     printf '%s\n' "$blob" | bat -lgo --theme ansi
+#     ((count++))
+#   done
+# }
 
 poc() {
   [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
+  local arg
   for arg in $args; do
     pydoc $arg | bat -Pplpython --theme ansi
   done
 }
 
 recover() {
+  local arg
   for arg in $@; do 
     git checkout "$(git rev-list -1 HEAD -- '$arg')^" -- '$arg'
   done
 }
 
 ext() {
+  local arg
   for arg in "$@"; do
     [ ! -f "$arg" ] && continue
     { local base="$(basename "$arg")" && local ext="${base##*.}"; } || return $?
@@ -105,12 +109,6 @@ _() {
   done
 }
 
-tpb() {
-  output=$(tmux save-buffer -)
-  [[ "$output" = *"\n" ]] && printf '%s' "$output" && return
-  [ -n "$output" ] && printf '%s\n' "$output"
-}
-
 twb() {
   if [ -d "$TERMUX__PREFIX" ]; then
     termux-clipboard-get | tmux load-buffer -
@@ -118,20 +116,6 @@ twb() {
     xclip -i -selection clipboard | tmux load-buffer -
   fi
 }
-
-
-tsb() {
-  tmux load-buffer -
-}
-
-tcb() {
-  if [ -n "$TERMUX__PREFIX" ]; then
-    tmux save-buffer - | termux-clipboard-set
-    return
-  fi
-  tmux save-buffer - | xclip -i -selection clipboard
-}
-
 
 take() {
   # Make a directory and cd into it
@@ -403,7 +387,7 @@ focus() {
 
 bckp() {
   local force=false
-  [ "$1" = "-f" -o "$1" = "--force"] && force=true && shift
+  [ "$1" = "-f" -o "$1" = "--force" ] && force=true && shift
   local origin=$(pwd)
   local old=$1
   if [[ -z "$old" ]]; then
@@ -1063,33 +1047,6 @@ forever() {
   while true; do $*; done
 }
 
-
-p() {
-  local output
-  if [ -n "$(command -v xclip)" ]; then
-    output=$(xclip -o -selection clipboard)
-  elif [ -n "$(command -v termux-clipboard-get)" ]; then
-    output=$(termux-clipboard-get)
-  else
-    echo no clipboard getter found
-    return 1
-  fi
-  
-  printf '%s' "$output"
-  [[ -n $output && $output != *$'\n' ]] && printf '\n'
-}
-
-c() {
-  if [ -n "$(command -v xclip)" ]; then
-    xclip -i -selection clipboard
-  elif [ -n "$(command -v termux-clipboard-set)" ]; then
-    termux-clipboard-set
-  else
-    echo no clipboard setter found
-    return 1
-  fi
-}
-
 throw() {
   local code="$1"
   shift
@@ -1330,65 +1287,7 @@ frc() {
   done
 }
 
-trans() {
-	local rate=()
-	for arg in "$@"; do
-		case "$1" in
-		'-h' | '--help' | 'help' | '')
-			printf "%s is a video transcoder\nusage: %s [flag] VIDEO_FILES...\n\t-h, --help\tprint this message\n\t-r, --rate\tframerate of output videos\n" "${0##*/}" "${0##*/}"
-			return 0
-			;;
-		'-r' | '--rate' | 'rate')
-			if [ -z "$2" ]; then
-				echo "${0##*/}: -r flag requires a frame rate value" >&2
-				return 1
-			fi
-			rate=(-r "$2")
-			shift 2
-			;;
-		*) break ;;
-		esac
-	done
-	[ "$#" -eq "0" ] && echo "${0##*/}: no input path(s) specified" >&2 && return 1
 
-	for name in "$@"; do
-		[ ! -f "$name" ] && echo "${0##*/}: '$name' is not a valid file" >&2 && continue
-		local ext="${name##*.}"
-		local base="${name%.*}"
-		local new="$(namespacer "${base}.mp4")"
-
-		echo "Transcoding: $(basename "$name")"
-
-		# Probe original audio bitrate to avoid upscaling
-		local orig_audio_br=$(ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 "$name" 2>/dev/null)
-		local audio_opts=(-c:a aac -b:a 128k)
-
-		# If original audio is lower quality, match it instead
-		if [ -n "$orig_audio_br" ] && [ "$orig_audio_br" -lt 128000 ]; then
-			audio_opts=(-c:a aac -b:a "${orig_audio_br}")
-		fi
-
-		# Scale to 720p only if larger (maintains aspect ratio, ensures even dimensions)
-		if ! SVT_LOG=0 ffmpeg -hide_banner -loglevel error -stats -i "$name" \
-			-c:v libsvtav1 "${rate[@]}" -crf 20 -preset 2 \
-			-vf "scale=-2:'min(720,ih)'" \
-			"${audio_opts[@]}" \
-			"$new"; then
-			rm -f "$new"
-			echo "${0##*/}: transcoding failed for '$name'" >&2
-			return 1
-		fi
-
-		local orig_size=$(du -b "$name" | cut -f1)
-		local new_size=$(du -b "$new" | cut -f1)
-
-		if [ "$new_size" -lt "$orig_size" ]; then
-			rm "$name" && echo "✔ Kept transcoded file (saved $(((orig_size - new_size) / 1024)) KB)"
-		else
-			rm "$new" && echo "✗ Kept original ($orig_size bytes) file because transcoded ($new_size bytes) was larger"
-		fi
-	done
-}
 
 tunes() {
   for dir in "$@"; do
@@ -1561,9 +1460,9 @@ symlinkDialogue() {
   elif [ -S "$target" ]; then
     target_type="socket"
   fi
-local target_dir="$(dirname "$target")"
-[ ! -e "$target_dir" ] && mkdir -p "$target_dir"
-[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
+  local target_dir="$(dirname "$target")"
+  [ ! -e "$target_dir" ] && mkdir -p "$target_dir"
+  [ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
   
   [[ $equal == true ]] && echo "skipping 'ln -s $source $target' because the source and target were proven equal" && return
   # Conflict handling - exhaustive analysis
@@ -1678,8 +1577,8 @@ local target_dir="$(dirname "$target")"
   done
 }
 
-gg() {
-  (( $# )) || { echo "usage: gg pat1 [pat2..]" >&2; return 1 }
+gfg() {
+  (( $# )) || { echo "usage: $0 pat1 [pat2..]" >&2; return 1; }
   # First arg seeds the file list
   local files
   files=(${(f)"$(rg -l "$1")"})
@@ -1688,6 +1587,15 @@ gg() {
     files=(${(f)"$(rg -l "$pat" -- $files)"})
   done
   printf "%s\n" $files
+}
+
+gg() {
+  [ $# -gt 1 ] || { echo "usage: <command> | $0 arg1 arg2 [... argN]"; return 1; }
+  local lines="$(cat)"
+  for arg in "$@"; do
+    lines="$(echo "$lines" | rg "$arg")"
+  done
+  echo "$lines"
 }
 
 goclean() {
@@ -1727,6 +1635,12 @@ upyet() {
   echo $msg
 }
 
+retract() {
+  local version="$(git tag | tail -1)"
+  [ -n "$1" ] && version="$1"
+  git tag -d "$version" && git push origin :refs/tags/"$version"
+}
+
 reissue() {
   local version="$(git tag | tail -1)"
   [ -n "$1" ] && version="$1"
@@ -1743,28 +1657,28 @@ peek() {
   sk -em --preview 'bat -p {}'
 }
 
-changes() {
-  local outFile="$(date +'%Y%M%e-%T').changes"
-  local cached=''
-  local files=( )
-  while [ $# -gt 0 ]; do
-    case "$1" in
-      -c|--cached) cached='--cached'; shift;;
-      -o|--output) shift; outFile="$1"; shift;;
-      *)
-        if [ -f "$1" ]; then
-          files+=("$1")
-          shift
-        else
-          echo "'$1' isn't a file name or valid flag"
-          return 1
-        fi;;
-    esac
-  done
-  local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon. when there are multiple changes, of the same type (ie add|fix|etc), to a block|function|script|etc put those changes in parentheses and put that block/function/script/file name before those parentheses (ie: fix: funcX(blah, blah), fileX(blah, blah, blah); update: funcY blah, fileY(blah, blah blah); etc: ...;). when stating dependencies just say the name and developer - omit the repository host (ie github.com/kendfss/but -> kendfss/but; golang.org/x/net -> x/net). never include dependencies of dependencies unless they have been updated\ninstead of giving each micro-detail: where possible, try to organize changes into cohesive units/features/fixes but don't consolidate modifications of different types like additions and fixes to the same file/scope\nwith regard to types, adhere to the following conventions: add->new functionality added to a function/file/class. fix->correcting bugs in the code/spelling. rm->removals of functions/types/data. update->elaborations/removals of natural language (ie comments/documentation)\nif you find that other types are necessary include them at will but explain them in (a) separate paragraph(s)%s\n" "$(git diff $cached $files)")"
-  echo "$msg" | c
-  echo "$msg" | delta
-}
+# changes() {
+#   local outFile="$(date +'%Y%M%e-%T').changes"
+#   local cached=''
+#   local files=( )
+#   while [ $# -gt 0 ]; do
+#     case "$1" in
+#       -c|--cached) cached='--cached'; shift;;
+#       -o|--output) shift; outFile="$1"; shift;;
+#       *)
+#         if [ -f "$1" ]; then
+#           files+=("$1")
+#           shift
+#         else
+#           echo "'$1' isn't a file name or valid flag"
+#           return 1
+#         fi;;
+#     esac
+#   done
+#   local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon. when there are multiple changes, of the same type (ie add|fix|etc), to a block|function|script|etc put those changes in parentheses and put that block/function/script/file name before those parentheses (ie: fix: funcX(blah, blah), fileX(blah, blah, blah); update: funcY blah, fileY(blah, blah blah); etc: ...;). when stating dependencies just say the name and developer - omit the repository host (ie github.com/kendfss/but -> kendfss/but; golang.org/x/net -> x/net). never include indirect dependencies (dependencies of dependencies) unless they have been updated\ninstead of giving each micro-detail: where possible, try to organize changes into cohesive units/features/fixes but don't consolidate modifications of different types like additions and fixes to the same file/scope\nwith regard to types, adhere to the following conventions: add->new functionality added to a function/file/class. fix->correcting bugs in the code/spelling. rm->removals of functions/types/data. update->elaborations/removals of natural language (ie comments/documentation)\nif you find that other types are necessary include them at will but explain them in (a) separate paragraph(s)%s\n" "$(git diff $cached $files)")"
+#   echo "$msg" | c
+#   echo "$msg" | delta
+# }
 
 review() {
   local maxdepth="-maxdepth 1"
@@ -1778,6 +1692,33 @@ review() {
   done
   [ $# -eq 0 ] && exts+=("go")
   echo "review the following files for bugs, simplifications, and architectural/dependency improvements:"
+  for ext in "${exts[@]}"; do
+    find . -type f -iname "*.$ext" ${=maxdepth} 2>/dev/null | while read -r file; do
+      echo "// $file"
+      cat "$file"
+      echo
+    done
+  done
+}
+
+writeme() {
+  local maxdepth="-maxdepth 1"
+  local exts=()
+  local name=false
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -w|--walk) maxdepth="" && shift && continue;;
+      -n|--name) name=true && shift && continue;;
+      -*) echo "unrecognized flag: $1" >&2 && return 1;;
+      *) exts+=("$1") && shift && continue;;
+    esac
+  done
+  [ $# -eq 0 ] && exts+=("go")
+  if [ false = "$name" ]; then
+    echo "write a readme for the following code. the project is called '$(basename "$(pwd)")', unless you can think of a better name"
+  else
+    echo "write a readme for the following code. the project doens't have a name yet, please recommend some"  
+  fi
   for ext in "${exts[@]}"; do
     find . -type f -iname "*.$ext" ${=maxdepth} 2>/dev/null | while read -r file; do
       echo "// $file"
@@ -1841,7 +1782,7 @@ lines() {
     dirs=("$(pwd)")
   fi
   for dir in "${dirs[@]}"; do
-    for name in $dir/(.|)*; do
+    for name in "$dir"/{.?,}*; do
       [ -f "$name" ] && files+=("$name")
     done
   done
@@ -1953,3 +1894,10 @@ dsu() {
 	du -sh {.?,}* 2> /dev/null | sort -h
 }
 
+get() {
+  local arg
+  for arg in "$@"; do
+    local name="$(echo "$arg" | sed 's/\?.+//g' | to basename)"
+    wget "$arg" -O "$name" 1>/dev/null && echo "$arg" @ "$name"
+  done
+}

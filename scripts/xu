@@ -1,0 +1,12 @@
+#!/bin/env sh
+
+if [ -x "$(command -v sk)" ]; then
+	finder=sk
+elif [ -x "$(command -v fzf)" ]; then
+	finder=fzf
+else
+	echo "neither fzf or sk are installed" >&2
+	exit 1
+fi
+
+sudo xbps-install -Syu $(xbps-install -nSu | cut -f1 -d' ' | sed 's/-[^-]*$//g' | $finder | tr '\n' ' ')

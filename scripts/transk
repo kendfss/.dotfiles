@@ -1,0 +1,350 @@
+#!/bin/env zsh
+
+# Define help text
+help_text='trans - intelligent video transcoder with AI upscaling
+
+USAGE:
+    trans [OPTIONS] VIDEO_FILES...
+
+OPTIONS:
+    -h, --help        Print this help message
+    -c, --cleanup     Remove larger file after transcoding
+                      (always removes original if upscaling occurred)
+    -r, --rate N      Set maximum framerate (default: 30fps)
+    -p, --processor P video2x processor (libplacebo, realesrgan, realcugan, rife)
+                      Default: realesrgan for real-world videos
+
+OUTPUT FORMAT:
+    • Container: MP4
+    • Video: AV1 (target 720p, ≤30fps)
+    • Audio: AAC (≤128kbps, preserves original codec)
+
+UPSCALING POLICY:
+    • Any video with height < 720p will be upscaled to 720p
+    • Vertical videos (<720 height) → scale to 720p height
+    • Horizontal videos (<1280 width) → scale to 1280x720
+
+UPSCALING TOOLS (in order of preference):
+    1. video2x with RealESRGAN (best for real-world videos)
+    2. ffmpeg with libplacebo
+    3. ffmpeg with lanczos
+
+PROCESSOR RECOMMENDATIONS:
+    • realesrgan: Best for real-world videos, photos (DEFAULT)
+    • realcugan:  Better for anime/cartoon content
+    • libplacebo: Fast GPU-accelerated, good quality
+    • rife:       Frame interpolation (not for upscaling)'
+
+if [ $# -eq 0 ]; then
+    echo "$help_text"
+    exit 0
+fi
+
+cleanup=0
+max_fps=30
+v2x_processor="realesrgan"  # Best default for real-world videos
+
+for arg in "$@"; do
+    case "$1" in
+    '-h' | '--help' | 'help')
+        echo "$help_text"
+        exit 0
+        ;;
+    '-c' | '--cleanup' | 'cleanup')
+        cleanup=1
+        shift
+        ;;
+    '-r' | '--rate' | 'rate')
+        if [ -z "$2" ]; then
+            echo "${0##*/}: -r flag requires a frame rate value" >&2
+            exit 1
+        fi
+        max_fps="$2"
+        shift 2
+        ;;
+    '-p' | '--processor' | 'processor')
+        if [ -z "$2" ]; then
+            echo "${0##*/}: -p flag requires a processor (libplacebo, realesrgan, realcugan, rife)" >&2
+            exit 1
+        fi
+        case "$2" in
+            libplacebo|realesrgan|realcugan|rife)
+                v2x_processor="$2"
+                ;;
+            *)
+                echo "${0##*/}: invalid processor '$2' (must be: libplacebo, realesrgan, realcugan, rife)" >&2
+                exit 1
+                ;;
+        esac
+        shift 2
+        ;;
+    *) break ;;
+    esac
+done
+
+[ "$#" -eq "0" ] && echo "${0##*/}: no input path(s) specified" >&2 && exit 1
+
+# Determine upscaling method
+upscale_method=""
+if command -v video2x &>/dev/null; then
+    upscale_method="video2x"
+elif ffmpeg -filters 2>/dev/null | grep -q libplacebo; then
+    upscale_method="ffmpeg-libplacebo"
+else
+    upscale_method="ffmpeg-lanczos"
+fi
+
+for name in "$@"; do
+    [ ! -f "$name" ] && echo "${0##*/}: '$name' is not a valid file" >&2 && continue
+    ext="${name##*.}"
+    base="${name%.*}"
+    
+    # Probe video properties
+    codec=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$name" 2>/dev/null)
+    width=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of default=noprint_wrappers=1:nokey=1 "$name" 2>/dev/null)
+    height=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of default=noprint_wrappers=1:nokey=1 "$name" 2>/dev/null)
+    duration=$(ffprobe -v error -select_streams v:0 -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$name" 2>/dev/null)
+    audio_br=$(ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 "$name" 2>/dev/null)
+    audio_codec=$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$name" 2>/dev/null)
+    fps=$(ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 "$name" 2>/dev/null | awk -F'/' '{if ($2) print $1/$2; else print $1}')
+    
+    # Try to extract CRF from source metadata
+    source_crf=$(ffprobe -v error -select_streams v:0 -show_entries stream_tags=encoder -of default=noprint_wrappers=1:nokey=1 "$name" 2>/dev/null | grep -oP '(?<=crf=)\d+' || echo "")
+    
+    # Determine target CRF: use CRF 28 only if source CRF > 28, otherwise use source CRF
+    target_crf=28
+    if [ -n "$source_crf" ]; then
+        if [ "$source_crf" -le 28 ]; then
+            target_crf="$source_crf"
+        fi
+    fi
+    
+    # Determine orientation
+    is_vertical=0
+    [ "$height" -gt "$width" ] && is_vertical=1
+    
+    # Format duration as h:m:s
+    if [ -n "$duration" ] && [ "$duration" != "N/A" ]; then
+        duration_int=${duration%.*}
+        duration_int=${duration_int:-0}
+        hours=$((duration_int / 3600))
+        minutes=$(((duration_int % 3600) / 60))
+        seconds=$((duration_int % 60))
+        duration_fmt=$(printf "%d:%02d:%02d" "$hours" "$minutes" "$seconds")
+    else
+        duration_fmt="Unknown"
+    fi
+    
+    # Check if already in target format
+    target_fps=$(awk -v f="$fps" -v m="$max_fps" 'BEGIN {print (f <= m) ? f : m}')
+    if [ "$codec" = "av1" ] && [ "$ext" = "mp4" ] && [ "$height" -le 720 ] && [ "${audio_br:-999999}" -le 128000 ]; then
+        if awk -v f="$fps" -v m="$max_fps" 'BEGIN {exit !(f <= m)}'; then
+            echo "⊘ Skipping '$(basename "$name")' - already in target format (AV1, MP4, ≤720p, ≤${max_fps}fps, ≤128kbps audio)"
+            continue
+        fi
+    fi
+    
+    # Determine if upscaling is needed (anything below 720p)
+    needs_upscale=0
+    target_width=1280
+    target_height=720
+    upscale_factor=1
+    
+    if [ "$is_vertical" -eq 1 ]; then
+        # Vertical video: need upscale if height < 720
+        if [ "$height" -lt 720 ]; then
+            needs_upscale=1
+            target_height=720
+            target_width=$((width * 720 / height))
+            upscale_factor=$(awk -v h="$height" 'BEGIN {printf "%.2f", 720 / h}')
+        fi
+    else
+        # Horizontal video: need upscale if width < 1280 OR height < 720
+        if [ "$width" -lt 1280 ] || [ "$height" -lt 720 ]; then
+            needs_upscale=1
+            target_width=1280
+            target_height=720
+            width_factor=$(awk -v w="$width" 'BEGIN {printf "%.2f", 1280 / w}')
+            height_factor=$(awk -v h="$height" 'BEGIN {printf "%.2f", 720 / h}')
+            upscale_factor=$(awk -v w="$width_factor" -v h="$height_factor" 'BEGIN {print (w > h) ? w : h}')
+        fi
+    fi
+    
+    # Print file info
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "File:     $(basename "$name")"
+    echo "Duration: $duration_fmt"
+    printf "Size:     %'d bytes\n" "$(du -b "$name" | cut -f1)"
+    echo "Video:    ${width}x${height} @ ${fps%%.*}fps ($codec)"
+    [ -n "$audio_codec" ] && echo "Audio:    $audio_codec @ ${audio_br}bps"
+    if [ -n "$source_crf" ]; then
+        echo "Quality:  Source CRF $source_crf → Target CRF $target_crf"
+    else
+        echo "Quality:  Target CRF $target_crf (source CRF unknown)"
+    fi
+    
+    processing_input="$name"
+    upscaled_temp=""
+    
+    # Perform AI upscaling if needed
+    if [ "$needs_upscale" -eq 1 ]; then
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "⬆ Upscaling from ${width}x${height} to ${target_width}x${target_height}"
+        
+        upscaled_temp="/tmp/upscaled_$(date +%s)_$(basename "$name")"
+        
+        if [ "$upscale_method" = "video2x" ]; then
+            # Determine video2x command based on processor
+            v2x_cmd=(video2x -i "$name" -o "$upscaled_temp" -p "$v2x_processor")
+            
+            case "$v2x_processor" in
+                libplacebo)
+                    # libplacebo requires explicit width/height
+                    echo "   Using video2x with libplacebo (${target_width}x${target_height})..."
+                    v2x_cmd+=(-w "$target_width" -h "$target_height")
+                    ;;
+                realesrgan)
+                    # RealESRGAN uses scale factor, round to nearest integer
+                    int_scale_factor=$(awk -v f="$upscale_factor" 'BEGIN {printf "%.0f", f + 0.5}')
+                    [ "$int_scale_factor" -lt 2 ] && int_scale_factor=2
+                    echo "   Using video2x with RealESRGAN (${int_scale_factor}x scale, model: realesrgan-plus)..."
+                    v2x_cmd+=(-s "$int_scale_factor" --realesrgan-model realesrgan-plus)
+                    ;;
+                realcugan)
+                    # RealCUGAN also uses scale factor
+                    int_scale_factor=$(awk -v f="$upscale_factor" 'BEGIN {printf "%.0f", f + 0.5}')
+                    [ "$int_scale_factor" -lt 2 ] && int_scale_factor=2
+                    echo "   Using video2x with RealCUGAN (${int_scale_factor}x scale)..."
+                    v2x_cmd+=(-s "$int_scale_factor")
+                    ;;
+                rife)
+                    echo "${0##*/}: RIFE is for frame interpolation, not upscaling - use realesrgan instead" >&2
+                    exit 1
+                    ;;
+            esac
+            
+            if ! "${v2x_cmd[@]}" 2>&1 | grep -v '^$'; then
+                echo "${0##*/}: AI upscaling failed for '$name'" >&2
+                rm -f "$upscaled_temp"
+                exit 1
+            fi
+        else
+            # Use ffmpeg fallback
+            new_width=$target_width
+            new_height=$target_height
+            
+            if [ "$upscale_method" = "ffmpeg-libplacebo" ]; then
+                echo "   Using ffmpeg with libplacebo to scale to ${new_width}x${new_height}..."
+                scale_filter="libplacebo=w=${new_width}:h=${new_height}:upscaler=ewa_lanczos"
+            else
+                echo "   Using ffmpeg with lanczos to scale to ${new_width}x${new_height}..."
+                scale_filter="scale=${new_width}:${new_height}:flags=lanczos"
+            fi
+            
+            if ! ffmpeg -hide_banner -loglevel error -stats -i "$name" \
+                -vf "$scale_filter" -c:v libx264 -crf 18 -preset fast \
+                -c:a copy "$upscaled_temp" 2>&1; then
+                echo "${0##*/}: upscaling failed for '$name'" >&2
+                rm -f "$upscaled_temp"
+                exit 1
+            fi
+        fi
+        
+        processing_input="$upscaled_temp"
+    fi
+    
+    new="$(namespacer "${base}.mp4")"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "⚙ Transcoding to AV1..."
+    
+    # Determine audio encoding options
+    audio_opts=()
+    if [ -n "$audio_codec" ]; then
+        orig_audio_br="${audio_br:-128000}"
+        target_audio_br=$((orig_audio_br < 128000 ? orig_audio_br : 128000))
+        
+        if [ "$audio_codec" = "aac" ] && [ "$orig_audio_br" -le 128000 ]; then
+            audio_opts=(-c:a copy)
+        else
+            audio_opts=(-c:a aac -b:a "${target_audio_br}")
+        fi
+    else
+        audio_opts=(-an)
+    fi
+    
+    # Build framerate filter
+    fps_filter=""
+    if awk -v f="$fps" -v m="$max_fps" 'BEGIN {exit !(f > m)}'; then
+        fps_filter=",fps=${max_fps}"
+    fi
+    
+    # Build scale filter based on orientation
+    scale_filter=""
+    if [ "$is_vertical" -eq 1 ]; then
+        if [ "$needs_upscale" -eq 0 ]; then
+            scale_filter="scale=-2:'min(720,ih)'"
+        fi
+    else
+        if [ "$needs_upscale" -eq 0 ]; then
+            scale_filter="scale='min(1280,iw)':-2,scale=-2:'min(720,ih)'"
+        fi
+    fi
+    
+    # Combine filters
+    vf=""
+    if [ -n "$scale_filter" ]; then
+        vf="${scale_filter}${fps_filter},setsar=1"
+    elif [ -n "$fps_filter" ]; then
+        vf="${fps_filter#,},setsar=1"
+    else
+        vf="setsar=1"
+    fi
+    
+    # Build ffmpeg command
+    ffmpeg_cmd=(ffmpeg -hide_banner -loglevel error -stats -i "$processing_input"
+        -c:v libsvtav1 -crf "$target_crf" -preset 6)
+    
+    if [ -n "$vf" ]; then
+        ffmpeg_cmd+=(-vf "$vf")
+    fi
+    
+    ffmpeg_cmd+=("${audio_opts[@]}" "$new")
+    
+    if ! SVT_LOG=0 "${ffmpeg_cmd[@]}"; then
+        rm -f "$new" "$upscaled_temp"
+        echo "${0##*/}: transcoding failed for '$name'" >&2
+        exit 1
+    fi
+    
+    # Clean up temp upscaled file
+    [ -n "$upscaled_temp" ] && rm -f "$upscaled_temp"
+    
+    orig_size=$(du -b "$name" | cut -f1)
+    new_size=$(du -b "$new" | cut -f1)
+    
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    printf "Original:   %'15d bytes\n" "$orig_size"
+    printf "Transcoded: %'15d bytes\n" "$new_size"
+    
+    # File cleanup logic
+    if [ "$needs_upscale" -eq 1 ]; then
+        rm "$name"
+        printf "✔ Upscaled and transcoded (removed original, saved %'d bytes)\n" "$((orig_size - new_size))"
+    elif [ "$cleanup" -eq 1 ]; then
+        if [ "$new_size" -lt "$orig_size" ]; then
+            rm "$name"
+            printf "✔ Kept transcoded file (removed original, saved %'d bytes)\n" "$((orig_size - new_size))"
+        else
+            rm "$new"
+            printf "✗ Kept original (removed transcoded, saved %'d bytes)\n" "$((new_size - orig_size))"
+        fi
+    else
+        if [ "$new_size" -lt "$orig_size" ]; then
+            printf "✔ Kept both files (transcoded is %'d bytes smaller)\n" "$((orig_size - new_size))"
+        else
+            printf "⚠ Kept both files (transcoded is %'d bytes larger)\n" "$((new_size - orig_size))"
+        fi
+    fi
+    echo ""
+done

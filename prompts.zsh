@@ -44,7 +44,7 @@ if [ -z "$TERMUX__PREFIX" ]; then
 fi
 
 tick='✔'
-cross='✗'
+cross='✘'
 dot='•'
 
 pth="%(3C.%-1d:%1~.%1~)"

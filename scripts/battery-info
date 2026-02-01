@@ -1,0 +1,14 @@
+#!/bin/env sh
+
+if [ -x "$(command -v termux-battery-status)" ]; then
+	blob="$(termux-battery-status)"
+	percentage="$(echo "$blob" | jq .percentage | grep -E '\d+')"
+	state="$(echo "$blob" | jq .status)"
+else
+	percentage="$(cat /sys/class/power_supply/BAT0/capacity)"
+	state="$(cat /sys/class/power_supply/BAT0/status)" # || exit 1
+fi
+
+state=$(echo "$state" | tr '[:upper:]' '[:lower:]' | sed 's/discharging/▮/;s/charging/↯/;s/full/✓/;s/"//g')
+
+printf "%s%s%%" "$state" "$percentage"

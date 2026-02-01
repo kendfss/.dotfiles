@@ -1,0 +1,113 @@
+#!/bin/env zsh
+
+helpText() {
+	cat <<-EOF
+		 usage: $(basename "$ZSH_ARGZERO") paths ... to ... scripts
+		     a script installer for void-linux
+
+		     -d, --directory set the directory items will be linked into (defaults to ${default_dst})
+		     -f, --flags     set the flags used for symbolic linking
+
+		     if your file names have spaces, dis ting ain't fah yuh
+	EOF
+}
+
+local default_dst=/usr/bin
+local dst="$default_dst"
+local setDst=false
+local update=false
+local verbose=false
+local flag=-s
+local arg
+local args=()
+for arg in "$@"; do
+	[ setDst = true ] && {
+		dst="$arg"
+		setDst=false
+		continue
+	}
+	case "$arg" in
+		-f | --force) flag="-fs" ;;
+		-d | --directory) setDst=true ;;
+		-u | --update) update=true ;;
+		-h | --help)
+			helpText
+			exit 0
+			;;
+		-*)
+			echo "unrecognized flag: $arg" >&2
+			exit 1
+			;;
+		*) args+=("$arg") ;;
+	esac
+done
+
+local input="${args[@]}"
+[ -n "$input" ] || {
+	if [ -t 0 ]; then
+		[ $update = true ] || {
+			helpText
+			exit 1
+		}
+		for name in "$DOTFILES"/scripts/*; do
+			[ -x "$name" ] || continue
+			input+=("$name")
+		done
+	else
+		input="$(cat)"
+		[ -n "$input" ] || {
+			echo "no input provided" >&2
+			helpText
+			exit 1
+		}
+	fi
+}
+
+local name
+echo "$input" | sed 's/\s+/\n/g' | xargs realpath | while read -r name; do
+	chmod +x "$name" || {
+		echo "chmod failed with $?" >&2
+		exit 1
+	}
+	echo "successfully set execute permission for '$name'" >&2
+	local base="$(basename "$name")"
+	code=$?
+	[ $code = 0 ] || {
+		echo "failed getting basename($name)" >&2
+		exit $code
+	}
+	local new="$dst/$base"
+	[ -e "$new" ] && {
+		echo "$new already exists" >&2
+		local real="$(realpath "$new")"
+		[ "$real" = "$name" ] || {
+			echo "realpath($new) == '$real'" >&2
+			exit 1
+		}
+		echo "already linked('$name' -> '$new')"
+		continue
+	}
+	sudo ln $flag "$name" "$new" || {
+		code=$?
+		echo "failed sudo(ln[-s]('$name' -> '$dst'))" >&2
+		[ $code = 1 ] || {
+			exit $code
+		}
+	}
+	local found="$(which "$base")"
+	code=$?
+	[ $code = 0 ] || {
+		echo "which(basename($name)) failed" >&2
+		exit $code
+	}
+	local tst="$(readlink "$found" || echo "$found")"
+	code=$?
+	[ "$tst" = "$name" ] || {
+		echo "readlink(which(basename($name))) != '$name': got '$tst'" >&2
+		echo "basename($name) == '$base'" >&2
+		echo "which($base) == '$found'" >&2
+		echo "readlink($found) == '$tst'" >&2
+		exit $code
+	}
+	echo "successfully linked '$name' into '$dst'"
+done

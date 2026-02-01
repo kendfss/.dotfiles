@@ -1,0 +1,30 @@
+#!/bin/env zsh
+
+local outFile="$(date +'%Y%M%e-%T').changes"
+local cached=''
+local files=()
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-c | --cached)
+			cached='--cached'
+			shift
+			;;
+		-o | --output)
+			shift
+			outFile="$1"
+			shift
+			;;
+		*)
+			if [ -f "$1" ]; then
+				files+=("$1")
+				shift
+			else
+				echo "'$1' isn't a file name or valid flag"
+				return 1
+			fi
+			;;
+	esac
+done
+local msg="$(printf "describe the changes below, in a single line, using the following syntax 'add: blah; fix: blah, blah; rm: blah; update: blah, blah, blah; ...;'\nalways end output with a semicolon. when there are multiple changes, of the same type (ie add|fix|etc), to a block|function|script|etc put those changes in parentheses and put that block/function/script/file name before those parentheses (ie: fix: funcX(blah, blah), fileX(blah, blah, blah); update: funcY blah, fileY(blah, blah blah); etc: ...;). when stating dependencies just say the name and developer - omit the repository host (ie github.com/kendfss/but -> kendfss/but; golang.org/x/net -> x/net). never include indirect dependencies (dependencies of dependencies) unless they have been updated\ninstead of giving each micro-detail: where possible, try to organize changes into cohesive units/features/fixes but don't consolidate modifications of different types like additions and fixes to the same file/scope\nwith regard to types, adhere to the following conventions: add->new functionality added to a function/file/class. fix->correcting bugs in the code/spelling. rm->removals of functions/types/data. update->elaborations/removals of natural language (ie comments/documentation)\nif you find that other types are necessary include them at will but explain them in (a) separate paragraph(s)%s\nplease, be careful not to confuse list bullets in markup languages with diff markers\n" "$(git diff $cached $files)")"
+echo "$msg" | c
+echo "$msg" | delta

@@ -46,6 +46,7 @@ for ((i=1; i<=$#files; i++)); do
     [ $i -gt 0 ] && prev="$(basename "${files[i-1]}")"
     [[ $(( i + 1 )) -le ${#files} ]] && next="$(basename "${files[i+1]}")"
     echo "🎵 $title"
+    [ -x $(command -v termux-toast) ] && termux-toast "$title"
     # Play the file
     if ! ssh "$ssh_host" "cat \"$file\"" | mpv $verbose --no-resume-playback --no-audio-display -; then
         echo "Error playing $file, continuing..."
@@ -57,6 +58,7 @@ for ((i=1; i<=$#files; i++)); do
 Next song in ${timeout} seconds...
 Enter
     return to play "$next"
+    s      to skip it
     q      to quit
     p      to play "$prev" again
     r      to restart "$title"
@@ -79,6 +81,9 @@ EOF
                     echo "restarting $(basename "$file")"
                     (( i-- ))
                     ;;
+                s|S|'>')
+                    echo skipping "$next"
+                    (( i++ ));;
                 *)
                     echo "Playing next song..."
                     ;;

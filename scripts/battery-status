@@ -5,7 +5,6 @@ if [ -x "$(command -v termux-battery-status)" ]; then
 	out="$(termux-battery-status | jq .status)" # || exit 1
 else
 	out="$(cat /sys/class/power_supply/BAT0/status)" # || exit 1
-
 fi
 
 [ $? = 0 ] || exit $?

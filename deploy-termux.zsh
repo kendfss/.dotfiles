@@ -33,10 +33,22 @@ for name in "$DOTFILES/scripts"/*; do
     symlinkDialogue "$name" "$target" || exit $?
 done
 
+lines() {
+  for arg in "$@"; do
+    echo "$arg"
+  done
+}
+
 if [[ -n "$(command -v pkg)" ]]; then
   pkg update && pkg upgrade
 
-  pkg install -y openssh fzf zsh tmux helix direnv ripgrep jq termux-services perl glow bat clang fd mpv mandoc iproute2 tree shellcheck git-delta || return 1
+  local packages=( )
+  local package
+  lines openssh fzf zsh tmux helix direnv ripgrep jq termux-services perl glow bat clang fd mpv mandoc iproute2 tree shellcheck git-delta | while read -r package; do
+    which "$package" && continue
+    packages+=("$package")
+  done
+  [ ${#packages} -gt 0 ] && { pkg install -y $packages || exit $?; }
 
   export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
   mkdir -p "$ZSH_PLUGINS"
@@ -54,10 +66,10 @@ if [[ -n "$(command -v pkg)" ]]; then
 
   export BASH_PLUGINS="$DOTFILES/bash-plugins"
   mkdir -p "$BASH_PLUGINS"
-  { [[ ! -e "$BASH_PLUGINS/ble.sh" ]] && { git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git "$BASH_PLUGINS/ble.sh" && make -C "$BASH_PLUGINS/ble.sh" && source "$BASH_PLUGINS/ble.sh/out/ble.sh"; }; } || echo "couldn't find, or clone, akinomyoga/ble.sh" && exit 1
+  { [ ! -e "$BASH_PLUGINS/ble.sh" ] && { { git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git "$BASH_PLUGINS/ble.sh" || { echo "couldn't find, or clone, akinomyoga/ble.sh" && exit 1; }; } && make -C "$BASH_PLUGINS/ble.sh"; }; }
 
 else
-  echo "pkg is not available. Make sure you have the package manager for termux installed." && return 1
+  echo "pkg is not available. Make sure you have the package manager for termux installed." && exit 1
 fi
 
 export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"

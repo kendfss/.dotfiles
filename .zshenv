@@ -20,6 +20,7 @@ export HARDWARECLOCK=localtime
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR="$DOTFILES"
 export CONFIG=$HOME/.config
+[ -x "$(which bat)" ] && export MANPAGER="$HOME/.dotfiles/scripts/manpager"
 
 if [ -x "$(command -v clang)" ]; then
   CC="$(which clang)" && export CC
