@@ -2,7 +2,7 @@
 
 if [ -x "$(command -v termux-battery-status)" ]; then
 	blob="$(termux-battery-status)"
-	percentage="$(echo "$blob" | jq .percentage | grep -E '\d+')"
+	percentage="$(echo "$blob" | jq .percentage)"
 	state="$(echo "$blob" | jq .status)"
 else
 	percentage="$(cat /sys/class/power_supply/BAT0/capacity)"
