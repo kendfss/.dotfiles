@@ -1,5 +1,11 @@
 #!/bin/env zsh
 
+local default_dst=/usr/bin
+local setDst=false
+local sudo=sudo
+[ -d "$TERMUX__HOME" ] && sudo='' && default_dst="$TERMUX__PREFIX/bin"
+local dst="$default_dst"
+
 helpText() {
 	cat <<-EOF
 		 usage: $(basename "$ZSH_ARGZERO") paths ... to ... scripts
@@ -12,11 +18,6 @@ helpText() {
 	EOF
 }
 
-local sudo=sudo
-[ -d "$TERMUX__HOME" ] && sudo=''
-local default_dst=/usr/bin
-local dst="$default_dst"
-local setDst=false
 local update=false
 local verbose=false
 local flag=-s
