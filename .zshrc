@@ -39,7 +39,3 @@ fi
 if [ -z "$TMUX" ] && [ -z "$NO_TMUX" ] && [ -z "$SSH_TTY" ] && [ -z "$SSH_CONNECTION" ] && [ -d "$TERMUX__HOME" ]; then
 	exec tmux || echo "couldn't start tmux. exited with $?" >&2
 fi
-
-preexec() {
-	date "+%H:%M:%S"
-}
