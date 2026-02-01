@@ -97,9 +97,7 @@ echo "$input" | sed 's/\s+/\n/g' | xargs realpath | while read -r name; do
 		else
 			echo "failed ln[$flag]('$name' -> '$dst')" >&2
 		fi
-		[ $code = 1 ] || {
-			exit $code
-		}
+		exit $code
 	}
 	local found="$(which "$base")"
 	code=$?
