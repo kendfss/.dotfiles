@@ -5,6 +5,16 @@ local setDst=false
 local sudo=sudo
 [ -d "$TERMUX__HOME" ] && sudo='' && default_dst="$TERMUX__PREFIX/bin"
 local dst="$default_dst"
+local update=false
+local verbose=false
+local flag=-s
+
+quietly() {
+	$verbose || return
+	for arg in "$@"; do
+		echo "$arg" >&2
+	done
+}
 
 helpText() {
 	cat <<-EOF
@@ -18,9 +28,6 @@ helpText() {
 	EOF
 }
 
-local update=false
-local verbose=false
-local flag=-s
 local arg
 local args=()
 for arg in "$@"; do
@@ -72,7 +79,7 @@ echo "$input" | sed 's/\s+/\n/g' | xargs realpath | while read -r name; do
 		echo "chmod failed with $?" >&2
 		exit 1
 	}
-	echo "successfully set execute permission for '$name'" >&2
+	quietly "successfully set execute permission for '$name'" >&2
 	local base="$(basename "$name")"
 	code=$?
 	[ $code = 0 ] || {
@@ -114,5 +121,5 @@ echo "$input" | sed 's/\s+/\n/g' | xargs realpath | while read -r name; do
 		echo "readlink($found) == '$tst'" >&2
 		exit $code
 	}
-	echo "successfully linked '$name' into '$dst'"
+	quietly "successfully linked '$name' into '$dst'"
 done
