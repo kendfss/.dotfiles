@@ -12,6 +12,8 @@ helpText() {
 	EOF
 }
 
+local sudo=sudo
+[ -d "$TERMUX__HOME" ] && sudo=''
 local default_dst=/usr/bin
 local dst="$default_dst"
 local setDst=false
@@ -87,9 +89,13 @@ echo "$input" | sed 's/\s+/\n/g' | xargs realpath | while read -r name; do
 		echo "already linked('$name' -> '$new')"
 		continue
 	}
-	sudo ln $flag "$name" "$new" || {
+	$sudo ln $flag "$name" "$new" || {
 		code=$?
-		echo "failed sudo(ln[-s]('$name' -> '$dst'))" >&2
+		if [ -n "$sudo" ]; then
+			echo "failed sudo(ln[$flag]('$name' -> '$dst'))" >&2
+		else
+			echo "failed ln[$flag]('$name' -> '$dst')" >&2
+		fi
 		[ $code = 1 ] || {
 			exit $code
 		}
