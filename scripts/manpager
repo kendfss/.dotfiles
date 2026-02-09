@@ -1,9 +1,16 @@
 #!/bin/env sh
 
 if ! command -v bat >/dev/null 2>&1; then
-    command man "$@"
-    exit $?
+	command man "$@"
+	exit $?
 fi
 
-[ ! -x "$(command -v bat)" ] && { man "$@"; exit $?; }
-col -bx < "$@" | bat -lman 
+[ ! -x "$(command -v bat)" ] && {
+	man "$@"
+	exit $?
+}
+[ $# -gt 0 ] && {
+	col -bx <"$@" | bat -lman
+	return $?
+}
+col -bx | bat -lman

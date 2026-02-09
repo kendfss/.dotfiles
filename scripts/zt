@@ -1,0 +1,6 @@
+#!/bin/env sh
+
+xid="$(tabbed -c -d)"
+
+zathura -e "$xid" "$@" >/dev/null 2>&1 &
+echo $!

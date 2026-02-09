@@ -1,0 +1,13 @@
+#!/bin/env sh
+
+root="$HOME/.local/share/piper"
+model="$root/en_GB-southern_english_female-low/en_GB-southern_english_female-low.onnx"
+exe="$root/piper"
+
+if [ $# -gt 0 ]; then
+	content="$*"
+else
+	content="$(cat)"
+fi
+
+echo "$content" | tr '\n' ' ' | $exe -m $model -f /dev/stdout --sentence-silence 0.5 --output-raw | mpv -

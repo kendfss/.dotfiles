@@ -61,7 +61,6 @@ alias lsblk='lsblk -o NAME,TRAN,STATE,MOUNTPOINTS,SIZE,FSUSE%,FSAVAIL,FSUSED'
 
 alias pull='git pull'
 alias push='git push'
-alias zt=zathura
 alias lst="ls --time=ctime"
 alias lsd="fd --type d --maxdepth 1"
 alias lsf="fd --type f --maxdepth 1"
