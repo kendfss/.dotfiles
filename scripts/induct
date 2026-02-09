@@ -23,6 +23,7 @@ helpText() {
 
 		     -d, --directory set the directory items will be linked into (defaults to ${default_dst})
 		     -f, --flags     set the flags used for symbolic linking
+		     -u, --update    install all uninstalled scripts
 
 		     if your file names have spaces, dis ting ain't fah yuh
 	EOF
@@ -74,52 +75,49 @@ local input="${args[@]}"
 }
 
 local name
-echo "$input" | sed 's/\s+/\n/g' | xargs realpath | while read -r name; do
+local exit_code=0
+
+while read -r name; do
 	chmod +x "$name" || {
 		echo "chmod failed with $?" >&2
-		exit 1
+		exit_code=1
+		continue
 	}
-	quietly "successfully set execute permission for '$name'" >&2
+
+	echo "successfully set execute permission for '$name'" >&2
+
 	local base="$(basename "$name")"
-	code=$?
-	[ $code = 0 ] || {
+	[ $? = 0 ] || {
 		echo "failed getting basename($name)" >&2
-		exit $code
+		exit_code=1
+		continue
 	}
+
 	local new="$dst/$base"
 	[ -e "$new" ] && {
 		echo "$new already exists" >&2
 		local real="$(realpath "$new")"
 		[ "$real" = "$name" ] || {
 			echo "realpath($new) == '$real'" >&2
-			exit 1
+			exit_code=1
+			continue
 		}
 		echo "already linked('$name' -> '$new')"
 		continue
 	}
+
 	$sudo ln $flag "$name" "$new" || {
-		code=$?
 		if [ -n "$sudo" ]; then
 			echo "failed sudo(ln[$flag]('$name' -> '$dst'))" >&2
 		else
 			echo "failed ln[$flag]('$name' -> '$dst')" >&2
 		fi
-		exit $code
+		exit_code=1
+		continue
 	}
-	local found="$(which "$base")"
-	code=$?
-	[ $code = 0 ] || {
-		echo "which(basename($name)) failed" >&2
-		exit $code
-	}
-	local tst="$(readlink "$found" || echo "$found")"
-	code=$?
-	[ "$tst" = "$name" ] || {
-		echo "readlink(which(basename($name))) != '$name': got '$tst'" >&2
-		echo "basename($name) == '$base'" >&2
-		echo "which($base) == '$found'" >&2
-		echo "readlink($found) == '$tst'" >&2
-		exit $code
-	}
-	quietly "successfully linked '$name' into '$dst'"
-done
+
+	echo "successfully linked '$name' into '$dst'"
+
+done < <(echo "$input" | sed 's/\s+/\n/g' | xargs realpath)
+
+exit $exit_code
