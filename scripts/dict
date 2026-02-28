@@ -1,36 +1,34 @@
 #!/usr/bin/env zsh
 
 fn() {
-  local word
-  local echo
-  if [ -n "$1" ]; then
-    word="$1"
-    echo=true
-  else
-    word="$(xclip -o -selection primary 2> /dev/null || xclip -o -selection clipboard || exit)"
-  fi
-  word="$(echo "$word" | xargs)"
-  query="$DICTAPI/$word"
-  result="$(curl -s "$query")"
-  if [ -z "$result" ]; then 
-    local msg="Invalid word: $word"
-    [ -z $echo ] && notify-send -h string:bgcolor:#bf616a -t 3000 "$msg" && return
-    echo "$msg" && return
-  fi
-  # local pipeline='[.[].meanings[] | {pos: .partOfSpeech, def: .definitions[].definition}] | .[:3].[] | "\(.pos). \(.def)\n"'
-  # echo here
-  # echo here
-  local pipeline='.[0].meanings[] | "\(.partOfSpeech). \(.definitions[0].definition)\n"'
-  local def
-  def="$(echo "$result" | jq -r "$pipeline" 2> /dev/null || echo "$result" | jq -r '.message' 2> /dev/null || exit)"
-  # local def="${def// \\n}"
-  [ -z "$def" ] && def="no results" && code=1
-  [ -z $echo ] && notify-send -t 60000 "$word -" "$def" && return 
-  echo "$def"
-  return $code
+	local word
+	local echo
+	if [ -n "$1" ]; then
+		word="$1"
+		echo=true
+	else
+		word="$(xclip -o -selection primary 2>/dev/null || xclip -o -selection clipboard || exit)"
+	fi
+	word="$(echo "$word" | xargs)"
+	query="$DICTAPI/$word"
+	result="$(curl -s "$query")"
+	if [ -z "$result" ]; then
+		local msg="Invalid word: $word"
+		[ -z $echo ] && notify-send -h string:bgcolor:#bf616a -t 3000 "$msg" && return
+		echo "$msg" && return
+	fi
+	# local pipeline='[.[].meanings[] | {pos: .partOfSpeech, def: .definitions[].definition}] | .[:3].[] | "\(.pos). \(.def)\n"'
+	# echo here
+	# echo here
+	local pipeline='.[0].meanings[] | "\(.partOfSpeech). \(.definitions[0].definition)\n"'
+	local def
+	def="$(echo "$result" | jq -r "$pipeline" 2>/dev/null || echo "$result" | jq -r '.message' 2>/dev/null || exit)"
+	# local def="${def// \\n}"
+	[ -z "$def" ] && def="no results" && code=1
+	[[ $def == "Sorry"* ]] && def="no results" && code=1
+	[ -z $echo ] && notify-send -t 60000 "$word -" "$def" && return
+	echo "$def"
+	return $code
 }
 
 fn "$@"
-
-
-
