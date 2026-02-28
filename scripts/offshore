@@ -1,0 +1,115 @@
+#!/bin/env zsh
+
+# transplant files/dirs to new places and create back-links
+
+local destination=""
+local -a items=()
+
+while (($#)); do
+	case $1 in
+		-d | --destination)
+			if (($# > 1)); then
+				destination="$2"
+				shift 2
+			else
+				echo "Error: '$1' requires an argument" >&2
+				exit 1
+			fi
+			;;
+		-*)
+			echo "Unsupported option: '$1'" >&2
+			exit 1
+			;;
+		*)
+			items+=("$1")
+			shift
+			;;
+	esac
+done
+
+if [[ -z $destination ]]; then
+	echo "Error: no destination set. Use -d /path/to/destination" >&2
+	exit 1
+fi
+
+if [[ ! -d $destination ]]; then
+	echo "Error: destination '$destination' is not a directory or doesn't exist" >&2
+	exit 1
+fi
+
+if ((${#items[@]} == 0)); then
+	echo "Error: no items specified to offload" >&2
+	exit 1
+fi
+
+for item in "${items[@]}"; do
+	if [[ ! -e $item ]]; then
+		echo "Warning: '$item' does not exist, skipping" >&2
+		continue
+	fi
+
+	local dir="$(dirname "$item")"
+	local base="$(basename "$item")"
+	local full_dest="${destination}/${base}"
+
+	if [[ -d $item ]]; then
+		echo "Processing directory: $item"
+
+		# Create tar ball
+		cd "$dir" || continue
+		local ball="${base}_backup.tar.gz"
+
+		if tar czf "$ball" "$base"; then
+			echo "  Created archive: $ball"
+
+			# Extract to destination
+			if tar xzf "$ball" -C "$destination"; then
+				echo "  Extracted to: $full_dest"
+
+				# Rename original
+				if mv "$base" "${base}-bckp"; then
+					echo "  Backed up original as: ${base}-bckp"
+
+					# Create symlink
+					if ln -sf "$full_dest" "$dir/$base"; then
+						echo "  Created symlink"
+
+						# Clean up
+						if rm "$ball"; then
+							echo "  Cleaned up archive"
+						else
+							echo "  Error: Failed to delete tarball: '$ball'" >&2
+						fi
+					else
+						echo "  Error: Failed to create symlink" >&2
+					fi
+				else
+					echo "  Error: Failed to backup original" >&2
+				fi
+			else
+				echo "  Error: Failed to extract archive" >&2
+			fi
+		else
+			echo "  Error: Failed to create archive" >&2
+		fi
+
+	elif [[ -f $item ]]; then
+		echo "Processing file: $item"
+
+		# Move file to destination
+		if mv "$item" "$full_dest"; then
+			echo "  Moved to: $full_dest"
+
+			# Create symlink
+			if ln -sf "$full_dest" "$item"; then
+				echo "  Created symlink"
+			else
+				echo "  Error: Failed to create symlink" >&2
+			fi
+		else
+			echo "  Error: Failed to move file" >&2
+		fi
+	else
+		echo "Warning: '$item' is not a regular file or directory, skipping" >&2
+	fi
+done

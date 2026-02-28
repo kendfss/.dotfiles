@@ -1,0 +1,38 @@
+#!/bin/env zsh
+
+## perform a web search from the comfort of your terminal
+
+set -euo pipefail
+
+  # Web_search from terminal
+  emulate -L zsh
+ 
+  # Define search engine URLS
+  typeset -A urls
+  local urls=(
+    google      "https://www.google.com/search?q="
+    g           "https://www.google.com/search?q="
+    ddg         "https://www.duckduckgo.com/?q="
+    github      "https://github.com/search?q="
+    gh          "https://github.com/search?q="
+  )
+ 
+  # Check whether the search engine is supported
+  if [[ -z "$urls[$1]" ]]; then
+    echo "Search engine $1 not supported."
+    exit  1
+  fi
+ 
+  # Search or go to main page depending on number of arguments passed
+  if [[ $# -gt 1 ]]; then
+    # Build search url:
+    # Join arguments passed with '+', then append to search engine URL
+    local url="${urls[$1]}${(j:+:)@[2,-1]}"
+  else
+    # Build main page url:
+    # Split by '/', then rejoin protocol (1) and domain (2) parts with '//'
+    local url="${(j://:)${(s:/:)urls[$1]}[1,2]}"
+  fi
+ 
+  open_command "$url"
+

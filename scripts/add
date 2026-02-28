@@ -1,0 +1,93 @@
+#!/bin/env zsh
+
+## manage staging files for commits in git
+
+set -euo pipefail
+
+local dry=false
+local visible=false
+local hidden=false
+local force=""
+
+local help_text=$(
+	cat <<-EOF
+		usage: ${0} [FLAG]... [ARG]...
+		  stage files in a git repository
+		  
+		  flags:
+		    --help               print this message
+		    -v, --visible        include non-hidden files that aren't in gitignore
+		    -h, --hidden         include hidden files that aren't in gitignore
+		    -f, --force          forcefully stage files matched by .gitignore
+		    -d, --dry, --dry-run just print the names to the files that would be stage
+
+		  args:
+		    paths to any files
+
+		  examples:
+		    # stage your readme
+		    ${0} README.md
+		    # stage hidden and visible files (the order of terms doesn't matter in short flags)
+		    ${0} -hv
+		    # stage all tracked files
+		    ${0}
+	EOF
+)
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		'--help')
+			echo "$help_text"
+			exit 0
+			;;
+		'-v' | '--visible') visible=true ;;
+		'-h' | '--hidden') hidden=true ;;
+		'-d' | '--dry' | '--dry-run') dry=true ;;
+		'-f' | '--force') force="-f" ;;
+		-*)
+			[[ $1 == *"v"* ]] && visible=true
+			[[ $1 == *"h"* ]] && hidden=true
+			[[ $1 == *"d"* ]] && dry=true
+			[[ $1 == *"f"* ]] && force="-f"
+			;;
+		*) break ;;
+	esac
+	shift
+done
+
+local files=""
+
+if [[ $# -gt 0 ]]; then
+	files=$(printf "%s\n" "$@")
+fi
+
+if [[ $# -eq 0 ]] && ! $visible && ! $hidden; then
+	files+=$(git status -s | rg '^[ MA]M\s' | awk '{print $2}')$'\n'
+	files+=$(git status -s | rg '^[ R]M\s' | awk '{print $4}')$'\n'
+fi
+
+if $visible; then
+	files+=$(git status -s -- [^.]* 2>/dev/null | awk '{print $2}')$'\n'
+fi
+
+if $hidden; then
+	files+=$(git status -s -- .[^.]* 2>/dev/null | awk '{print $2}')$'\n'
+fi
+
+files=$(echo "$files" | rg -v '^\s*$' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sort -u)
+
+if [[ -z $files ]]; then
+	echo "no changes" >&2
+	exit
+fi
+
+if $dry; then
+	echo "would add:"
+else
+	echo "$files" | xargs -r git add $force
+	echo "added:"
+fi
+
+echo "$files" | while IFS= read -r file; do
+	[[ -n $file ]] && printf "    %s\n" "$file"
+done

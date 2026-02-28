@@ -1,0 +1,11 @@
+#!/bin/env zsh
+
+# check pairs of directory trees that should be the same for missing entries
+
+[ $# = 2 ] || { echo "want 2 args, have $#" >&2 && exit 1; }
+local base1="$1"
+local base2="$2"
+
+comm -23 \
+	<(find "$base1" | sed "s|^$base1||" | sort) \
+	<(find "$base2" | sed "s|^$base2||" | sort)

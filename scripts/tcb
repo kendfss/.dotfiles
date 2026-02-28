@@ -1,7 +1,18 @@
-#!/bin/env zsh
+#!/bin/env sh
 
-if [ -n "$TERMUX__PREFIX" ]; then
-	tmux save-buffer - | termux-clipboard-set
-	return
+# copy tmux's buffer to system clipboard
+
+if [ $# = 0 ]; then
+	[ -n "$TERMUX__PREFIX" ] && {
+		tmux save-buffer - | termux-clipboard-set
+		exit $?
+	}
+	tmux save-buffer - | xclip -i -selection clipboard
+else
+	[ -n "$TERMUX__PREFIX" ] && {
+		tmux save-buffer "$@" | termux-clipboard-set
+		exit $?
+	}
+	tmux save-buffer "$@" | xclip -i -selection clipboard
 fi
-tmux save-buffer - | xclip -i -selection clipboard
+exit $?

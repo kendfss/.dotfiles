@@ -1,0 +1,37 @@
+#!/bin/env zsh
+
+## add metadata to audio files using ffmpeg
+
+set -euo pipefail
+
+  local artist=''
+  local album=''
+  local title=''
+  local year=''
+  local files=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      '-a'|'--artist') shift && artist="-metadata artist='$1'" && shift && continue;;
+      '-l'|'--album') shift && album="-metadata album='$1'" && shift && continue;;
+      '-t'|'--title') shift && title="-metadata title='$1'" && shift && continue;;
+      '-y'|'--year') shift && year="-metadata year='$1'" && shift && continue;;
+      -*) echo "unrecognized flag: $1" >&2 && exit 1;;
+      *)
+        [ -f "$1" ] && files+=("$1") && shift && continue
+        echo "file not found: $1" >&2 && exit 1;;
+    esac
+  done
+  if [ -n "$title" -a ${#files[@]} -gt 1 ]; then
+    printf "setting title of more than one file to %s. sure? [yN] " "$title"
+    read -r response
+    case "${=response}" in
+      [yY]|[yY][eE][sS]) :;;
+      *) exit 0;;
+    esac
+  fi
+  for file in "${files[@]}"; do
+    local temp="$(mktemp)"
+    ffmpeg -i "$file" $artist $album $title $year -codec copy "$temp" || exit $?
+    mv "$temp" "$file" || { local code=$? && echo "failed cleanup: $file" >&2 && exit $code; }
+  done
+

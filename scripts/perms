@@ -1,0 +1,102 @@
+#!/bin/bash
+
+# Function to generate permutations of an array
+permute_array() {
+	local items=("$@")
+	local n=${#items[@]}
+
+	# Base case
+	if ((n == 1)); then
+		echo "${items[0]}"
+		return
+	fi
+
+	# Recursive case
+	for ((i = 0; i < n; i++)); do
+		local first="${items[i]}"
+		local rest=()
+
+		# Build the rest of the array without the current element
+		for ((j = 0; j < n; j++)); do
+			if ((j != i)); then
+				rest+=("${items[j]}")
+			fi
+		done
+
+		# Recursively permute the rest
+		while IFS= read -r perm; do
+			echo "$first$perm"
+		done < <(permute_array "${rest[@]}")
+	done
+}
+
+# Function to generate permutations of characters in a string
+permute_string() {
+	local str="$1"
+	local chars=()
+
+	# Convert string to array of characters
+	for ((i = 0; i < ${#str}; i++)); do
+		chars+=("${str:i:1}")
+	done
+
+	permute_array "${chars[@]}"
+}
+
+# Main function
+permute() {
+	local char_flag=false
+	local args=()
+
+	# Parse arguments
+	for arg in "$@"; do
+		if [[ $arg == "-c" ]] || [[ $arg == "--chars" ]]; then
+			char_flag=true
+		else
+			args+=("$arg")
+		fi
+	done
+
+	# Check number of arguments
+	case ${#args[@]} in
+		0)
+			echo "Usage: permute [-c|--chars] <string> [string2 ...]"
+			return 1
+			;;
+		1)
+			# Single argument: permute characters
+			permute_string "${args[0]}"
+			;;
+		*)
+			# Multiple arguments
+			if $char_flag; then
+				# Permute characters of each string
+				for str in "${args[@]}"; do
+					echo "Permutations of '$str':"
+					permute_string "$str"
+					echo
+				done
+			else
+				# Permute the list
+				permute_array "${args[@]}"
+			fi
+			;;
+	esac
+}
+
+permute "$@"
+
+# Example usage and tests
+if false; then
+	echo "=== Test 1: Single string, permute characters ==="
+	permute "abc"
+
+	echo -e "\n=== Test 2: Multiple strings, permute list ==="
+	permute "hello" "world" "bash"
+
+	echo -e "\n=== Test 3: Multiple strings with -c flag ==="
+	permute -c "ab" "cd"
+
+	echo -e "\n=== Test 4: Single string with -c flag (should ignore flag) ==="
+	permute -c "xyz"
+fi

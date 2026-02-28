@@ -8,6 +8,7 @@ local http=''
 local short=''
 local source=''
 local unexported=''
+local paging=''
 while [ $# -gt 0 ]; do
 	case "$1" in
 		'')
@@ -22,8 +23,16 @@ while [ $# -gt 0 ]; do
 		'-short' | '--short') short='-short' && shift && continue ;;
 		'-s' | '-src' | '--src') source='-src' && shift && continue ;;
 		'-u' | '--unexported') unexported='-u' && shift && continue ;;
+		'-p' | '--paging')
+			[ $# -ge 2 ] || {
+				echo "$0: param '$1' expects an argument" >&2
+				return 1
+			}
+			paging=$2 && shift 2
+			continue
+			;;
 		--*)
-			echo "unrecognized flag: $1" >&2
+			echo "$0: unrecognized flag: $1" >&2
 			return 1
 			;;
 		-*)
@@ -42,7 +51,8 @@ while [ $# -gt 0 ]; do
 done
 local count=0
 local head=""
-local arg
+local arg=''
+local paging="${paging:-auto}"
 for arg in "$@"; do
 	local blob="$(go doc $change_dir $all $case $cmd $http $short $source $unexported "$arg")"
 	local blob_head="$(printf '%s\n' "$blob" | sed -n 1p)"
@@ -56,6 +66,6 @@ for arg in "$@"; do
 			blob="$(printf '%s\n' "$blob" | sed 1d)"
 		fi
 	fi
-	printf '%s\n' "$blob" | bat -lgo --theme ansi
+	printf '%s\n' "$blob"
 	((count++))
-done
+done | bat -lgo --theme ansi --paging="$paging"

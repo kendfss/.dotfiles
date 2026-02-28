@@ -1,9 +1,16 @@
 #!/bin/env zsh
 
+set -eo pipefail
+
+local self="$(basename "$ZSH_ARGZERO")"
+
 local default_dst=/usr/bin
 local setDst=false
 local sudo=sudo
-[ -d "$TERMUX__HOME" ] && sudo='' && default_dst="$TERMUX__PREFIX/bin"
+# TERMUX__HOME=''
+if [ -d "$TERMUX__HOME" ]; then
+	sudo='' && default_dst="$TERMUX__PREFIX/bin"
+fi
 local dst="$default_dst"
 local update=false
 local verbose=false
@@ -18,7 +25,7 @@ quietly() {
 
 helpText() {
 	cat <<-EOF
-		 usage: $(basename "$ZSH_ARGZERO") paths ... to ... scripts
+		 usage: $self [FILE]...
 		     a script installer for void-linux
 
 		     -d, --directory set the directory items will be linked into (defaults to ${default_dst})

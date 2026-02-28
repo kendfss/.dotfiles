@@ -1,5 +1,10 @@
 #!/bin/env zsh
 
-output=$(tmux save-buffer -)
-[[ $output == *"\n" ]] && printf '%s' "$output" && return
-[ -n "$output" ] && printf '%s\n' "$output"
+# print the contents of tmux's buffer
+
+if [ $# = 0 ]; then
+	tmux save-buffer -
+else
+	tmux save-buffer "$@"
+fi
+exit $?

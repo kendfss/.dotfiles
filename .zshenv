@@ -1,9 +1,9 @@
 # Set important shell variables
-export EDITOR=hx                            # Set default editor
-export VISUAL=hx                            # Set default editor
-export PAGER=less                           # Set default pager
-export LESS="-R"                            # Set the default options for less 
-export LANG="en_GB.UTF-8"                   # I'm not sure who looks at this, but I know it's good to set in general
+export EDITOR=hx          # Set default editor
+export VISUAL=hx          # Set default editor
+export PAGER=less         # Set default pager
+export LESS="-R"          # Set the default options for less
+export LANG="en_GB.UTF-8" # I'm not sure who looks at this, but I know it's good to set in general
 export GOFMT=gofumpt
 export CLONEDIR=$HOME/gitclone/clones
 export CLONES=$HOME/gitclone/clones
@@ -11,6 +11,8 @@ export REPO_HOST=https://github.com
 export DEVELOPER=$USER
 export GOPATH="$HOME/go"
 export WORKSPACE="$HOME/workspace"
+export FLROOT="$HOME/.wine/drive_c/Program Files/Image-Line/FL Studio 2025"
+export VST2_DIR="$HOME/.wine/drive_c/Program Files/Common Files/VST2"
 export FLPROJECTS="$HOME/Documents/Image-Line/FL Studio/Projects"
 export VIDEOS="$HOME/$({ [ "$(uname)" = "Linux" ] && echo Videos; } || echo Movies)"
 export MUSIC=$HOME/Music
@@ -23,70 +25,79 @@ export CONFIG=$HOME/.config
 [ -x "$(which bat)" ] && export MANPAGER="$HOME/.dotfiles/scripts/manpager"
 
 if [ -x "$(command -v clang)" ]; then
-  CC="$(which clang)" && export CC
+	CC="$(which clang)" && export CC
 fi
 
 # Python/UV related
 [ -d "$HOME/.venv" ] && export VIRTUAL_ENV=$HOME/.venv && source "$HOME"/.venv/bin/activate
 
-export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.cache/dart-sdk/bin:$HOME/.cache/vscode/bin:$DOTFILES/scripts"
+# Dart/Flutter related
+[ -d "$HOME/dartsdk" ] && export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin"
+[ -d "$HOME/.cache/dart-sdk" ] && export PATH="$PATH:$HOME/.cache/dart-sdk/bin"
+
+# VS Code related
+[ -d "$HOME/.cache/vscode/bin" ] && export PATH="$PATH:$HOME/.cache/vscode/bin"
+
+# rust related
+[ -d "$HOME/.cargo" ] && {
+	export PATH="$PATH:$HOME/.cargo/bin"
+	. "$HOME/.cargo/env"
+}
+
+export PATH="$PATH:$HOME/.local/bin:$HOME/go/bin:$DOTFILES/scripts"
 export DICTAPI="https://api.dictionaryapi.dev/api/v2/entries/en_GB"
 
 _dirof() {
-  for name in "$@"; do
-    pth=$(dirname "$(command -v "$name")")
-    echo "$pth"
-  done
+	for name in "$@"; do
+		pth=$(dirname "$(command -v "$name")")
+		echo "$pth"
+	done
 }
 
 export RUST_BACKTRACE=full
 
 export PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/bin:$TERMUX__ROOTFS_DIR/bin:$TERMUX__ROOTFS_DIR/usr/sbin:$TERMUX__ROOTFS_DIR/sbin:$TERMUX__ROOTFS_DIR/usr/local/bin"
 
-if [[ $(uname) = Darwin ]]; then
-    export PATH="$PATH:/Library/TeX/texbin:/Library/Apple/usr/bin"
-    export PATH="$PATH:/Library/Frameworks/Python.framework/Versions/3.10/bin"
+if [[ $(uname) == Darwin ]]; then
+	export PATH="$PATH:/Library/TeX/texbin:/Library/Apple/usr/bin"
+	export PATH="$PATH:/Library/Frameworks/Python.framework/Versions/3.10/bin"
 fi
 
 if [[ -x $(command -v node) ]]; then
-    export PATH="$PATH:$(_dirof node)"
-    export PATH="$PATH:$(_dirof npm)"
+	export PATH="$PATH:$(_dirof node)"
+	export PATH="$PATH:$(_dirof npm)"
 fi
 
 [ -d /usr/local/go/bin ] && export PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/local/go/bin"
 
-
 [ -x "$(command -v go)" ] && export PATH="$PATH:$HOME/go/bin"
-
 
 export PROFILE=$DOTFILES/.zprofile
 export RC=$DOTFILES/.zshrc
 export ENV=$DOTFILES/.zshenv
-[ -d "$HOME/.cargo" ] && . "$HOME/.cargo/env"
 
 export XDG_DATA_DIRS="$XDG_DATA_DIRS:/var/lib/flatpak/exports/share:/home/kendfss/.local/share/flatpak/exports/share"
 
 if [[ $(uname) -eq Linux ]]; then
-  [[ -d "$HOME/Android/Sdk" ]] && ANDROID_STUDIO_HOME=$HOME/Android/Sdk/android-studio
-  [[ -d "$ANDROID_STUDIO_HOME" ]] && alias anstu="$ANDROID_STUDIO_HOME/bin/studio.sh"
-  [[ -d "$HOME/Android" ]] && export ANDROID_SDK_ROOT="$HOME/Android/Sdk"
-  [[ -d "$ANDROID_SDK_ROOT" ]] && PATH="$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools"
-  export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/20.1.5948944"
+	[[ -d "$HOME/Android/Sdk" ]] && ANDROID_STUDIO_HOME=$HOME/Android/Sdk/android-studio
+	[[ -d $ANDROID_STUDIO_HOME ]] && alias anstu="$ANDROID_STUDIO_HOME/bin/studio.sh"
+	[[ -d "$HOME/Android" ]] && export ANDROID_SDK_ROOT="$HOME/Android/Sdk"
+	[[ -d $ANDROID_SDK_ROOT ]] && PATH="$PATH:$ANDROID_SDK_ROOT/cmdline-tools/bin:$ANDROID_SDK_ROOT/platform-tools"
+	export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/20.1.5948944"
 fi
 
 [ -d "$TERMUX__ROOTFS_DIR" ] && export PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/local/bin:$TERMUX__ROOTFS_DIR/usr/bin"
 [ -d "$HOME/.elan" ] && export PATH="$PATH:$HOME/.elan/bin"
 
-
-PATH="$PATH:$HOME/dartsdk/dart-sdk/bin:$DOTFILES/scripts"
+PATH="$PATH:$DOTFILES/scripts"
 if [ -d "$TERMUX__PREFIX" ]; then
-    export PLAYPATH="$HOME/storage/music"
+	export PLAYPATH="$HOME/storage/music"
 else
-    export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music:/mnt/Elements/drive:/mnt/Elements/music"
+	export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music:/mnt/Elements/drive:/mnt/Elements/music"
 fi
 export MUSIC_FORMATS="mp3|m4a|wav|flac|ogg|aif|aiff|opus"
 
-export WORDCHARS=${WORDCHARS//[&+;\-_\/=.\|]}
+export WORDCHARS=${WORDCHARS//[&+;\-_\/=.\|]/}
 
 export SKIM_DEFAULT_OPTIONS="-m --tiebreak index --bind='tab:toggle,alt-a:select-all,alt-d:deselect-all'"
 export FZF_DEFAULT_OPTS="$SKIM_DEFAULT_OPTIONS"

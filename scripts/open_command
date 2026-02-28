@@ -1,0 +1,31 @@
+#!/bin/env zsh
+
+## open some uri with the system's default handler
+
+set -euo pipefail
+
+# Use generalized open command
+emulate -L zsh
+# setopt shwordsplit
+setopt localoptions shwordsplit
+
+local open_cmd
+
+# Define the open command
+case "$OSTYPE" in
+	darwin*) open_cmd='open' ;;
+	cygwin*) open_cmd='cygstart' ;;
+	linux*) open_cmd='xdg-open' ;;
+	msys*) open_cmd='start ""' ;;
+	*)
+		echo "Platform $OSTYPE not supported"
+		exit 1
+		;;
+esac
+
+# Don't use nohup on OSX
+if [[ $OSTYPE == darwin* ]]; then
+	$open_cmd "$@" &>/dev/null
+else
+	nohup $open_cmd "$@" &>/dev/null
+fi

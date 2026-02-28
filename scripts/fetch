@@ -1,0 +1,119 @@
+#!/bin/zsh
+
+# a chached downloader, initially written for ghs with the future in mind.
+
+set -euo pipefail
+
+local self=$(basename "$ZSH_ARGZERO")
+helpText() {
+	cat <<-EOF
+		usage: $self [OPTION]... [URL]...
+		     a script for caching file downloads
+
+		  flags:
+		     -c, --command   command to use when downloading files
+		                     default: just a plain $(command -v curl || echo curl not found) with the '-o' for naming
+		     -d, --directory use the given directory as a cache (it won't be created for you)
+		                     default: .
+		     -r, --read      read file contents to stdout after downloading
+
+		  file names will be stripped of slashes and colons by replacing them with hyphens and
+		  then trimming sequences of repeated hyphens
+	EOF
+}
+
+local _testing=false
+[ $_testing = true ] && set -x
+
+dir='.'
+cmd=''
+read=false
+
+args=''
+SEP="£"
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-d | --dir)
+			dir="$2"
+			shift 2
+			;;
+		-c | --command | command)
+			cmd="$2"
+			shift 2
+			;;
+		-r | --read | read)
+			read=true
+			shift
+			;;
+		-rd | rd)
+			read=true
+			dir="$2"
+			shift 2
+			;;
+		-rc | rc)
+			read=true
+			cmd="$2"
+			shift 2
+			;;
+		-h | --help | help)
+			helpText
+			exit 0
+			;;
+		-*)
+			echo "unrecognized flag '$1'" >&2
+			helpText >&2
+			exit 1
+			;;
+		*)
+			args="$args$SEP$1"
+			shift
+			;;
+	esac
+done
+
+get() {
+	local arg="$1"
+	local name="$2"
+	if [ -z "$cmd" ]; then
+		curl "$arg" -o "$name"
+	else
+		eval "$cmd \"\$arg\"" >"$name"
+	fi
+}
+
+load() {
+	local link
+	for link in "$@"; do
+		name="$dir/$(echo "$link" | sed -E 's|^\w+://||g;s|[/:]|-|g;s:-+:-:g;s:-$::g')"
+		[ $_testing = true ] && {
+			echo "arg: '$link'" >&2
+			echo "name: '$name'" >&2
+		}
+
+		if [ -e "$name" ]; then
+			[ ! -s "$name" ] && {
+				rm "$name"
+				$0 "$link"
+				continue
+			}
+			if [ $read = false ]; then
+				echo "already have '$link'" >&2
+			fi
+		else
+			get "$link" "$name"
+		fi
+
+		[ $read = true ] && {
+			cat "$name"
+			continue
+		}
+		echo "$name"
+	done
+}
+
+[ $_testing = true ] && echo "$args" >&2
+
+echo "$args" | sed "s:^$SEP::g;s:$SEP:\n:g" | while read -r link; do
+	load "$link"
+done

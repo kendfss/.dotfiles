@@ -1,0 +1,20 @@
+#!/bin/env zsh
+
+local maxdepth=(-maxdepth 1)
+local exts=()
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-w | --walk) maxdepth=() && shift && continue ;;
+		-*) echo "unrecognized flag: $1" >&2 && return 1 ;;
+		*) exts+=("$1") && shift && continue ;;
+	esac
+done
+[ $# -eq 0 ] && exts+=("go")
+echo "review the following files for bugs, simplifications, and architectural/dependency improvements:"
+for ext in "${exts[@]}"; do
+	find . -type f -iname "*.$ext" $maxdepth 2>/dev/null | while read -r file; do
+		echo "// $file"
+		cat "$file"
+		echo
+	done
+done

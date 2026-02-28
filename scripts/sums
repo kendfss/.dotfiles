@@ -1,0 +1,27 @@
+#!/bin/env zsh
+count=false
+
+loop() {
+	for arg in "$@"; do
+		shasum -a256 "$arg" | awk '{print $1}'
+	done
+}
+
+args=()
+while (($#)); do
+	case "$1" in
+		-c | --count) count=true ;;
+		-*)
+			echo "unrecognized flag '$1'" >&2
+			exit 1
+			;;
+		*) args+=("$1") ;;
+	esac
+	shift
+done
+
+if [ $count = true ]; then
+	loop "${args[@]}" | sort | uniq -c | awk '{print $1 "\t" $2}'
+else
+	loop "${args[@]}"
+fi

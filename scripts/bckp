@@ -1,0 +1,28 @@
+#!/bin/env zsh
+
+## create spare copies of file and directories before introducing critical changes
+
+set -euo pipefail
+
+local force=false
+
+[ "$1" = "-f" -o "$1" = "--force" ] && force=true && shift
+
+local origin=$(pwd)
+local old=$1
+
+if [[ -z $old ]]; then
+	old="../$(basename "$(pwd)")"
+fi
+
+local new="$old-$0"
+
+if [ $force = false ]; then
+	[ -e "$new" ] && echo "already exists" >&2 && exit 1
+else
+	[ -f "$new" ] && rm -f "$new"
+	[ -d "$new" ] && rm -rf "$new"
+fi
+
+[[ -d $old ]] && cp -rf "$old/" "$new" && cd "$origin" && echo "backed up $old to $new"
+[[ -f $old ]] && cp "$old" "$new" && cd "$origin" && echo "backed up $old to $new"

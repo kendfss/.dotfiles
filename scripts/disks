@@ -1,0 +1,33 @@
+#!/bin/env bash
+
+set -euo pipefail
+
+self=$$
+
+options="KNAME,MIN-IO,TRAN,FSTYPE,STATE,MOUNTPOINTS,SIZE,FSUSE%,FSAVAIL,FSUSED"
+lang=conf
+
+[ $# = 0 ] && {
+	lsblk -o $options | bat -lconf
+	exit $?
+}
+
+{ lsblk "$@" || kill $self; } | bat -lconf
+exit $?
+
+args=()
+while [ $# -gt 0 ]; do
+	case $1 in
+		-o) options="$2" && shift 2 && continue ;;
+		-H) lang=xml && options='' ;;
+		*) ;;
+	esac
+	args+=("$1")
+	shift
+done
+
+[ -n "$options" ] && {
+	lsblk -o $options "${args[@]}" | bat -l $lang
+	exit $?
+}
+lsblk "${args[@]}" | bat -l $lang

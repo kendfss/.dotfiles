@@ -1,0 +1,53 @@
+#!/bin/env zsh
+# search github repos, check them each out, and print your choices
+
+set -euo pipefail
+
+local self=$(basename "$ZSH_ARGZERO")
+helpText() {
+	cat <<-EOF
+		usage: $self [QUERY TERM]...
+		     a script for peeking at github repo READMEs
+
+		     query terms will be concatenated into a single query
+	EOF
+}
+
+local _testing=false
+[ $_testing = true ] && set -x
+
+local args=()
+while (($#)); do
+	case "$1" in
+		-h | --help)
+			helpText
+			exit 0
+			;;
+		-*)
+			echo "unrecognized flag: $1" >&2
+			helpText >&2
+			exit 1
+			;;
+		*)
+			args+="$1"
+			shift
+			;;
+	esac
+done
+
+tmp="$(mktemp -d)"
+rm -rf "$tmp"
+DIR="$(dirname "$tmp")/$(basename "$ZSH_ARGZERO")"
+
+[ $_testing = true ] && echo "$DIR"
+[ ! -e "$DIR" ] && mkdir "$DIR"
+
+viewer="$(command -v mdv)"
+[ ! -x "$viewer" ] && {
+	viewer="$(command -v bat) -lmd"
+	[ ! -x "$viewer" ] && {
+		viewer="$(command -v cat)"
+	}
+}
+
+gh search repos "${args[@]}" | column -t -s $'\t' | fzf --tabstop=4 --preview "fetch -r -d '$DIR' -c 'gh repo view' {1} | GH_FORCE_TTY=1 $viewer" | awk '{print $1}'

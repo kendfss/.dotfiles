@@ -1,0 +1,92 @@
+#!/bin/env zsh
+
+# Intellegently extract archives based on extension.
+local file=$1
+shift
+local dir=$1
+
+if [[ -n $dir ]]; then
+	mkdir -p "$dir"
+	echo Extracting "$file" into "$dir" ...
+else
+	echo Extracting "$file" ...
+fi
+
+if [[ ! -f $file ]]; then
+	echo "'$file' is not a valid file"
+else
+	case $file in
+		*.tar.bz2)
+			if [[ -n $dir ]]; then dc="-C $dir"; fi
+			local cmd="tar xjvf \"$file\" $dc"
+			echo $cmd
+			eval ${cmd}
+			;;
+
+		*.tar.gz)
+			if [[ -n $dir ]]; then dc="-C $dir"; fi
+			local cmd="tar xzvf \"$file\" $dc"
+			echo $cmd
+			eval ${cmd}
+			;;
+
+		*.tar)
+			if [[ -n $dir ]]; then dc="-C $dir"; fi
+			local cmd="tar vxf \"$file\" $dc"
+			echo $cmd
+			eval ${cmd}
+			;;
+
+		*.tbz2)
+			if [[ -n $dir ]]; then dc="-C $dir"; fi
+			local cmd="tar xjvf \"$file\" $dc"
+			echo $cmd
+			eval ${cmd}
+			;;
+
+		*.tgz)
+			if [[ -n $dir ]]; then dc="-C $dir"; fi
+			local cmd="tar xzf \"$file\" $dc"
+			echo $cmd
+			eval ${cmd}
+			;;
+
+		*.bz2)
+			if [[ -n $dir ]]; then dc="-C $dir"; fi
+			local cmd="tar jf \"$file\" $dc"
+			echo $cmd
+			eval ${cmd}
+			;;
+
+		*.zip)
+			if [[ -n $dir ]]; then dc="-d $dir"; fi
+			local cmd="unzip \"$file\" $dc"
+			echo $cmd
+			eval ${cmd}
+			;;
+
+		*.gz)
+			if [[ -n $dir ]]; then dc="-C $dir"; fi
+			local cmd="tar zf \"$file\" \"$dc\""
+			echo $cmd
+			eval ${cmd}
+			;;
+
+		*.7z)
+			#TODO dir
+			local cmd="7z x -o \"$dir\" \"$file\""
+			echo $cmd
+			eval ${cmd}
+			;;
+
+		*.rar)
+			#TODO Dir
+			local cmd="unrar x \"$file\" \"$dir\""
+			echo $cmd
+			eval ${cmd}
+			;;
+		*)
+			echo "'$file' cannot be extracted via extract()"
+			;;
+	esac
+fi

@@ -1,6 +1,20 @@
 local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 
+config.audible_bell = "SystemBeep"
+config.visual_bell = {
+	fade_in_function = "EaseIn",
+	fade_in_duration_ms = 150,
+	fade_out_function = "EaseOut",
+	fade_out_duration_ms = 150,
+}
+config.colors = {
+	visual_bell = "#202020",
+}
+wezterm.on("bell", function(window, pane)
+	wezterm.log_info("the bell was rung in pane " .. pane:pane_id() .. "!")
+end)
+
 -- Font
 -- config.font = wezterm.font("Cascadia Code PL", { weight = "Bold" })
 config.font = wezterm.font("Iosevka Term Slab", { weight = "ExtraBlack" })
@@ -88,9 +102,9 @@ config.keys = {
 				"tmux",
 				"display-popup",
 				"-w",
-				"80%",
+				"90%",
 				"-h",
-				"80%",
+				"90%",
 				"-E",
 				"hx ~/.dotfiles/.wezterm.lua",
 			}
@@ -105,9 +119,9 @@ config.keys = {
 				"tmux",
 				"display-popup",
 				"-w",
-				"80%",
+				"90%",
 				"-h",
-				"80%",
+				"90%",
 				"-E",
 				"hx ~/.dotfiles/.tmux.conf && tmux source-file ~/.dotfiles/.tmux.conf && tmux display 'tmux conf reloaded!'",
 			}
@@ -122,9 +136,9 @@ config.keys = {
 				"tmux",
 				"display-popup",
 				"-w",
-				"80%",
+				"90%",
 				"-h",
-				"80%",
+				"90%",
 				"-E",
 				[[
             cd $HOME/.dotfiles;

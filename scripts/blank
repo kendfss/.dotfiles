@@ -1,0 +1,9 @@
+#!/bin/env zsh
+
+## print some number of blank lines
+
+set -euo pipefail
+
+for arg in {1..$1}; do
+	echo ""
+done

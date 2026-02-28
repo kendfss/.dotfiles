@@ -1,0 +1,59 @@
+#!/bin/env sh
+
+set -eu
+
+cmd="$(basename "$0")"
+
+slashed() {
+	case "$1" in
+		*/*) ;;
+		*) return 1 ;;
+	esac
+}
+
+take() {
+	$(command -v mkdir) -p "$1" || return $?
+	cd "$1"
+}
+
+# goto() {
+# 	cd "$1" || return $?
+# 	echo "$1"
+# }
+
+[ $# -eq 0 ] && {
+	echo "$cmd: no args received" >&2
+	return 1
+}
+
+depth="--depth=1"
+dev=""
+
+[ "$1" = "-d" ] && {
+	depth=""
+	shift 1
+}
+
+slashed "$dev" || {
+	dev="$1"
+	shift 1
+}
+
+args="$*"
+[ $# -eq 0 ] && {
+	args="$args $dev"
+	dev="$USER"
+}
+
+echo "$args" | while read repo; do
+	slashed "$repo" && dev="$(basename "$(dirname "$repo")")"
+	repo=$(basename "$repo")
+	pth="$CLONEDIR/$dev/$repo"
+	if [ -d "$pth" ]; then
+		echo "$cmd: already have $dev/$repo" >&2
+	else
+		echo "$cmd: fetching $dev/$repo" >&2
+		take "$CLONEDIR/$dev" && git clone $depth "$REPO_HOST/$dev/$repo" "$repo" >&2
+	fi
+	echo "$pth"
+done

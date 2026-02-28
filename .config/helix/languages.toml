@@ -174,3 +174,17 @@ auto-format = true
 name        = "bash"
 auto-format = true
 formatter   = { command = 'shfmt', args = ["-s", "-ci"] }
+
+
+[[language]]
+name          = "numbat"
+scope         = "source.numbat"
+file-types    = ["nbt"]
+roots         = []
+comment-token = "#"
+grammar       = "numbat"
+# indent        = { tab-width = 2, unit = "  " }
+
+[[grammar]]
+name   = "numbat"
+source = { path = "/home/kendfss/.config/helix/grammars/sources/tree-sitter-numbat" }

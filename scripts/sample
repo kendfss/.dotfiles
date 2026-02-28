@@ -1,0 +1,31 @@
+#!/bin/env zsh
+
+## convert raw data into audio
+
+set -euo pipefail
+
+[ "$1" = "-h" ] && echo "usage: $0 [dir/path - default .] [duration_in_seconds - default 180]" >&2 && return 0
+local preview path secs target response fileMode
+[ "$1" = "-p" ] && preview=true && shift
+path="$(pwd)"
+secs=180
+[ "$#" = "2" ] && path="$1" && secs="$2"
+[ "$#" = "1" ] && path="$1"
+[ "$path" = ".." ] && path="$(dirname "$(pwd)")"
+[ "$path" = "." ] && path="$(pwd)"
+[ -f "$path" ] && fileMode=true
+target="$(namespacer ~/Music/samples/$(basename "$path").flac)"
+if [ -n "$preview" ]; then
+	[ -d "$path" ] && find "$path" -type f -print0 | xargs -0 cat | sort | aplay >&2 /dev/null
+	[ -f "$path" ] && cat "$path" | sort | aplay >&2 /dev/null
+else
+	printf 'sampling %s into %s for %s seconds [Y/n] ' "$path" "$target" "$secs"
+	read -r response
+	case "$response" in
+		[yY] | [yY][eE][sS] | "")
+			[ -d "$path" ] && find "$path" -type f -print0 | xargs -0 cat | sort | head -c $((8000 * secs)) | flac - -s -f --endian=little --sign=unsigned --channels=1 --bps=8 --sample-rate=8000 -o "$target" >/dev/null
+			[ -f "$path" ] && cat "$path" | sort | head -c $((8000 * secs)) | flac - -s -f --endian=little --sign=unsigned --channels=1 --bps=8 --sample-rate=8000 -o "$target" >/dev/null
+			;;
+		*) return ;;
+	esac
+fi

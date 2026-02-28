@@ -1,0 +1,13 @@
+#!/bin/env sh
+
+if [ $# -eq 1 ]; then
+	count=$1
+else
+	count=1
+fi
+
+while [ "$count" -gt 0 ]; do
+	printf '\a'
+	sleep 0.1
+	count=$((count - 1))
+done

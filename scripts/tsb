@@ -1,3 +1,10 @@
-#!/bin/env zsh
+#!/bin/env sh
 
-tmux load-buffer -
+# write into tmux's default buffer
+
+if [ $# = 0 ]; then
+	tmux load-buffer -
+else
+	tmux load-buffer "$@"
+fi
+exit $?

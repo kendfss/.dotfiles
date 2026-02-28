@@ -6,5 +6,6 @@ elif [ -n "$(command -v termux-clipboard-set)" ]; then
 	termux-clipboard-set
 else
 	echo no clipboard setter found
-	return 1
+	exit 1
 fi
+exit $?

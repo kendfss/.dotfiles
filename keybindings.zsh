@@ -7,7 +7,7 @@ expand-or-complete-with-dots() {
 	[[ -n "$terminfo[rmam]" && -n "$terminfo[smam]" ]] && echoti rmam
 	print -Pn "%{%F{red}......%f%}"
 	[[ -n "$terminfo[rmam]" && -n "$terminfo[smam]" ]] && echoti smam
- 
+
 	zle expand-or-complete
 	zle redisplay
 }
@@ -21,8 +21,12 @@ bindkey "^[[4~" end-of-line
 bindkey "^[[3~" delete-char
 bindkey '^[[3;3~' kill-word
 
-[[ $0 = *"zsh" ]] && autoload -U edit-command-line
+bindkey -r '^H' # disable backward-delete-char
+[ -x $(command -v fzf) ] && {
+	bindkey -r '^R'
+	bindkey '^H' fzf-history-widget
+}
+
+[[ $0 == *"zsh" ]] && autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '^e' edit-command-line
-
-

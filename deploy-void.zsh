@@ -10,7 +10,7 @@ source "$DOTFILES/functions.zsh" || { code=$? && echo "couldn't source functions
 
 source "$DOTFILES/functions.zsh"
 
-PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$HOME/.local/bin:$HOME/go/bin"
+export PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$HOME/.local/bin:$HOME/go/bin"
 for name in "$DOTFILES"/scripts/*; do
 	[ -x "$name" ] || continue
 	target="/usr/bin/$(basename "$name")"

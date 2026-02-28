@@ -1,0 +1,76 @@
+#!/bin/env zsh
+
+## kill tmux panes/windows/sessions whose utility has expired
+
+set -euo pipefail
+
+local args=()
+local panes=false
+local windows=false
+local sessions=false
+local dry=false
+local eliminate_current=false
+
+for arg in "$@"; do
+	case "$arg" in
+		'--panes') panes=true ;;
+		'--windows') windows=true ;;
+		'--sessions') sessions=true ;;
+		'--dry-run') dry=true ;;
+		'--eliminate-current') eliminate_current=true ;;
+		--*)
+			echo "unrecognized flag: $arg" >&2
+			exit 1
+			;;
+		-*)
+			local found=false
+			arg="${arg//-/}"
+			[[ $arg == *"p"* ]] && panes=true && found=true && arg="${arg//p/}"
+			[[ $arg == *"w"* ]] && windows=true && found=true && arg="${arg//w/}"
+			[[ $arg == *"s"* ]] && sessions=true && found=true && arg="${arg//s/}"
+			[[ $arg == *"d"* ]] && dry=true && found=true && arg="${arg//d/}"
+			[[ $arg == *"e"* ]] && eliminate_current=true && found=true && arg="${arg//e/}"
+			([ -z "$arg" ] && [ $found = true ]) && continue
+			echo "unrecognized flag(s): $arg" >&2
+			exit 1
+			;;
+		*) args+=("$arg") ;;
+	esac
+done
+
+local count=0
+local keyword=""
+local format=""
+[ $panes = true ] && keyword=pane && format='#P' && ((count++))
+[ $windows = true ] && keyword=window && format='#{window_index}' && ((count++))
+[ $sessions = true ] && keyword=session && format='#S' && ((count++))
+[ $count -ne 1 ] && echo "must choose ONE of  --panes (-p), --windows (-w), or --sessions (-s)" >&2 && exit 1
+
+local current="$(tmux display-message -p "$format")"
+if [ $eliminate_current = false ]; then
+	args+=("$current")
+fi
+
+local list="$(tmux list-"${keyword}s" | awk -F: '{print $1}')"
+[ -n "$list" ] || {
+	echo "couldn't find ${keyword}s" >&2
+	exit 1
+}
+
+for item in "${args[@]}"; do
+	list="$(echo "$list" | grep -v "^$item$")"
+done
+
+printf "current $keyword is: $current\nthis would close: %s\n" "$(echo "${list[@]}" | sed 's/[[:space:]]/, /g')"
+
+if [ $dry = false ]; then
+	printf "sure? [Y|n]: "
+	read -r response
+	case "$response" in
+		[yY] | [yY][eE][sS] | '')
+			echo "$list" | xargs -I{} tmux kill-$keyword -t {}
+			exit $?
+			;;
+		*) exit ;;
+	esac
+fi

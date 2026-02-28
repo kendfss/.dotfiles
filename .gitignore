@@ -1,4 +1,5 @@
 response
+*.chat
 *.log
 *.bak
 bug.md
@@ -70,3 +71,4 @@ services/brightness/.brightness
 .zcompdump
 .zcompcache
 *.go.md
+.cert/

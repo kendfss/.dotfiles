@@ -1,0 +1,17 @@
+#!/bin/env zsh
+
+## git add, commit, and push in one tiny interface
+
+set -euo pipefail
+
+[ "$1" = '-' ] && { { add && commit "$(p)" && push && return; } || { echo "failed: $?" && return 1; }; }
+if [[ -z $1 ]]; then
+	argv[1]=\.
+fi
+if [[ -z $2 ]]; then
+	argv[2]=sorry
+fi
+if [[ -z $3 ]]; then
+	argv[3]=origin
+fi
+add $1 && commit $2 && push $3

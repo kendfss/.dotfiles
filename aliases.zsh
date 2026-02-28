@@ -6,6 +6,7 @@ fi
 
 alias .="cd $DOTFILES"
 alias ~="cd $HOME"
+# alias -="cd -"
 alias sed="sed -E"
 alias spaced='tr "[:space:]" " "'
 alias lined='tr "[:space:]" "\n"'
@@ -28,13 +29,9 @@ fi
 if [ -x "$(command -v sk)" ] && [ -x "$(command -v fzf)" ]; then
 	echo "WARNING both fzf and skim/sk installed!" >&2
 elif [ -x "$(command -v sk)" ]; then
-	alias skim=sk
-	alias fzf=sk
-	source <(sk --shell zsh)
+	fzf() { command sk "$@"; }
 elif [ -x "$(command -v fzf)" ]; then
-	skim() { fzf "$@"; }
-	sk() { fzf "$@"; }
-	source <(fzf --zsh)
+	sk() { command fzf "$@"; }
 else
 	echo "neither fzf or skim are installed" >&2
 fi
@@ -57,7 +54,7 @@ alias rg='rg -g "!.git/"'
 [ "$0" = "zsh" ] && alias -g G='| grep' && alias -g L='| less'
 alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of compact=p=0:nk=1"
 
-alias lsblk='lsblk -o NAME,TRAN,STATE,MOUNTPOINTS,SIZE,FSUSE%,FSAVAIL,FSUSED'
+# alias disks='lsblk -do KNAME,TRAN,FSTYPE,STATE,MOUNTPOINTS,SIZE,FSUSE%,FSAVAIL,FSUSED | bat -lconf'
 
 alias pull='git pull'
 alias push='git push'
@@ -107,8 +104,3 @@ alias la='ls -la'
 alias md='mkdir -p'
 alias rd='rmdir'
 alias d='dirs -v | head -10' # List the last ten directories we've been to this session, no duplicates
-
-# Copy with a progress bar
-
-# [[ -z "$(command -v which)" ]] && alias which="command -v"
-# [[ -z "$(command -v mkdir)" ]] && alias mkdir="$TERMUX__ROOTFS_DIR/usr/bin/mkdir"

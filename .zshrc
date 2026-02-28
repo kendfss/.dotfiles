@@ -1,8 +1,10 @@
+set -o pipefail # remember to check $pipestatus
+
 [ -f ~/.secrets ] && source "$HOME/.secrets"
 # Load external config files and tools
-source "$DOTFILES/termsupport.zsh" # Set terminal window title and other terminal-specific things
-autoload -Uz compinit && compinit
-zstyle ':completion:*' menu select
+
+source "$DOTFILES/completions.zsh"
+source "$DOTFILES/termsupport.zsh"                    # Set terminal window title and other terminal-specific things
 source "$DOTFILES/aliases.zsh"                        # Load aliases. Done in a seperate file to keep this from getting too long and ugly
 source "$DOTFILES/functions.zsh"                      # Load misc functions. Done in a seperate file to keep this from getting too long and ugly
 source "$DOTFILES/keybindings.zsh"                    # Load misc functions. Done in a seperate file to keep this from getting too long and ugly
@@ -28,12 +30,19 @@ if [ -d "$DOTFILES/zsh-plugins" ]; then
 fi
 
 if [ -d "$ZSH_PLUGINS" ]; then
-	source "$ZSH_PLUGINS/zsh-autosuggestions/zsh-autosuggestions.zsh"
-	if [ -d "$ZSH_PLUGINS/zsh-sweep" ]; then
+	[ ! -d "$TERMUX__PREFIX" ] && source "$ZSH_PLUGINS/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+	[ -d "$ZSH_PLUGINS/zsh-autosuggestions" ] && source "$ZSH_PLUGINS/zsh-autosuggestions/zsh-autosuggestions.zsh"
+	[ -d "$ZSH_PLUGINS/zsh-fzf" ] && {
+		[ -z "${_comps+x}" ] && {
+			autoload -U compinit
+			compinit
+		}
+		source "$ZSH_PLUGINS/zsh-fzf/fzf-tab.plugin.zsh"
+	}
+	[ -d "$ZSH_PLUGINS/zsh-sweep" ] && {
 		zs_set_path=1
 		source "$DOTFILES/zsh-plugins/zsh-sweep/zsh-sweep.plugin.zsh"
-	fi
-	[ ! -d "$TERMUX__PREFIX" ] && source "$ZSH_PLUGINS/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+	}
 fi
 
 [[ $- != *i* ]] && return

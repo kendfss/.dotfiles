@@ -1,14 +1,11 @@
 #!/bin/env zsh
 
-local output
 if [ -n "$(command -v xclip)" ]; then
-	output=$(xclip -o -selection clipboard)
+	xclip -o -selection clipboard
 elif [ -n "$(command -v termux-clipboard-get)" ]; then
-	output=$(termux-clipboard-get)
+	termux-clipboard-get
 else
 	echo no clipboard getter found
-	return 1
+	exit 1
 fi
-
-printf '%s' "$output"
-[[ -n $output && $output != *$'\n' ]] && printf '\n'
+exit $?

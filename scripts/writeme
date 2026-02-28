@@ -1,0 +1,31 @@
+#!/bin/env zsh
+
+set -euo pipefail
+
+local maxdepth="-maxdepth 1"
+local exts=()
+local name=false
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-w | --walk) maxdepth="" && shift && continue ;;
+		-n | --name) name=true && shift && continue ;;
+		-*) echo "unrecognized flag: $1" >&2 && exit 1 ;;
+		*) exts+=("$1") && shift && continue ;;
+	esac
+done
+
+[ $# -eq 0 ] && exts+=("go")
+if [ false = "$name" ]; then
+	echo "write a readme for the following code. the project is called '$(basename "$(pwd)")', unless you can think of a better name"
+else
+	echo "write a readme for the following code. the project doens't have a name yet, please recommend some"
+fi
+
+for ext in "${exts[@]}"; do
+	find . -type f -iname "*.$ext" "${maxdepth[@]}" 2>/dev/null | while read -r file; do
+		echo "// $file"
+		cat "$file"
+		echo
+	done
+done

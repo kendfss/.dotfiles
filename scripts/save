@@ -1,0 +1,36 @@
+#!/bin/env zsh
+
+## choose files to delete by specifying those you want to keep
+
+set -euo pipefail
+
+local dir=$(mktemp -d)
+
+echo "dir: $dir" >&2
+for name in "$@"; do
+	mv -- "$name" "$dir/"
+done
+
+local items="$(ls -1)"
+if [ -z "$items" ]; then
+	echo "No items to delete. Restoring..." >&2
+	find "$dir" -maxdepth 1 -mindepth 1 -exec mv {} . \; && rm -rf "$dir"
+	exit $?
+fi
+
+printf "would delete:\n%s\n" "$items"
+printf "[yN]: "
+read -r resp
+case "$resp" in
+	y | Y | yes | Yes) echo "$items" | while IFS= read -r name; do
+		[ -d "$name" ] && rm -rf -- "$name" || rm -f -- "$name"
+	done ;;
+	*)
+		echo "Cancelled. Restoring items..." >&2
+		find "$dir" -maxdepth 1 -mindepth 1 -exec mv {} . \; && rm -rf "$dir"
+		exit $?
+		;;
+esac
+find "$dir" -maxdepth 1 -mindepth 1 -exec mv {} . \;
+rm -rf "$dir"
+exit $?
