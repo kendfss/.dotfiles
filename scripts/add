@@ -59,6 +59,10 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
+if $graphical; then
+	git status -s 2>/dev/null | grep -E '\?\?' | column -tH1 -s $' ' | fzf --preview '{ test -f {} && bat {} && exit; } || ls {}' | xargs -n git add
+fi
+
 local files=""
 
 if [[ $# -gt 0 ]]; then
@@ -68,10 +72,6 @@ fi
 if [[ $# -eq 0 ]] && ! $visible && ! $hidden; then
 	files+=$(git status -s | rg '^[ MA]M\s' | awk '{print $2}')$'\n'
 	files+=$(git status -s | rg '^[ R]M\s' | awk '{print $4}')$'\n'
-fi
-
-if $graphical; then
-	git status -s 2>/dev/null | grep -E '\?\?' | column -tH1 -s $' ' | fzf --preview '{ test -f {} && bat {} && exit; } || ls {}' | xargs -n git add
 fi
 
 if $visible; then
