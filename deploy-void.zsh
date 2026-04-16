@@ -16,24 +16,28 @@ for name in "$DOTFILES"/scripts/*; do
 	target="/usr/bin/$(basename "$name")"
 	symlinkDialogue "$name" "$target" || exit $?
 done
-for name in "$DOTFILES"/services/*; do
+
+for name in "$DOTFILES"/etc/*; do
 	[ -d "$name" ] || continue
 	local base="$(basename "$name")"
-	symlinkDialogue "$name" "/etc/sv/$base" || exit $?
-	symlinkDialogue "$name" "/var/service/$base" || exit $?
+	case $base in
+		sv) ls -1 "$name" | while read -r service; do
+			symlinkDialogue "$name" "/etc/sv/$base" || exit $?
+			symlinkDialogue "/etc/sv/$base" "/var/service/$base" || exit $?
+		done ;;
+		*)
+			[ "$base" = "ly" ] && continue
+			symlinkDialogue "$name" "/etc/$base" || exit $?
+			;;
+	esac
 done
+symlinkDialogue {$DOTFILES,}/etc/ly/config.ini || exit $?
+
 for name in "$DOTFILES/.config"/*; do
 	[ -d "$name" ] || continue
 	local base="$(basename "$name")"
 	symlinkDialogue "$name" "$HOME/.config/$base" || exit $?
 done
-for name in "$DOTFILES/etc"/*; do
-	[ -d "$name" ] || continue
-	local base="$(basename "$name")"
-	[ "$base" = "ly" ] && continue
-	symlinkDialogue "$name" "/etc/$base" || exit $?
-done
-symlinkDialogue {$DOTFILES,}/etc/ly/config.ini || exit $?
 
 for item in "$DOTFILES"/.*; do
 	[ -f "$item" ] || continue
@@ -54,10 +58,11 @@ if [[ -x "$(command -v xbps-install)" ]]; then
 	sudo xbps-install -Syu || exit $?
 	local packages=()
 	local package
-	lines git zsh acl-progs rsync zsh tmux kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer skim clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist tabbed zathura{,-pdf-mupdf} pandoc psmisc lf coreutils mpv{,-mpris} playerctl nicotine+ lua-language-server StyLua taplo base-devel bat gcc make llvm xkill xfce4-screenshooter delta gallery-dl lsof ntfs-3g uv | while read -r package; do
+	lines git zsh acl-progs rsync zsh tmux kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer skim clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist tabbed zathura{,-pdf-mupdf} pandoc psmisc lf coreutils mpv{,-mpris} playerctl nicotine+ lua-language-server StyLua taplo base-devel bat gcc make llvm xkill xfce4-screenshooter delta gallery-dl lsof ntfs-3g uv pup xtools alsa-utils | while read -r package; do
 		where $package && continue
 		packages+=("$package")
 	done
+	xlocate -S
 	[ ${#packages} -gt 0 ] && { sudo xbps-install -Syu $packages || exit $?; }
 
 	[[ "$(gh auth status | tr '[:upper:]' '[:lower:]')" != *"logged in"* ]] && { gh auth login || exit $?; }

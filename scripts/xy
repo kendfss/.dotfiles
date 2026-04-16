@@ -1,0 +1,8 @@
+#!/bin/env zsh
+
+# query the package which offers the binary of interest
+
+for arg in "$@"; do
+	xbps-query -o "*/$arg" | rg 'regular file' | head -1 | awk '{print $1}' | sed -E 's/-[0-9\._]+:?\s*$//g'
+	# xbps-query -Ro --regex ".*$arg.*" | rg 'regular file' | head -1 | awk '{print $1}' | sed -E 's/-[0-9\._]+:?\s*$//g'
+done

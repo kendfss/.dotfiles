@@ -1,0 +1,17 @@
+#!/bin/env zsh
+
+local cmd=""
+{ command -v "$1" && {
+	cmd=$1
+	shift
+}; } || case "$(uname)" in
+	Linux) cmd=xdg-open ;;
+	Darwin) cmd=open ;;
+	*)
+		echo unsure how to open files on $(uname) platform >&2
+		exit 1
+		;;
+esac
+
+$cmd $* &>/dev/null &
+exit

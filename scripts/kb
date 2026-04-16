@@ -1,0 +1,8 @@
+#!/bin/env zsh
+
+# kill all browser sessions
+
+set -eu
+
+pgrep firefox | xargs -n1 kill -9
+pgrep chrom | xargs -n1 kill -9

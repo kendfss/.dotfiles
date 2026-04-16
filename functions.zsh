@@ -1,6 +1,10 @@
 # https://zsh.sourceforge.io/Doc/Release/Conditional-Expressions.html
 autoload -Uz add-zsh-hook
 
+lfcd () {
+    cd "$(command lf -print-last-dir "$@")"
+}
+
 poc() {
   [[ $# -eq 0 ]] && local args=(".") || local args=("$@")
   local arg
@@ -142,10 +146,6 @@ issues() {
 }
 
 
-commit() {
-  local msg="$*"
-  git commit -m "$msg"
-}
 
 
 base() {
@@ -247,11 +247,6 @@ fext() {
   echo "${filename:${#base} + 1}" 
 }
 
-quietly() {
-  local cmd=$1
-  shift
-  $cmd $* &>/dev/null &
-}
 
 note() {
   local fname=~/self.notes/notes
@@ -367,16 +362,6 @@ east() {
   done
 }
 
-fl() {
-  local pids="$(pgrep FL64\.exe)"
-  [ -n "$pids" ] && echo "$pids" | xargs -I{} kill -9 {} && { [ -z "$1" ] && return; }
-  case "$1" in
-    '-r'|'--reload'|'r'|'reload') shift 1;;
-    '-k'|'--kill'|'k'|'kill') return;;
-    *);;
-  esac
-  quietly wine ~/.wine/drive_c/Program\ Files/Image-Line/FL\ Studio*/FL64.exe #$* #&> /dev/null
-}
 
 gitpop() {
   quietly firefox `git remote -v | head -n 1 | cut -d@ -f2 | cut -d" " -f1`
@@ -426,7 +411,11 @@ map() {
 }
 
 gofiles() {
-  find . -name "*.go" ! -name "*_string.go" ! -name "*_templ.go"
+  local args="$@"
+  [ "${#args}" = 0 ] && args+="."
+  for arg in "${args[@]}"; do
+    find "$arg" -name "*.go" ! -name "*_string.go" ! -name "*_templ.go"
+  done
 }
 
 
@@ -453,13 +442,6 @@ ipof() {
   # Return the IP of the host of the given urls
   for arg in "$@"; do
     ping -q -c1 -t1 $arg | tr -d '()' | awk '/^PING/{print $3}'
-  done
-}
-
-gouch() {
-  for arg in "$@"; do
-    mkdir "$arg"
-    echo "package $arg\n" > "$arg/$arg.go"
   done
 }
 
@@ -635,11 +617,11 @@ peek() {
   fzf -em --preview 'bat -p {}'
 }
 
-xq() {
-  for arg in "$@"; do
-    xbps query -Rs $arg | rg "$(printf '] (\w+(-)?)*%s((-)?\w+)*-' "$arg")" | rg "$arg"
-  done
-}
+# xq() {
+#   for arg in "$@"; do
+#     xbps query -Rs $arg | rg "$(printf '] (\w+(-)?)*%s((-)?\w+)*-' "$arg")" | rg "$arg"
+#   done
+# }
 
 xi() {
   local args=()

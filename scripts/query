@@ -1,0 +1,35 @@
+#!/bin/env zsh
+
+# start a web query from the command line, your current selected text, or your clipboard
+
+set -euopipefail
+
+testing=false
+[ $testing = true ] && set -x
+
+fn() {
+	local query=""
+	local browser=chromium
+	[ $# -gt 0 ] && {
+		case "$1" in
+			ff | firefox)
+				browser="firefox"
+				shift
+				;;
+			ch | chromium)
+				browser="chromium"
+				shift
+				;;
+			*)
+				query="$(echo "$@")"
+				break
+				;;
+		esac
+	}
+	[ -z "$query" ] && query="$(xclip -o -selection primary 2>/dev/null || xclip -o -selection clipboard 2>/dev/null || exit 1)"
+	printf 'https://duckduckgo.com?q=%s' "$query" | sed -E 's/\s+/%20/g' | xargs -I{} $browser '{}'
+	return $?
+}
+
+fn "$@"
+exit $?

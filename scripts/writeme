@@ -2,7 +2,13 @@
 
 set -euo pipefail
 
+local testing=false
+[ $testing = true ] && set -x
+
+local self="$(basename "$ZSH_ARGZERO")"
+
 local maxdepth="-maxdepth 1"
+local dir="$(pwd)"
 local exts=()
 local name=false
 
@@ -10,6 +16,7 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 		-w | --walk) maxdepth="" && shift && continue ;;
 		-n | --name) name=true && shift && continue ;;
+		-d | --dir) dir="$2" && shift 2 && continue ;;
 		-*) echo "unrecognized flag: $1" >&2 && exit 1 ;;
 		*) exts+=("$1") && shift && continue ;;
 	esac
@@ -17,15 +24,19 @@ done
 
 [ $# -eq 0 ] && exts+=("go")
 if [ false = "$name" ]; then
-	echo "write a readme for the following code. the project is called '$(basename "$(pwd)")', unless you can think of a better name"
+	echo "write a readme for the following code. the project is called '$(basename "$dir")', unless you can think of a better name"
 else
 	echo "write a readme for the following code. the project doens't have a name yet, please recommend some"
 fi
 
 for ext in "${exts[@]}"; do
-	find . -type f -iname "*.$ext" "${maxdepth[@]}" 2>/dev/null | while read -r file; do
+	find "$dir" -type f -iname "*.$ext" ${=maxdepth} 2>/dev/null | while read -r file; do
+		echo
 		echo "// $file"
 		cat "$file"
-		echo
-	done
+	done || {
+		local code=$?
+		echo "$self: reading error"
+		exit $code
+	}
 done

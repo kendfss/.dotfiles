@@ -17,14 +17,14 @@ end)
 
 -- Font
 -- config.font = wezterm.font("Cascadia Code PL", { weight = "Bold" })
-config.font = wezterm.font("Iosevka Term Slab", { weight = "ExtraBlack" })
+-- config.font = wezterm.font("Iosevka Term Slab", { weight = "ExtraBlack" })
 config.font = wezterm.font("Iosevka Term Slab Extended", { weight = "ExtraBlack" })
-config.font = wezterm.font("Iosevka Term Extended", { weight = "ExtraBlack" })
+-- config.font = wezterm.font("Iosevka Term Extended", { weight = "ExtraBlack" })
 -- config.font = wezterm.font("Iosevka Term", { weight = "ExtraBlack" })
 config.font_size = 12.0
 config.cell_width = 0.8
 config.line_height = 0.9
--- config.harfbuzz_features = { "calt=1", "clig=1", "liga=1" } -- ligatures enabled
+config.harfbuzz_features = { "calt=1", "clig=1", "liga=1" } -- ligatures enabled
 
 -- Window and UI
 config.window_background_opacity = 0.75
@@ -45,7 +45,10 @@ config.window_padding = {
 }
 
 -- Shell
-config.default_prog = { "tmux" }
+config.term = "wezterm"
+
+-- config.default_prog = { "tmux" }
+-- config.default_prog = { "zsh" }
 
 -- Notifications
 config.notification_handling = "SuppressFromFocusedWindow"
@@ -57,12 +60,41 @@ config.selection_word_boundary = " \t\n{}[]()\"'"
 config.leader = nil
 
 -- Keybindings
-config.disable_default_key_bindings = true
+-- config.disable_default_key_bindings = true
 config.keys = {
 	-- Font sizing
 	{ key = "Equal", mods = "CTRL", action = wezterm.action.IncreaseFontSize },
 	{ key = "Minus", mods = "CTRL", action = wezterm.action.DecreaseFontSize },
 	{ key = "0", mods = "CTRL", action = wezterm.action.ResetFontSize },
+
+	-- bind -N "shift window to left" -n C-S-Left swap-window -d -t -1
+	-- bind -N "shift window to right" -n C-S-Right swap-window -d -t +1
+	{
+		key = "RightArrow",
+		mods = "CTRL|SHIFT",
+		action = wezterm.action_callback(function(window, pane)
+			wezterm.run_child_process({
+				"tmux",
+				"swap-window",
+				"-d",
+				"-t",
+				"+1",
+			})
+		end),
+	},
+	{
+		key = "LeftArrow",
+		mods = "CTRL|SHIFT",
+		action = wezterm.action_callback(function(window, pane)
+			wezterm.run_child_process({
+				"tmux",
+				"swap-window",
+				"-d",
+				"-t",
+				"-1",
+			})
+		end),
+	},
 
 	-- Opacity (Alt+/-)
 	{
@@ -193,5 +225,27 @@ config.hyperlink_rules = {
 		format = "https://jira.example.com/browse/$1",
 	},
 }
+
+config.mouse_bindings = {
+	-- Alt + Left Mouse to start selection
+	{
+		event = { Up = { streak = 1, button = "Left" } },
+		mods = "ALT",
+		action = wezterm.action.CompleteSelection("Clipboard"),
+	},
+}
+
+-- config.mouse_bindings = {
+-- 	{
+-- 		event = { Drag = { streak = 1, button = "Left" } },
+-- 		mods = "ALT",
+-- 		action = wezterm.action.SelectTextAtMouseCursor("Block"),
+-- 	},
+-- 	{
+-- 		event = { Up = { streak = 1, button = "Left" } },
+-- 		mods = "ALT",
+-- 		action = wezterm.action.CompleteSelection("Clipboard"),
+-- 	},
+-- }
 
 return config

@@ -1,0 +1,63 @@
+#!/bin/sh
+
+file -Lb --mime-type -- "$1"
+
+# set -eu
+
+testing=false
+[ $testing = true ] && set -x
+
+code=0
+
+command -v bat >/dev/null || bat() { cat "$@"; }
+
+# image() {
+# 	if [ -n "$WT_SESSION" ] || [ -n "$TMUX" ]; then
+# 		# windows terminal (no sixels yet) or tmux (not much success with passthrough to iterm here)
+# 		chafa -f symbols -s "${2}x$3" --animate off --polite on "$1"
+# 	else
+# 		chafa -f sixels -s "${2}x$3" --animate off --polite on "$1"
+# 	fi
+# }
+
+image() {
+	if [ -n "$TMUX" ]; then
+		chafa -f symbols -s "${2}x$3" --animate off "$1"
+	elif [ -n "$KITTY_WINDOW_ID" ] || [ "$TERM" = 'xterm-kitty' ]; then
+		chafa -f kitty -s "${2}x$3" --animate off "$1"
+	elif [ "$TERM" = 'wezterm' ] || [ "$TERM_PROGRAM" = "WezTerm" ]; then
+		chafa -f iterm -s "${2}x$3" --animate off "$1"
+	else
+		chafa -f symbols -s "${2}x$3" --animate off "$1"
+	fi
+}
+
+CACHE="/tmp/lf-preview-cache"
+[ -d "$CACHE" ] || mkdir -p "$CACHE" || {
+	code=$?
+	echo "couldn't initialize or find cache: $CACHE" >&2
+	exit $code
+}
+
+CACHE="$CACHE/thumbnail.$(sha256sum "$1" | awk '{print $1}')"
+
+du -sh "$1" || exit $?
+
+[ -d "$1" ] && exit 0
+case "$(file -Lb --mime-type -- "$1")" in
+	image/*)
+		image "$1" "$2" "$3" "$4" "$5"
+		exit 1
+		;;
+	application/pdf)
+		[ ! -f "${CACHE}.jpg" ] && pdftoppm -jpeg -f 1 -singlefile "$1" "$CACHE"
+		image "${CACHE}.jpg" "$2" "$3" "$4" "$5"
+		;;
+	text/* | application/json | application/javascript) bat "$1" 2>/dev/null ;;
+	# audio/*) mpv --no-video "$1" ;;
+	audio/*) echo "audio" ;;
+	# *) lesspipe "$1" || bat "$1" 2>/dev/null || echo "couldn't open file" ;;
+	*) lesspipe "$1" || echo "couldn't open file" ;;
+esac
+
+exit $code

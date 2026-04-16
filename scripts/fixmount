@@ -1,0 +1,32 @@
+#!/bin/env sh
+
+set -eu
+
+testing=false
+[ $testing = true ] && set -x
+
+self="$(basename "$0")"
+
+[ "$(id -u)" -ne 0 ] && {
+	echo "$self: This script must be run as root. Use 'sudo $self'." >&2
+	exit 1
+}
+
+[ $# = 0 ] && echo "$self: must specify ntfs devices" >&2 && exit 1
+
+code=0
+
+while [ $# -gt 0 ]; do
+	ntfsfix -bd "$1" || {
+		code=$?
+		echo "$self: couldn't fix '$1'"
+		exit $code
+	}
+	shift
+done
+
+mount -a || {
+	code=$?
+	echo "$self: unable to mount device(s)" >&2
+}
+exit $code

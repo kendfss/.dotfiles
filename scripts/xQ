@@ -1,0 +1,57 @@
+#!/bin/env sh
+
+# query xbps
+
+set -eu
+
+testing=fale
+[ $testing = true ] && set -x
+
+need() {
+	while [ $# -gt 0 ]; do
+		[ -x "$(command -v "$1")" ] || {
+			echo "couldn't find $1" >&2
+			exit 1
+		}
+		shift
+	done
+}
+
+need awk || { need gawk && alias awk=gawk; }
+need sed grep fzf
+
+raw=false
+tmp=""
+choices=""
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-r | --raw) raw=true ;;
+		-*) echo unrecognized flag: "$1" ;;
+		*) tmp="$tmp $1" ;;
+	esac
+	shift
+done
+
+# shellcheck disable=SC2086
+set -- $tmp
+
+search() {
+	xbps-query -Rs "$1" | grep -E "] (\w+(-)?)*$1((-)?\w+)*-" | grep "$1"
+}
+
+if [ $raw = false ]; then
+	choices="$(for arg in "$@"; do
+		search "$arg"
+	done | fzf | awk '{print $2}' | sed -E 's/-[0-9_.]+$//')"
+else
+	for arg in "$@"; do
+		search "$arg"
+	done
+fi
+
+code=$?
+
+[ -n "$choices" ] || exit $code
+
+eval 'sudo xbps-install -Su $choices'

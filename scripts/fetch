@@ -1,10 +1,13 @@
-#!/bin/zsh
+#!/bin/sh
 
 # a chached downloader, initially written for ghs with the future in mind.
 
-set -euo pipefail
+self=$(basename "$ZSH_ARGZERO")
 
-local self=$(basename "$ZSH_ARGZERO")
+set -eu
+testing=false
+[ $testing = true ] && set -x
+
 helpText() {
 	cat <<-EOF
 		usage: $self [OPTION]... [URL]...
@@ -12,7 +15,7 @@ helpText() {
 
 		  flags:
 		     -c, --command   command to use when downloading files
-		                     default: just a plain $(command -v curl || echo curl not found) with the '-o' for naming
+		                     default: just a plain curl with the '-o' for naming and -L to follow redirects
 		     -d, --directory use the given directory as a cache (it won't be created for you)
 		                     default: .
 		     -r, --read      read file contents to stdout after downloading
@@ -22,8 +25,17 @@ helpText() {
 	EOF
 }
 
-local _testing=false
-[ $_testing = true ] && set -x
+need() {
+	while [ $# -gt 0 ]; do
+		[ -x "$(command -v "$1")" ] || {
+			echo "$self: couldn't find $1" >&2
+			return 1
+		}
+		shift
+	done
+}
+
+need curl || exit $?
 
 dir='.'
 cmd=''
@@ -60,6 +72,10 @@ while [ $# -gt 0 ]; do
 			helpText
 			exit 0
 			;;
+		-)
+			args="$args$SEP$(p)"
+			shift
+			;;
 		-*)
 			echo "unrecognized flag '$1'" >&2
 			helpText >&2
@@ -72,21 +88,22 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
+[ "${#args}" = 0 ] && echo "$self: no args received. use '-' to read from clipboard" >&2 && exit 1
+
 get() {
-	local arg="$1"
-	local name="$2"
+	arg="$1"
+	name="$2"
 	if [ -z "$cmd" ]; then
-		curl "$arg" -o "$name"
+		curl -L "$arg" -o "$name"
 	else
 		eval "$cmd \"\$arg\"" >"$name"
 	fi
 }
 
 load() {
-	local link
 	for link in "$@"; do
 		name="$dir/$(echo "$link" | sed -E 's|^\w+://||g;s|[/:]|-|g;s:-+:-:g;s:-$::g')"
-		[ $_testing = true ] && {
+		[ $testing = true ] && {
 			echo "arg: '$link'" >&2
 			echo "name: '$name'" >&2
 		}
@@ -112,7 +129,7 @@ load() {
 	done
 }
 
-[ $_testing = true ] && echo "$args" >&2
+[ $testing = true ] && echo "$args" >&2
 
 echo "$args" | sed "s:^$SEP::g;s:$SEP:\n:g" | while read -r link; do
 	load "$link"

@@ -1,0 +1,53 @@
+set previewer ~/.dotfiles/scripts/lf-preview
+
+cmd edit-config ${{
+    $EDITOR ~/.config/lf/lfrc
+    lf -remote "send $id source ~/.config/lf/lfrc"
+}}
+
+map C edit-config
+
+
+map d delete
+map <delete> delete
+map x cut
+
+cmd wiki ${{
+    $EDITOR $CLONES/gokechan/lf.wiki
+}}
+
+map w wiki
+
+cmd follow-link %{{
+  lf -remote "send $id select \"$(readlink -- "$f" | sed 's/\\/\\\\/g;s/"/\\"/g')\""
+}}
+
+map gL follow-link
+map <a-r> reload
+
+cmd copy_to_clipboard ${{
+    printf '%s' "$f" | c
+}}
+map <a-c> copy_to_clipboard
+
+
+# set sixel true
+# refine selected file as I type
+# set incsearch true
+
+
+cmd fzf_jump ${{
+    #res="$(find * | fzf --header='Jump to location')"
+    res="$(fzf --walker=file,dir,follow,hidden --walker-skip=.git,node_modules,.Trash)"
+    if [ -n "$res" ]; then
+        if [ -d "$res" ]; then
+            cmd="cd"
+        else
+            cmd="select"
+        fi
+        res="$(printf '%s' "$res" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        lf -remote "send $id $cmd \"$res\""
+    fi
+}}
+
+# map <c-o> :fzf_jump

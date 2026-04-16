@@ -1,0 +1,252 @@
+#!/bin/env sh
+
+# jellyfin installation script for void linux
+
+self="$(basename "$ZSH_ARGZERO")"
+
+set -eu
+
+testing=false
+[ $testing = true ] && set -x
+
+[ -z "$DOTFILES" ] && DOTFILES=/home/$user/.dotfiles
+[ -z "$SUDO_USER" ] && SUDO_USER="${SUDO_USER:-$(logname 2>/dev/null || echo "$USER")}"
+[ -z "$JELLYFIN_ROOT" ] && JELLYFIN_ROOT=/opt/jellyfin
+[ -z "$JELLYFIN_LATEST_URL" ] && JELLYFIN_LATEST_URL=https://repo.jellyfin.org/files/server/linux/latest-stable/amd64
+[ -z "$JELLYFIN_SCRIPT_PATH" ] && JELLYFIN_SCRIPT_PATH=$DOTFILES/scripts/jellyfin
+[ -z "$JELLYFIN_SERVICE_ROOT" ] && JELLYFIN_SERVICE_ROOT=$DOTFILES/etc/sv/jellyfin
+
+help_text() {
+	cat <<-EOF
+		usage: $self [FLAGS] [URL]
+
+		install a local jellyfin server
+
+		supported flags:
+			-h, --help        print this message
+			-y, --yes         automatically accept all dependency installations
+			-d, --dotfiles    where you keep your dotfiles. should contain a 'scripts' directory unless you specify a script path (default: $DOTFILES)
+			-u, --user        final owner of the installation (default: $SUDO_USER)
+			-r, --root        installation directory for the server. shouldn't contain spaces (default: $JELLYFIN_ROOT)
+			--script-path     path where your starter script should be saved. no spaces. (default: $JELLYFIN_SCRIPT_PATH)
+			--service-root    path where you keep your services. we'll link to /etc/sv and /var/service. no spaces. (default: $JELLYFIN_SERVICE_ROOT)
+
+		environment variables:
+			DOTFILES                where you keep your dotfiles. should contain a 'scripts' directory unless you specify an irrelevant script path
+			SUDO_USER               the user who should own the final installation(s)
+			JELLYFIN_ROOT           where the installation should be kept
+			JELLYFIN_LATEST_URL     where to start browsing for tarballs
+			JELLYFIN_SCRIPT_PATH    where to keep the start script
+			JELLYFIN_SERVICE_ROOT   where to link the services from
+
+	EOF
+	return "$1"
+}
+
+xbps_flags=-Su
+
+while [ $# -gt 0 ]; do
+	case $1 in
+		-h | --help) help_text 0 ;;
+		-y | --yes) xbps_flags=-Syu ;;
+		-y*) ;;
+		-d | --dotfiles) ;;
+		-u | --user) ;;
+		-r | --root) ;;
+		--script-path) ;;
+		--service-root) ;;
+		-*)
+			echo unrecognized flag: "$1" >&2
+			exit 1
+			;;
+		*)
+			echo unexpected argument: "$1" >&2
+			exit 1
+			;;
+	esac
+done
+
+[ "$(id -u)" -ne 0 ] && {
+	echo "Error: This script must be run as root. Use 'sudo $self'." >&2
+	exit 1
+}
+
+assure() {
+	# Collect missing bins/pkgs into positional params as pairs: bin pkg bin pkg ...
+	missing=""
+	while [ $# -gt 0 ]; do
+		bin="$1"
+		pkg="$2"
+		if [ -z "$pkg" ]; then
+			echo "$self: developer error: no package specified for '$bin' binary" >&2
+			return 1
+		fi
+		if ! command -v "$bin" >/dev/null 2>&1; then
+			echo "$self: need to install '$bin' from the '$pkg' package" >&2
+			missing="$missing $bin $pkg"
+		fi
+		shift 2
+	done
+	[ -z "$missing" ] && return 0
+	# Re-set positional params to the missing pairs
+	# shellcheck disable=SC2086
+	set -- $missing # intentional word splitting
+	xbps-install $xbps_flags "$@" || return $?
+	code=0
+	while [ $# -gt 0 ]; do
+		bin="$1" pkg="$2"
+		if ! command -v "$bin" >/dev/null 2>&1; then
+			echo "$self: '$bin' from '$pkg' not installed" >&2
+			code=1
+		fi
+		shift 2
+	done
+	return $code
+}
+
+need() {
+	missing=""
+	while [ $# -gt 0 ]; do
+		[ -x "$(command -v "$1")" ] || {
+			missing="$missing $1 $1"
+		}
+		shift
+	done
+	[ "${#missing}" = 0 ] && return
+	command -v assure || {
+		echo "$self: need and not sure how to get:"
+		# shellcheck disable=SC2086
+		printf '%s from %s\n' $missing
+		return 1
+	}
+	# shellcheck disable=SC2086
+	assure $missing
+	return $?
+}
+
+assure chpst runit tr coreutils || exit $?
+need pup ffmpeg fzf curl tar sed || exit $?
+
+user=$(id -un "$SUDO_USER")
+group=$(id -gn "$SUDO_USER")
+script="$(
+	cat <<-EOF
+		#!/bin/sh
+		$JELLYFIN_ROOT/jellyfin/jellyfin \
+		 -d $JELLYFIN_ROOT/data \
+		 -C $JELLYFIN_ROOT/cache \
+		 -c $JELLYFIN_ROOT/config \
+		 -l $JELLYFIN_ROOT/log \
+		 --ffmpeg "\$(command -v ffmpeg)"
+	EOF
+)"
+service_etc=/etc/sv/jellyfin
+service_var=/var/service/jellyfin
+service_run_path=$JELLYFIN_SERVICE_ROOT/run
+service_finish_path=$JELLYFIN_SERVICE_ROOT/finish
+service_run="$(
+	cat <<-EOF
+		#!/bin/sh
+		exec 2>&1
+		exec chpst -u $user:$group $JELLYFIN_SCRIPT_PATH
+	EOF
+)"
+service_finish="$(
+	cat <<-EOF
+		#!/bin/sh
+		# Optional cleanup when service stops
+		exit 0
+	EOF
+)"
+
+mkservice() {
+	{ [ ! -e "$JELLYFIN_SERVICE_ROOT" ] && mkdir -p "$JELLYFIN_SERVICE_ROOT"; } || echo "already exists: $JELLYFIN_SERVICE_ROOT" >&2
+	{ [ ! -e "$service_run_path" ] && printf "%s\n" "$service_run" >"$service_run_path"; } || echo "already exists: $service_run_path" >&2
+	{ [ ! -e "$service_finish_path" ] && printf "%s\n" "$service_finish" >"$service_finish_path"; } || echo "already exists: $service_finish_path" >&2
+	chmod u+x "$service_run_path"
+	chmod u+x "$service_finish_path"
+	chown -R "$user:$group" "$JELLYFIN_SERVICE_ROOT"
+	ln -fs "$JELLYFIN_SERVICE_ROOT" $service_etc
+	ln -fs $service_etc $service_var
+}
+
+ball=""
+flags=""
+download=true
+
+[ -d "$JELLYFIN_ROOT" ] && {
+	printf "target directory '%s' already exists\n" "$JELLYFIN_ROOT"
+	printf "  b - backup\n"
+	printf "  d - delete\n"
+	printf "  o - overwrite\n"
+	printf "  s - skip download\n"
+	printf "  * - exit\n"
+	printf ">>> "
+	read -r resp
+	resp="$(echo "$resp" | tr '[:upper:]' '[:lower:]')"
+	case "$resp" in
+		d) {
+			rm -rf "$JELLYFIN_ROOT"
+			mkdir "$JELLYFIN_ROOT"
+		} || exit $? ;;
+		b) {
+			mv "$JELLYFIN_ROOT" "$JELLYFIN_ROOT.bak"
+			mkdir "$JELLYFIN_ROOT"
+		} || exit $? ;;
+		o) ;;
+		s) download=false ;;
+		*) exit ;;
+	esac
+}
+
+cd "$JELLYFIN_ROOT"
+
+[ $download = true ] && {
+	while true; do
+		ball="$(curl -sL "$JELLYFIN_LATEST_URL" | pup 'a text{}' | fzf --preview "{ [ '{}' = '../' ] && echo '$JELLYFIN_LATEST_URL'; } || echo '$JELLYFIN_LATEST_URL/${ball#../}{}'")"
+		case "$ball" in
+			*.tar.gz | *.tar.gx)
+				flags=xvzf
+				break
+				;;
+			*.tar.xz)
+				flags=xvJf
+				break
+				;;
+			../) JELLYFIN_LATEST_URL="$(dirname "$JELLYFIN_LATEST_URL")" ;;
+			*) JELLYFIN_LATEST_URL="$JELLYFIN_LATEST_URL/$ball" ;;
+		esac
+	done
+	curl -L "$JELLYFIN_LATEST_URL/$ball" | tar -C "$JELLYFIN_ROOT" -$flags - || exit $?
+}
+
+mkdir -p "$JELLYFIN_ROOT/data"
+mkdir -p "$JELLYFIN_ROOT/cache"
+mkdir -p "$JELLYFIN_ROOT/config"
+mkdir -p "$JELLYFIN_ROOT/log"
+
+[ -e "$JELLYFIN_SCRIPT_PATH" ] && rm "$JELLYFIN_SCRIPT_PATH"
+printf '%s\n' "$script" >"$JELLYFIN_SCRIPT_PATH"
+chown -R "$user:$group" "$JELLYFIN_SCRIPT_PATH"
+
+chown -R "$user:$group" "$JELLYFIN_ROOT"
+chmod u+x "$JELLYFIN_SCRIPT_PATH"
+
+ln -fs "$JELLYFIN_SCRIPT_PATH" /usr/bin/jellyfin
+ln -fs "$JELLYFIN_SCRIPT_PATH" "$JELLYFIN_ROOT/jellyfin.sh"
+
+printf "make runit service? [Ny]: "
+read -r resp
+resp="$(echo "$resp" | tr '[:upper:]' '[:lower:]')"
+case $resp in
+	y | yes) mkservice ;;
+	*) ;;
+esac
+
+printf "run? [Ny]: "
+read -r resp
+resp="$(echo "$resp" | tr '[:upper:]' '[:lower:]')"
+case $resp in
+	y | yes) exec $JELLYFIN_SCRIPT_PATH ;;
+	*) exit ;;
+esac

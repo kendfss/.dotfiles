@@ -1,0 +1,3 @@
+#!/bin/env zsh
+
+fzf --preview-window=hidden --multi --bind "btab:toggle,tab:preview:xdg-open {}"

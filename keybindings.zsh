@@ -1,6 +1,8 @@
+# compatibility (silent failure) with bash
 [ $0 = "bash" ] && function zle() {
 	true
 } && alias bindkey=zle
+
 expand-or-complete-with-dots() {
 	# Show dots while waiting for tab-completion
 	# toggle line-wrapping off and back on again
@@ -16,13 +18,17 @@ bindkey "^I" expand-or-complete-with-dots
 
 bindkey "^[[1;3C" forward-word
 bindkey "^[[1;3D" backward-word
-bindkey "^[[1~" beginning-of-line
-bindkey "^[[4~" end-of-line
 bindkey "^[[3~" delete-char
 bindkey '^[[3;3~' kill-word
+bindkey '^[[4~' end-of-line
+bindkey '^[[1~' beginning-of-line
+[ "$TERM" = 'xterm-kitty' -o "$TERM" = 'wezterm' ] && {
+	bindkey "^[[F" end-of-line
+	bindkey "^[[H" beginning-of-line
+}
 
 bindkey -r '^H' # disable backward-delete-char
-[ -x $(command -v fzf) ] && {
+[ -x $(command -v fzf 2>/dev/null) ] && {
 	bindkey -r '^R'
 	bindkey '^H' fzf-history-widget
 }

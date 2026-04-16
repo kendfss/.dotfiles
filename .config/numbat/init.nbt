@@ -1,0 +1,44 @@
+fn kineticEnergy(mass: Mass, speed: Velocity) -> Energy = ½ mass speed²
+
+assert_eq(kineticEnergy(800 kg, 30 m/s), 360 kJ, 0.1 J)
+
+
+# This script calculates and prints the molarity of a salt
+# water solution, given a fixed mass of salt (NaCl) and a
+# volume of water.
+
+let molar_mass_NaCl = 58.44 g / mol
+
+fn molarity(mass: Mass, volume: Volume) -> Molarity =
+    (mass / molar_mass_NaCl) / volume
+
+let salt_mass = 9 g
+let water_volume = 1 L
+
+# print(molarity(salt_mass, water_volume) -> mmol / l)
+assert_eq(molarity(salt_mass, water_volume), 154 mmol/l, 0.1 mmol/l)
+
+
+# Musical note frequencies in the 12 equal temperament system
+
+let A440: Frequency = 440 Hz  # the A above middle C, A4
+
+fn hz(n: Scalar) -> Frequency = A440 * 2^(n / 12)
+
+# print("A5: {hz(12)}")  # one octave higher up, 880 Hz
+# print("E4: {hz(7)}")
+# print("C4: {hz(-3)}")
+assert_eq(hz(12), 2 * A440)
+assert_eq(hz(7),  659.255 Hz, 1 mHz)
+assert_eq(hz(-3), 369.994 Hz, 1 mHz)
+
+
+# https://en.wikipedia.org/wiki/Projectile_motion
+
+fn max_height(v: Velocity, θ: Angle) -> Length = v² · sin(θ)^2 / (2 · g0)
+fn max_distance(v: Velocity, θ: Angle) -> Length = v² · sin(2 θ) / g0
+fn time_of_flight(v: Velocity, θ: Angle) -> Time = 2 v · sin(θ) / g0
+
+assert_eq(max_height(10 m/s, 45 deg),      2.55 m,  1 cm)
+assert_eq(max_distance(10 m/s, 45 deg),   10.20 m,  1 cm)
+assert_eq(time_of_flight(10 m/s, 45 deg),  1.44 s, 10 ms)

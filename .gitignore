@@ -2,7 +2,8 @@ response
 *.chat
 *.log
 *.bak
-bug.md
+*bug.md
+bugs.md
 ble.sh/
 **/mpv/scripts/*.so
 CRUSH.md

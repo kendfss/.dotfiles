@@ -14,17 +14,17 @@ local target="$2"
 # Validate we have both args
 if [ -z "$source" ] || [ -z "$target" ]; then
 	echo "Usage: symlinkDialogue [-r|--real] <source> <target>" >&2
-	return 1
+	exit 1
 fi
 # Resolve if requested
 if [[ $real == true ]]; then
 	source="$(realpath "$source" 2>/dev/null)" || {
 		echo "Error: Cannot resolve source '$source'" >&2
-		return 2
+		exit 2
 	}
 	target="$(realpath "$target" 2>/dev/null)" || {
 		echo "Error: Cannot resolve target '$target'" >&2
-		return 2
+		exit 2
 	}
 fi
 local equal=false
@@ -34,16 +34,16 @@ command -v sudo &>/dev/null && sudo="sudo"
 # Validate source exists
 if [ ! -e "$source" ] && [ ! -L "$source" ]; then
 	echo "Error: Source '$source' does not exist" >&2
-	return 2
+	exit 2
 fi
 
 # Case 1: Target doesn't exist - simple creation
 if [ ! -e "$target" ] && [ ! -L "$target" ]; then
 	local target_dir="$(dirname "$target")"
 	[ ! -e "$target_dir" ] && mkdir -p "$target_dir"
-	[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
+	[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && exit 1
 	$sudo ln -s "$source" "$target" && printf 'Linked %s -> %s\n' "$source" "$target"
-	return $?
+	exit $?
 fi
 
 # Case 2: Target is already the correct symlink
@@ -52,7 +52,7 @@ if [ -L "$target" ]; then
 	current_link="$(readlink "$target")"
 	if [ "$current_link" = "$source" ] || [ "$current_link" = "$(realpath "$(readlink "$source" 2>/dev/null)" 2>/dev/null)" ]; then
 		echo "Symlink already correct: $target -> $source"
-		return 0
+		exit 0
 	fi
 fi
 
@@ -104,9 +104,9 @@ elif [ -S "$target" ]; then
 fi
 local target_dir="$(dirname "$target")"
 [ ! -e "$target_dir" ] && mkdir -p "$target_dir"
-[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
+[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && exit 1
 
-[[ $equal == true ]] && echo "skipping 'ln -s $source $target' because the source and target were proven equal" && return
+[[ $equal == true ]] && echo "skipping 'ln -s $source $target' because the source and target were proven equal" && exit
 # Conflict handling - exhaustive analysis
 echo "Conflict: $target already exists" >&2
 
@@ -143,19 +143,19 @@ while true; do
 		o | O)
 			local target_dir="$(dirname "$target")"
 			[ ! -e "$target_dir" ] && $sudo mkdir -p "$target_dir"
-			[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
+			[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && exit 1
 			$sudo ln -sf "$source" "$target" && echo "Overwritten: $target -> $source"
-			return $?
+			exit $?
 			;;
 		b | B)
 			local target_dir="$(dirname "$target")"
 			[ ! -e "$target_dir" ] && $sudo mkdir -p "$target_dir"
-			[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
+			[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && exit 1
 			local backup="${target}.backup.$(date +%s)"
 			if $sudo mv "$target" "$backup" 2>/dev/null; then
 				echo "Backed up to: $backup"
 				$sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
-				return $?
+				exit $?
 			else
 				echo "Error: Backup failed" >&2
 				continue
@@ -165,12 +165,12 @@ while true; do
 			if [ "$target_type" = "directory" ] || [ "$target_type" = "regular file" ]; then
 				local target_dir="$(dirname "$target")"
 				[ ! -e "$target_dir" ] && $sudo mkdir -p "$target_dir"
-				[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
+				[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && exit 1
 				local moved="${target}.old"
 				if $sudo mv "$target" "$moved" 2>/dev/null; then
 					echo "Moved existing to: $moved"
 					$sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
-					return $?
+					exit $?
 				else
 					echo "Error: Move failed" >&2
 					continue
@@ -184,11 +184,11 @@ while true; do
 			if [ "$target_type" = "symlink" ]; then
 				local target_dir="$(dirname "$target")"
 				[ ! -e "$target_dir" ] && $sudo mkdir -p "$target_dir"
-				[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && return 1
+				[ ! -d "$target_dir" ] && echo "desired target directory already exists but is not a directory" >&2 && exit 1
 				if $sudo rm "$target" 2>/dev/null; then
 					echo "Removed existing symlink"
 					$sudo ln -s "$source" "$target" && echo "Created: $target -> $source"
-					return $?
+					exit $?
 				else
 					echo "Error: Removal failed" >&2
 					continue
@@ -200,7 +200,7 @@ while true; do
 			;;
 		s | S)
 			echo "Skipped: $target"
-			return
+			exit
 			;;
 		i | I)
 			echo "Inspecting $target:" >&2

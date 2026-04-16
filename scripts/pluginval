@@ -1,0 +1,5 @@
+#!/bin/env sh
+
+for arg in "$@"; do
+	wine "$PLUGINVAL_ROOT/pluginval.exe" "$arg" >/dev/null 2>/dev/null
+done

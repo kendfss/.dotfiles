@@ -4,7 +4,20 @@
 
 set -euo pipefail
 
-[ "$1" = '-' ] && { { add && commit "$(p)" && push && return; } || { echo "failed: $?" && return 1; }; }
+fail() {
+	[ $# = 0 ] && echo "failed" && exit 1
+	echo "failed: $?" && exit 1
+}
+
+case $1 in
+	'-')
+		{ add && commit "$(p)" && push && exit; } || fail
+		;;
+	'first')
+		{ add -hv && commit first\; && gh repo create -s. --private --push -d "$(awk 'NR>=3 && !NF {exit} NR>=3 {gsub(/[][]/, ""); gsub(/\]\[[^]]*\]/, ""); printf "%s%s", $0, (NF ? " " : "")} END {print ""}' README.md)" && exit; } || fail
+		;;
+esac
+
 if [[ -z $1 ]]; then
 	argv[1]=\.
 fi

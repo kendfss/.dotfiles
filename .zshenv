@@ -11,7 +11,8 @@ export REPO_HOST=https://github.com
 export DEVELOPER=$USER
 export GOPATH="$HOME/go"
 export WORKSPACE="$HOME/workspace"
-export FLROOT="$HOME/.wine/drive_c/Program Files/Image-Line/FL Studio 2025"
+export FL_ROOT="$HOME/.wine/drive_c/Program Files/Image-Line/FL Studio 2025"
+export PLUGINVAL_ROOT="$HOME/.wine/drive_c/Program Files/pluginval_Windows"
 export VST2_DIR="$HOME/.wine/drive_c/Program Files/Common Files/VST2"
 export FLPROJECTS="$HOME/Documents/Image-Line/FL Studio/Projects"
 export VIDEOS="$HOME/$({ [ "$(uname)" = "Linux" ] && echo Videos; } || echo Movies)"
@@ -22,7 +23,10 @@ export HARDWARECLOCK=localtime
 export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR="$DOTFILES"
 export CONFIG=$HOME/.config
+export MTPTAB=$DOTFILES/mtptab.toml
+# echo $DOTFILES $ZSH_PLUGINS
 [ -x "$(which bat)" ] && export MANPAGER="$HOME/.dotfiles/scripts/manpager"
+[ -d "$DOTFILES/zsh-plugins" ] && export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
 
 if [ -x "$(command -v clang)" ]; then
 	CC="$(which clang)" && export CC
@@ -93,13 +97,15 @@ PATH="$PATH:$DOTFILES/scripts"
 if [ -d "$TERMUX__PREFIX" ]; then
 	export PLAYPATH="$HOME/storage/music"
 else
-	export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music:/mnt/Elements/drive:/mnt/Elements/music"
+	export PLAYPATH="$HOME/Music:$HOME/.local/share/nicotine/downloads:/music:/mnt/elements/drive:/mnt/elements/music"
 fi
 export MUSIC_FORMATS="mp3|m4a|wav|flac|ogg|aif|aiff|opus"
 
 export WORDCHARS=${WORDCHARS//[&+;\-_\/=.\|]/}
 
-export SKIM_DEFAULT_OPTIONS="-m --tiebreak index --bind='tab:toggle,alt-a:select-all,alt-d:deselect-all'"
+export SKIM_DEFAULT_OPTIONS="-m --tiebreak index --bind='tab:toggle,ctrl-a:select-all,alt-a:deselect-all,alt-left:backward-word,alt-right:forward-word,alt-up:beginning-of-line,alt-down:end-of-line,alt-delete:kill-word'"
 export FZF_DEFAULT_OPTS="$SKIM_DEFAULT_OPTIONS"
+
+[ -d "$HOME/.wine/drive_c/bin" ] && export PATH="$PATH:$HOME/.wine/drive_c/bin"
 
 export PATH="$(echo "$PATH" | sed 's/::/:/g' | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"

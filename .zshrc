@@ -4,10 +4,10 @@ set -o pipefail # remember to check $pipestatus
 # Load external config files and tools
 
 source "$DOTFILES/completions.zsh"
-source "$DOTFILES/termsupport.zsh"                    # Set terminal window title and other terminal-specific things
-source "$DOTFILES/aliases.zsh"                        # Load aliases. Done in a seperate file to keep this from getting too long and ugly
-source "$DOTFILES/functions.zsh"                      # Load misc functions. Done in a seperate file to keep this from getting too long and ugly
-source "$DOTFILES/keybindings.zsh"                    # Load misc functions. Done in a seperate file to keep this from getting too long and ugly
+source "$DOTFILES/termsupport.zsh"
+source "$DOTFILES/aliases.zsh"
+source "$DOTFILES/functions.zsh"
+source "$DOTFILES/keybindings.zsh"
 [[ -z $SKIPPROFILE ]] && source "$DOTFILES/.zprofile" # Setup our profile post-login
 source "$DOTFILES/spectrum.zsh"                       # Make nice colors available
 source "$DOTFILES/prompts.zsh"                        # Setup our PS1, PS2, etc.
@@ -24,10 +24,6 @@ zstyle ':chpwd:*' recent-dirs-max 5
 export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
 
 [ -d "$TERMUX__PREFIX" ] && [ -z "$(pgrep sshd)" ] && [ -x "$(command -v sshd)" ] && { $DOTFILES/boot/sshd || echo unable to start sshd; }
-
-if [ -d "$DOTFILES/zsh-plugins" ]; then
-	export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
-fi
 
 if [ -d "$ZSH_PLUGINS" ]; then
 	[ ! -d "$TERMUX__PREFIX" ] && source "$ZSH_PLUGINS/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"

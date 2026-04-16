@@ -4,6 +4,7 @@
 
 set -euo pipefail
 
+local self="$(basename "$ZSH_ARGZERO")"
 local force=false
 
 [ "$1" = "-f" -o "$1" = "--force" ] && force=true && shift
@@ -15,7 +16,7 @@ if [[ -z $old ]]; then
 	old="../$(basename "$(pwd)")"
 fi
 
-local new="$old-$0"
+local new="$old-$self"
 
 if [ $force = false ]; then
 	[ -e "$new" ] && echo "already exists" >&2 && exit 1

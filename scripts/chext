@@ -1,0 +1,92 @@
+#!/bin/env sh
+
+set -eu
+
+self="$(basename "$0")"
+
+testing=false
+
+args=""
+ext=""
+
+check_ext() {
+	[ $# = 0 ] && {
+		echo "dev error: must specify arguments when calling $0" >&2
+		exit 2
+	}
+	[ -z "$1" ] || {
+		echo "extension set twice: $*" >&2
+		exit 1
+	}
+}
+
+helpText() {
+	cat <<-EOF
+		usage:
+		      $self [FLAGS] args
+		      ... | $self [FLAGS]
+
+		      arguments that cannot be found on the file system will be treated as extensions
+
+		flags:
+		      -e, -x, --extension    chose the extension incident files will be renamed to
+		      -t, --test, --testing  run $self in debug mode
+		      -h, --help             print this message and exit
+
+		exit codes:
+		      0   success
+		      1   user error
+		      2   developer error
+		      3   internal error
+	EOF
+	code=$1
+	[ $# = 0 ] && echo "dev error: must specify exit code when calling $0" >&2 && code=2
+	exit $code
+}
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-e | -x | --extension)
+			check_ext "$ext" $2
+			ext="$2"
+			shift
+			;;
+		-t | --test | --testing) testing=true ;;
+		-h | --help) helpText 0 ;;
+		-*)
+			echo "unrecognized flag: $1" >&2
+			exit 1
+			;;
+		*)
+			[ ! -e "$1" ] && {
+				check_ext "$ext" $1
+				ext="$1"
+				shift
+				continue
+			}
+			args="$args:$1"
+			;;
+	esac
+	shift
+done
+
+[ $testing = true ] && {
+	mv() {
+		echo "$@"
+	}
+}
+
+[ ${#ext} = 0 ] && { echo no extension given >&2 && exit 1; }
+
+args="$(echo "$args" | sed 's/^://')"
+
+case "$ext" in
+	.*) ;;
+	*) ext=".$ext" ;;
+esac
+
+echo "$args" | tr ':' '\n' | while read -r name; do
+	new="$(echo "$name" | sed -E "s/\.\w+$/$ext/")"
+	[ "$new" = "$name" ] && new="$name$ext"
+	mv "$name" "$new" || exit 3
+done #| grep -v '^\s*$'

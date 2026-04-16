@@ -1,0 +1,12 @@
+#!/bin/env zsh
+
+local pids="$(pgrep FL64\.exe)"
+[ -n "$pids" ] && echo "$pids" | xargs -I{} kill -9 {} && { [ -z "$1" ] && exit; }
+case "$1" in
+	'-r' | '--reload' | 'r' | 'reload') shift 1 ;;
+	'-k' | '--kill' | 'k' | 'kill') exit ;;
+	*) ;;
+esac
+wine ~/.wine/drive_c/Program\ Files/Image-Line/FL\ Studio*/FL64.exe $* &>/dev/null &
+printf "pid(FL64.exe) := " >&2
+printf "$!\n"

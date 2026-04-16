@@ -1,46 +1,51 @@
 # ZSH CheatSheet
 
-This is a cheat sheet for how to perform various actions to ZSH, which can be tricky to find on the web as the syntax is not intuitive and it is generally not very well-documented.
+This is a cheat sheet for how to perform various actions to ZSH, which can be
+tricky to find on the web as the syntax is not intuitive and it is generally not
+very well-documented.
 
 ## Strings
 
-| Description                                      | Syntax                              |
-| ------------------------------------------------ | ----------------------------------- |
-| Get the length of a string                       | `${#VARNAME}`                       |
-| Get a single character                           | `${VARNAME[index]}`                 |
-| Get the string from a specific index             | `${VARNAME[index,-1]}`              |
-| Get a substring                                  | `${VARNAME[from,to]}`               |
-| Replace the first occurrence in a string         | `${VARNAME/toreplace/replacement}`  |
-| Replace all occurrences in a string              | `${VARNAME//toreplace/replacement}` |
-| Cut a string after a model                       | `${VARNAME%%model*}`                |
-| Check if a string starts by a specific substring | `if [[ $VARNAME = "startstr"* ]]`   |
-| Check if a string contains a substring           | `if [[ $VARNAME = *"substring"* ]]` |
-| Check if a string ends by a specific substring   | `if [[ $VARNAME = *"substring" ]]`  |
+| Description                                      | Syntax                                |
+| ------------------------------------------------ | ------------------------------------- |
+| Get the length of a string                       | `${#VARNAME}`                         |
+| Get a single character                           | `${VARNAME[index]}`                   |
+| Get the string from a specific index             | `${VARNAME[index,-1]}`                |
+| Get a substring                                  | `${VARNAME[from,to]}`                 |
+| Replace the first occurrence in a string         | `${VARNAME/toreplace/replacement}`    |
+| Replace all occurrences in a string              | `${VARNAME//toreplace/replacement}`   |
+| Cut a string after a model                       | `${VARNAME%%model*}`                  |
+| Check if a string starts by a specific substring | `if [[ $VARNAME = "startstr"* ]]`     |
+| Check if a string contains a substring           | `if [[ $VARNAME = *"substring"* ]]`   |
+| Check if a string ends by a specific substring   | `if [[ $VARNAME = *"substring" ]]`    |
+| Trim whitespace                                  | `${${var##[:space:]##}%%[:space:]##}` |
 
 ## Arrays
 
-| Description                                         | Syntax                           |
-| --------------------------------------------------- | -------------------------------- |
-| Create an array                                     | `VARNAME=()`                     |
-| Create an array with initial values                 | `VARNAME=(value1 value2 value3)` |
-| Push to an array                                    | `VARNAME+=(value)`               |
-| Access an array's element                           | `VARNAME[index]`                 |
-| Remove first element from an array (shift)          | `shift VARNAME`                  |
-| Remove last element from an array (pop)             | `shift -p VARNAME`               |
-| Get an array's length                               | `${#VARNAME}`                    |
-| Iterate over an array's values                      | `for value in $VARNAME;`         |
-| Get index of a value in an array (`0` if not found) | `${VARNAME[(Ie)value]}`          |
+| Description                                                       | Syntax                           |
+| ----------------------------------------------------------------- | -------------------------------- |
+| Create an array                                                   | `VARNAME=()`                     |
+| Create an array with initial values                               | `VARNAME=(value1 value2 value3)` |
+| Push to an array                                                  | `VARNAME+=(value)`               |
+| Access an array's element                                         | `VARNAME[index]`                 |
+| Remove first element from an array (shift)                        | `shift VARNAME`                  |
+| Remove last element from an array (pop)                           | `shift -p VARNAME`               |
+| Get an array's length                                             | `${#VARNAME}`                    |
+| Iterate over an array's values                                    | `for value in $VARNAME;`         |
+| Get index of a value in an array (`0` if not found)               | `${VARNAME[(Ie)value]}`          |
 | Get index of a value in an array (`${#VARNAME} + 1` if not found) | `${VARNAME[(ie)value]}`          |
-| Get an array slice _after_ the specified index      | `${VARNAME:index}`               |
-| Get an array slice _after_ the specified index      | `${VARNAME:index:length}`        |
-| Check if a value is contained in an array           | `if (( $VARNAME[(Ie)value] ));`  |
-| Check if an array is empty                          | `if [[ -z $VARNAME ]]`           |
-| Check if an array is not empty                      | `if [[ ! -z $VARNAME ]]`         |
-| Remove an element from an array                     | `VARNAME[index]=()`              |
+| Get an array slice _after_ the specified index                    | `${VARNAME:index}`               |
+| Get an array slice _after_ the specified index                    | `${VARNAME:index:length}`        |
+| Check if a value is contained in an array                         | `if (( $VARNAME[(Ie)value] ));`  |
+| Check if an array is empty                                        | `if [[ -z $VARNAME ]]`           |
+| Check if an array is not empty                                    | `if [[ ! -z $VARNAME ]]`         |
+| Remove an element from an array                                   | `VARNAME[index]=()`              |
 
 ## Associative arrays (= maps / dictionaries)
 
-Associate arrays are the equivalent of hash maps or dictionaries in many other programming languages: unlike arrays, they can use string keys, and these don't necessary have an order.
+Associate arrays are the equivalent of hash maps or dictionaries in many other
+programming languages: unlike arrays, they can use string keys, and these don't
+necessary have an order.
 
 | Description                                     | Syntax                                               |
 | ----------------------------------------------- | ---------------------------------------------------- |
@@ -137,7 +142,7 @@ fi
 | Check if a string is empty or not defined                       | `if [[ -z $VARNAME ]];`      |
 | Check if a string is defined and not empty                      | `if [[ -n $VARNAME ]];`      |
 | Check if a file exists                                          | `if [[ -f "filepath" ]];`    |
-| Check if a directory exists                                     | `if [[ -d "dirpath" ]]; `    |
+| Check if a directory exists                                     | `if [[ -d "dirpath" ]];`     |
 | Check if a symbolic link exists                                 | `if [[ -L "symlinkpath" ]];` |
 | Check if a shell option is set                                  | `if [[ -o OPTION_NAME ]];`   |
 | Check if two values are equal                                   | `if [[ $VAR1 = $VAR2 ]];`    |
@@ -147,9 +152,12 @@ fi
 | Check if a command exits successfully (exit code `0`)           | `if command arg1 arg2 ...`   |
 | Check if a command doesn't exit successfully (exit code != `0`) | `if ! command arg1 arg2 ...` |
 
-Note that the `$` symbol preceding variables' names in arithmetic expression (`((...))`) are purely optional, so you can perfectly write `if (( VAR1 < VAR2 ));` for instance.
+Note that the `$` symbol preceding variables' names in arithmetic expression
+(`((...))`) are purely optional, so you can perfectly write
+`if (( VAR1 < VAR2 ));` for instance.
 
-You can read all dash `-` options in ZSH's manual, as there are many different ones: http://zsh.sourceforge.net/Doc/Release/Conditional-Expressions.html
+You can read all dash `-` options in ZSH's manual, as there are many different
+ones: http://zsh.sourceforge.net/Doc/Release/Conditional-Expressions.html
 
 ## Loops
 
@@ -199,14 +207,18 @@ echo $(add_twice 2 3) # 10
 
 ## A word on conditionals
 
-Conditionals use expressions, such as in `if [[ -z $VARNAME ]];` the expression is `[[ -z $VARNAME ]]`. These can also be used in `while` loops, as well as be used outside of blocks:
+Conditionals use expressions, such as in `if [[ -z $VARNAME ]];` the expression
+is `[[ -z $VARNAME ]]`. These can also be used in `while` loops, as well as be
+used outside of blocks:
 
 ```zsh
 [[ -z $VARNAME ]] && echo "VARNAME is not defined or empty!"
 [[ -f $FILEPATH ]] && echo "File exists!"
 ```
 
-This works because conditional expressions (`[[ ... ]]` and `(( ... ))`) don't actually return a value; they behave like commands and as such set the status code to `0` if the condition is true, or `1` else.
+This works because conditional expressions (`[[ ... ]]` and `(( ... ))`) don't
+actually return a value; they behave like commands and as such set the status
+code to `0` if the condition is true, or `1` else.
 
 If we want to display the message only if the condition is falsey:
 
@@ -216,127 +228,148 @@ If we want to display the message only if the condition is falsey:
 ```
 
 ### Expressions
-| Expression        | Example             | Description
-| ---               | ---                 | ---
-| `!!`              | `sudo !!`           | Last command (`sudo !!`)
-| ---               | ---                 | ---
-| `!*`              | `vim !*`            | Last command's parameters (`vim !*`)
-| `!^`              |                     | Last command's first parameter
-| `!$`              |                     | Last command's last parameter
-| ---               | ---                 | ---
-| `!?ls` `<tab>`    | `sudo !?mv` `<tab>` | Command and params of last `ls` command
-| `!?ls?:*` `<tab>` |                     | Params of last `ls` command
-| ---               | ---                 | ---
-| `*(m0)`           | `rm *(m0)`          | Last modified today
-| `*(m-4)`          |                     | Last modified <4 days ago
+
+| Expression        | Example             | Description                             |
+| ----------------- | ------------------- | --------------------------------------- |
+| `!!`              | `sudo !!`           | Last command (`sudo !!`)                |
+| ---               | ---                 | ---                                     |
+| `!*`              | `vim !*`            | Last command's parameters (`vim !*`)    |
+| `!^`              |                     | Last command's first parameter          |
+| `!$`              |                     | Last command's last parameter           |
+| ---               | ---                 | ---                                     |
+| `!?ls` `<tab>`    | `sudo !?mv` `<tab>` | Command and params of last `ls` command |
+| `!?ls?:*` `<tab>` |                     | Params of last `ls` command             |
+| ---               | ---                 | ---                                     |
+| `*(m0)`           | `rm *(m0)`          | Last modified today                     |
+| `*(m-4)`          |                     | Last modified <4 days ago               |
 
 ### Process Substitution
-| Expression        | Example                                               | Description
-| ---               | ---                                                   | ---
-| `<(COMMAND)`      | `grep "needle" <(curl "https://haystack.io")`         | Replace argument with _named pipe/FIFO_ (read-only) with command output
-| `=(COMMAND)`      | `vim =(curl "https://haystack.io")`                   | Replace argument with _file_ (writable) containing command output
+
+| Expression   | Example                                       | Description                                                             |
+| ------------ | --------------------------------------------- | ----------------------------------------------------------------------- |
+| `<(COMMAND)` | `grep "needle" <(curl "https://haystack.io")` | Replace argument with _named pipe/FIFO_ (read-only) with command output |
+| `=(COMMAND)` | `vim =(curl "https://haystack.io")`           | Replace argument with _file_ (writable) containing command output       |
 
 # A plain old glob
-print -l *.txt
-print -l **/*.txt
+
+print -l _.txt print -l **/_.txt
 
 # Show text files that end in a number from 1 to 10
+
 print -l **/*<1-10>.txt
 
 # Show text files that start with the letter a
+
 print -l **/[a]*.txt
 
 # Show text files that start with either ab or bc
+
 print -l **/(ab|bc)*.txt
 
 # Show text files that don't start with a lower or uppercase c
+
 print -l **/[^cC]*.txt
 
 # Show only directories
+
 print -l **/*(/)
 
 # Show only regular files
+
 print -l **/*(.)
 
 # Show empty files
+
 print -l **/*(L0)
 
 # Show files greater than 3 KB
+
 print -l **/*(Lk+3)
 
 # Show files modified in the last hour
+
 print -l **/*(mh-1)
 
 # Sort files from most to least recently modified and show the last 3
+
 print -l **/*(om[1,3])
 
 # `.` show files, `Lm-2` smaller than 2MB, `mh-1` modified in last hour,
+
 # `om` sort by modification date, `[1,3]` only first 3 files
+
 print -l **/*(.Lm-2mh-1om[1,3])
 
 # Show every directory that contain directory `.git`
+
 print -l **/*(e:'[[ -d $REPLY/.git ]]':)
 
 # Return the file name (t stands for tail)
+
 print -l *.txt(:t)
 
 # Return the file name without the extension (r stands for remove_extension)
+
 print -l *.txt(:t:r)
 
 # Return the extension
+
 print -l *.txt(:e)
 
 # Return the parent folder of the file (h stands for head)
+
 print -l *.txt(:h)
 
 # Return the parent folder of the parent
+
 print -l *.txt(:h:h)
 
 # Return the parent folder of the first file
+
 print -l *.txt([1]:h)
 
 # Parameter expansion
-files=(*.txt)          # store a glob in a variable
-print -l $files
-print -l $files(:h)    # this is the syntax we saw before
-print -l ${files:h}
-print -l ${files(:h)}  # don't mix the two, or you'll get an error
-print -l ${files:u}    # the :u modifier makes the text uppercase
+
+files=(*.txt) # store a glob in a variable print -l $files print -l $files(:h) #
+this is the syntax we saw before print -l ${files:h} print -l ${files(:h)} #
+don't mix the two, or you'll get an error print -l ${files:u} # the :u modifier
+makes the text uppercase
 
 # :s modifier
-variable="path/aaabcd"
-echo ${variable:s/bc/BC/}    # path/aaaBCd
-echo ${variable:s_bc_BC_}    # path/aaaBCd
-echo ${variable:s/\//./}     # path.aaabcd (escaping the slash \/)
-echo ${variable:s_/_._}      # path.aaabcd (slightly more readable)
-echo ${variable:s/a/A/}      # pAth/aaabcd (only first A is replaced)
-echo ${variable:gs/a/A/}     # pAth/AAAbcd (all A is replaced)
+
+variable="path/aaabcd" echo ${variable:s/bc/BC/} # path/aaaBCd echo
+${variable:s_bc_BC_} # path/aaaBCd echo ${variable:s/\//./} # path.aaabcd
+(escaping the slash \/) echo ${variable:s_/_._} # path.aaabcd (slightly more
+readable) echo ${variable:s/a/A/} # pAth/aaabcd (only first A is replaced) echo
+${variable:gs/a/A/} # pAth/AAAbcd (all A is replaced)
 
 # Split the file name at each underscore
+
 echo ${(s._.)file}
 
 # Join expansion flag, opposite of the split flag.
-array=(a b c d)
-echo ${(j.-.)array} # a-b-c-d
+
+array=(a b c d) echo ${(j.-.)array} # a-b-c-d
 
 # Short if
-if [[ ... ]] command
-if [[ ... ]] { command ... }
+
+if [[ ... ]] command if [[ ... ]] { command ... }
 
 # Short for
-for i ( word ... ) command
-for i ( word ... ) { command ... }
-for i in word ... ; command
+
+for i ( word ... ) command for i ( word ... ) { command ... } for i in word ...
+; command
 
 # Short while/until
-while [[ ... ]] { command ... }
-until [[ ... ]] { command ... }
+
+while [[ ... ]] { command ... } until [[ ... ]] { command ... }
 
 # Use output of command, when using pipe is not possible
+
 <( command )
 
 # Similar to <( ), but creates temporary file (instead of FD or FIFO), when
+
 # program needs to seek in output.
+
 =( command )
-
-

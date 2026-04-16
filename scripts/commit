@@ -1,0 +1,5 @@
+#!/bin/env zsh
+
+local msg="$*"
+git commit -m "$msg"
+exit $?

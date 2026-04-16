@@ -1,0 +1,86 @@
+#!/bin/env sh
+
+set -eu
+
+testing=false
+[ $testing = true ] && set -x
+
+self="$(basename "$0")"
+
+[ -z "$(command -v go)" ] && {
+	echo "$self: go not found" >&2
+	exit 1
+}
+
+install() {
+	while [ $# -gt 0 ]; do
+		echo '===============================================' >&2
+		link="$1"
+		name="$(basename "$link")"
+		echo "$self: installing '$name'" >&2
+		CGO_ENABLED=0 go install "$link" && echo "$self: installed '$name' @ $(go env GOPATH) " >&2
+
+		shift
+
+		name="$(go env GOPATH)/bin/$(echo "$name" | sed -E 's/@.+$//g')"
+		{
+			[ -f "$name" ] && {
+				bin_name=$(basename "$name")
+				target="/usr/bin/$bin_name"
+				# Check if symlink already exists and points to the correct target
+				if [ -L "$target" ]; then
+					current_target=$(readlink "$target")
+					if [ "$current_target" = "$name" ]; then
+						echo "$self: Symlink already exists and is correct: $target -> $name" >&2
+						continue
+					else
+						echo "$self: Symlink exists but points to different target:" >&2
+						echo "  Current: $target -> $current_target" >&2
+						echo "  Desired: $target -> $name" >&2
+						printf "Update symlink? [y/N] "
+						read -r response
+						case "$response" in
+							[yY] | [yY][eE][sS])
+								sudo ln -fs "$name" "$target" || {
+									echo "$self: unable to link $name" >&2
+									exit 1
+								}
+								echo "$self: Updated symlink: $target -> $name" >&2
+								;;
+							*)
+								echo "$self: Skipped $target" >&2
+								;;
+						esac
+					fi
+				elif [ -e "$target" ]; then
+					echo "$self: Warning: $target exists but is not a symlink. Skipping." >&2
+					continue
+				else
+					echo "$self: Creating new symlink: $target -> $name" >&2
+					sudo ln -fs "$name" "$target" || {
+						echo "$self: unable to link $name" >&2
+						exit 1
+					}
+				fi
+			}
+		} || {
+			echo "$self: binary not found: $name" >&2
+			return 1
+		}
+
+	done
+	echo '===============================================' >&2
+}
+
+echo "$self: Installing Go tools..." >&2
+
+install \
+	golang.org/x/tools/gopls@latest \
+	mvdan.cc/gofumpt@latest \
+	github.com/go-delve/delve/cmd/dlv@latest \
+	golang.org/x/tools/cmd/goimports@latest \
+	github.com/nametake/golangci-lint-langserver@latest \
+	github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest \
+	golang.org/x/mobile/cmd/gomobile@latest
+
+echo "$self: All Go tools installed and linked successfully!" >&2

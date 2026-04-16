@@ -7,7 +7,8 @@
 [[language]]
 name       = "elvish"
 scope      = "source.elvish"
-file-types = ["conf"]
+file-types = ["conf","lfrc"]
+formatter  = { command = 'shfmt', args = ["-s", "-ci"] }
 
 [[language]]
 name             = "go"
@@ -21,7 +22,13 @@ formatter        = { command = "fmtgo" }
 command = "golangci-lint-langserver"
 
 [language-server.golangci-lint-lsp.config]
-command = ["golangci-lint", "run", "--output.json.path=stdout", "--show-stats=false", "--issues-exit-code=1"]
+command = [
+  "golangci-lint",
+  "run",
+  "--output.json.path=stdout",
+  "--show-stats=false",
+  "--issues-exit-code=1",
+]
 
 [language-server.lsp-ai]
 command = "lsp-ai"
@@ -62,16 +69,27 @@ formatter   = { command = "stylua", args = ["-"] }
 file-types  = ["lua"]
 
 [[language]]
-name        = "toml"
-scope       = "source.toml"
+name = "toml"
+scope = "source.toml"
 auto-format = true
-formatter   = { command = "taplo", args = ["format", "-o", "align_entries=true", "-o", "align_comments=true", "-o", "array_trailing_comma=true", "-o", "array_auto_expand=false", "-o", "array_auto_collapse=true", "-o", "compact_arrays=true", "-o", "compact_inline_tables=false", "-o", "inline_table_expand=true", "-o", "compact_entries=false", "-o", "column_width=80", "-o", "indent_tables=false", "-o", "indent_entries=false", "-o", "trailing_newline=true", "-o", "reorder_keys=false", "-o", "reorder_arrays=false", "-o", "reorder_inline_tables=false", "-o", "crlf=false", "-o", "allowed_blank_lines=2", "-o", "indent_string=' '", "-"] }
-file-types  = ["toml"]
+file-types = ["toml"]
+formatter = { command = "taplo", args = [  "format",  "-o",  "align_entries=true",  "-o",  "align_comments=true",  "-o",  "compact_arrays=true",  "-o",  "inden_entries=true",  "-"] }
+
+# formatter   = { command = "taplo", args = ["format", "-o", "align_entries=true", "-o", "align_comments=true", "-o", "array_trailing_comma=true", "-o", "array_auto_expand=false", "-o", "array_auto_collapse=true", "-o", "compact_arrays=true", "-o", "compact_inline_tables=false", "-o", "inline_table_expand=true", "-o", "compact_entries=false", "-o", "column_width=80", "-o", "indent_tables=false", "-o", "indent_entries=false", "-o", "trailing_newline=true", "-o", "reorder_keys=false", "-o", "reorder_arrays=false", "-o", "reorder_inline_tables=false", "-o", "crlf=false", "-o", "allowed_blank_lines=2", "-o", "indent_string= ", "-"] }
 
 [[language]]
-name       = "sql"
-scope      = "source.sql"
-formatter  = { command = "sqlformat", args = ["--reindent", "--indent_width", "2", "--keywords", "upper", "--identifiers", "lower", "-"] }
+name = "sql"
+scope = "source.sql"
+formatter = { command = "sqlformat", args = [
+  "--reindent",
+  "--indent_width",
+  "2",
+  "--keywords",
+  "upper",
+  "--identifiers",
+  "lower",
+  "-",
+] }
 file-types = ["sql"]
 
 [[language]]
@@ -174,6 +192,8 @@ auto-format = true
 name        = "bash"
 auto-format = true
 formatter   = { command = 'shfmt', args = ["-s", "-ci"] }
+# file-types  = ['zsh', 'sh', 'envrc']
+# file-types  = ['zsh', 'sh', 'envrc']
 
 
 [[language]]

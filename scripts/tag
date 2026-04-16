@@ -4,34 +4,47 @@
 
 set -euo pipefail
 
-  local artist=''
-  local album=''
-  local title=''
-  local year=''
-  local files=()
-  while [ $# -gt 0 ]; do
-    case "$1" in
-      '-a'|'--artist') shift && artist="-metadata artist='$1'" && shift && continue;;
-      '-l'|'--album') shift && album="-metadata album='$1'" && shift && continue;;
-      '-t'|'--title') shift && title="-metadata title='$1'" && shift && continue;;
-      '-y'|'--year') shift && year="-metadata year='$1'" && shift && continue;;
-      -*) echo "unrecognized flag: $1" >&2 && exit 1;;
-      *)
-        [ -f "$1" ] && files+=("$1") && shift && continue
-        echo "file not found: $1" >&2 && exit 1;;
-    esac
-  done
-  if [ -n "$title" -a ${#files[@]} -gt 1 ]; then
-    printf "setting title of more than one file to %s. sure? [yN] " "$title"
-    read -r response
-    case "${=response}" in
-      [yY]|[yY][eE][sS]) :;;
-      *) exit 0;;
-    esac
-  fi
-  for file in "${files[@]}"; do
-    local temp="$(mktemp)"
-    ffmpeg -i "$file" $artist $album $title $year -codec copy "$temp" || exit $?
-    mv "$temp" "$file" || { local code=$? && echo "failed cleanup: $file" >&2 && exit $code; }
-  done
+local testing=true
+[ $testing = true ] && set -x
+
+local artist=''
+local album=''
+local title=''
+local year=''
+local files=()
+local flags=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    # '-a'|'--artist') shift && artist="-metadata artist='$1'" && shift && continue;;
+    # '-l'|'--album') shift && album="-metadata album='$1'" && shift && continue;;
+    # '-t'|'--title') shift && title="-metadata title='$1'" && shift && continue;;
+    # '-y'|'--year') shift && year="-metadata year='$1'" && shift && continue;;
+    '-a'|'--artist') shift && flags+=("-metadata" "artist=$1") && shift && continue;;
+    '-l'|'--album') shift && flags+=("-metadata" "album=$1") && shift && continue;;
+    '-t'|'--title') shift && flags+=("-metadata" "title=$1") && shift && continue;;
+    '-y'|'--year') shift && flags+=("-metadata" "year=$1") && shift && continue;;
+    -*) echo "unrecognized flag: $1" >&2 && exit 1;;
+    *)
+      [ -f "$1" ] && files+=("$1") && shift && continue
+      echo "file not found: $1" >&2 && exit 1;;
+  esac
+done
+[ ${#flags} = 0 ] && { echo "no metadata flags passed" >&2; exit 1; }
+if [ -n "$title" -a ${#files[@]} -gt 1 ]; then
+  printf "setting title of more than one file to %s. sure? [yN] " "$title" >&2
+  read -r response
+  case "${=response}" in
+    [yY]|[yY][eE][sS]) :;;
+    *) exit 0;;
+  esac
+fi
+for file in "${files[@]}"; do
+  [ -e "$file" ] || { echo "file not found: $file" >&2; continue; }
+  local format="${file##*.}"
+  local temp="$(mktemp).${format}"
+  echo "making $temp"
+  # ffmpeg -hide_banner -i "$file" ${=artist} ${=album} ${=title} ${=year} -f "$format" -codec copy "$temp" || { local code=$?; [ -e "$temp" ] && rm "$temp";  exit $code; }
+  ffmpeg -hide_banner -i "$file" ${flags[@]} -codec copy -update 1 "$temp" || { local code=$?; [ -e "$temp" ] && rm "$temp";  exit $code; }
+  mv "$temp" "$file" || { local code=$? && echo "failed cleanup: $file" >&2 && exit $code; }
+done
 
