@@ -7,6 +7,7 @@ set -euo pipefail
 local dry=false
 local visible=false
 local hidden=false
+local graphical=false
 local force=""
 
 local help_text=$(
@@ -20,6 +21,7 @@ local help_text=$(
 		    -h, --hidden         include hidden files that aren't in gitignore
 		    -f, --force          forcefully stage files matched by .gitignore
 		    -d, --dry, --dry-run just print the names to the files that would be stage
+		    -g, --graphical      run an fzf picker to determine which untracked files/dirs to stage
 
 		  args:
 		    paths to any files
@@ -44,10 +46,12 @@ while [[ $# -gt 0 ]]; do
 		'-h' | '--hidden') hidden=true ;;
 		'-d' | '--dry' | '--dry-run') dry=true ;;
 		'-f' | '--force') force="-f" ;;
+		'-g' | '--graphical') graphical=true ;;
 		-*)
 			[[ $1 == *"v"* ]] && visible=true
 			[[ $1 == *"h"* ]] && hidden=true
 			[[ $1 == *"d"* ]] && dry=true
+			[[ $1 == *"g"* ]] && graphical=true
 			[[ $1 == *"f"* ]] && force="-f"
 			;;
 		*) break ;;
@@ -64,6 +68,10 @@ fi
 if [[ $# -eq 0 ]] && ! $visible && ! $hidden; then
 	files+=$(git status -s | rg '^[ MA]M\s' | awk '{print $2}')$'\n'
 	files+=$(git status -s | rg '^[ R]M\s' | awk '{print $4}')$'\n'
+fi
+
+if $graphical; then
+	git status -s 2>/dev/null | grep -E '\?\?' | column -tH1 -s $' ' | fzf --preview '{ test -f {} && bat {} && exit; } || ls {}' | xargs -n git add
 fi
 
 if $visible; then
