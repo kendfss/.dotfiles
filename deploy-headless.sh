@@ -238,7 +238,7 @@ if [ -x "$(command -v xbps-install)" ]; then
 	chsh -s "$(which zsh)" "$user"
 	# symlinkDialogue /usr/lib/mpv-mpris/mpris.so ~/.config/mpv/scripts/mpris.so || exit $?
 
-	[ -z "$(gh auth status | tr '[:upper:]' '[:lower:]' | rg -o 'logged in')" ] && error "run 'gh auth login' manually later for github cli access"
+	[ -z "$({ gh auth status || fatal; } | { tr '[:upper:]' '[:lower:]' || fatal; } | { rg -o 'logged in' || fatal; })" ] && error "run 'gh auth login' manually later for github cli access"
 
 	command -v json2go >/dev/null || doas -u "$user" go install github.com/Parutix/json2go@latest || exit $?
 
