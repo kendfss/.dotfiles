@@ -235,9 +235,9 @@ if [ -x "$(command -v xbps-install)" ]; then
 		}
 	done
 	[ ${#packages} -gt 0 ] && { xbps-install -Syu $packages || exit $?; }
-	su - "$user" <<-EOF
-		chsh -s "$(which zsh)" "$user"
-	EOF
+	# su - "$user" <<-EOF
+	# 	chsh -s "$(which zsh)" "$user"
+	# EOF
 	# symlinkDialogue /usr/lib/mpv-mpris/mpris.so ~/.config/mpv/scripts/mpris.so || exit $?
 
 	[ -z "$({ gh auth status || fatal; } | { tr '[:upper:]' '[:lower:]' || fatal; } | { rg -o 'logged in' || fatal; })" ] && error "run 'gh auth login' manually later for github cli access"
@@ -247,13 +247,13 @@ if [ -x "$(command -v xbps-install)" ]; then
 	test -d "$userhome/.venv" || { test -e "$userhome/.venv" && fatal "$userhome/.venv exists but isn't a directory"; } || uv venv "$userhome/.venv" || exit $?
 	# doas -u "$user" uv python install || exit $?
 	# doas -u "$user" uv pip install python send2trash click dill filetype || exit $?
-	su - "$user" <<-'EOF'
-		    export UV_PYTHON=/usr/bin/python3
-		    uv python install 3.12
-		    [ -e "$userhome/.venv" ] || uv venv $userhome/.venv
-		    source ~/.venv/bin/activate
-		    uv pip install send2trash click dill filetype
-	EOF
+	# su - "$user" <<-'EOF'
+	# 	    export UV_PYTHON=/usr/bin/python3
+	# 	    uv python install 3.12
+	# 	    [ -e "$userhome/.venv" ] || uv venv $userhome/.venv
+	# 	    source ~/.venv/bin/activate
+	# 	    uv pip install send2trash click dill filetype
+	# EOF
 
 	gochain || fatal golang toolchain setup failed
 
