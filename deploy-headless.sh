@@ -23,10 +23,10 @@ assure() {
 		bin="$1"
 		pkg="$2"
 		if [ -z "$pkg" ]; then
-			fatal "$self: developer error: no package specified for '$bin' binary"
+			fatal "developer error: no package specified for '$bin' binary"
 		fi
 		if ! command -v "$bin" >/dev/null 2>&1; then
-			error "$self: need to install '$bin' from the '$pkg' package"
+			error "need to install '$bin' from the '$pkg' package"
 			missing="$missing $bin $pkg"
 		fi
 		shift 2
@@ -39,7 +39,7 @@ assure() {
 	while [ $# -gt 0 ]; do
 		bin="$1" pkg="$2"
 		if ! command -v "$bin" >/dev/null 2>&1; then
-			error "$self: '$bin' from '$pkg' not installed"
+			error "'$bin' from '$pkg' not installed"
 			code=1
 		fi
 		shift 2
@@ -57,7 +57,7 @@ need() {
 	done
 	[ "${#missing}" = 0 ] && return
 	command -v assure >/dev/null || {
-		error "$self: need and not sure how to get:"
+		error "need and not sure how to get:"
 		# shellcheck disable=SC2086
 		printf '%s from %s\n' $missing >&2
 		return 1
@@ -70,35 +70,12 @@ check() {
 	code=0
 	while [ $# -gt 0 ]; do
 		command -v "$1" >/dev/null || {
-			error "$self: couldn't find command/builtin: $1"
+			error "couldn't find command/builtin: $1"
 			code=1
 		}
 		shift
 	done
 	[ $code = 0 ] || exit $code
-}
-
-export DOTFILES=$HOME/.dotfiles
-export ZDOTDIR="$DOTFILES"
-export PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$HOME/.local/bin:$HOME/go/bin"
-export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
-mkdir -p "$ZSH_PLUGINS"
-
-check symlinkDialogue gochain
-assure chpst runit tr coreutils || exit $?
-need curl uv go bat git
-
-helpText() {
-	cat <<-EOF | bat -lman >&2
-		usage:
-			sudo $self [FLAGS]
-
-		$description
-
-		flags:
-			-h, --help            print this message
-	EOF
-	[ -n "$1" ] && exit "$1"
 }
 
 [ "$(id -u)" -ne 0 ] && {
@@ -141,6 +118,29 @@ if [ ! -f "/etc/sudoers.d/$user" ] && [ ! -n "$(id "$user" | grep wheel)" ]; the
 	echo "$user ALL=(ALL) ALL" >"/etc/sudoers.d/$user" || fatal failed to create sudoers entry for "'$user'"
 	chmod 440 "/etc/sudoers.d/$user"
 fi
+
+export DOTFILES="$user/.dotfiles"
+export ZDOTDIR="$DOTFILES"
+export PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$user/.local/bin:$user/go/bin"
+export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
+mkdir -p "$ZSH_PLUGINS"
+
+check symlinkDialogue gochain
+assure chpst runit tr coreutils || exit $?
+need curl uv go bat git
+
+helpText() {
+	cat <<-EOF | bat -lman >&2
+		usage:
+			sudo $self [FLAGS]
+
+		$description
+
+		flags:
+			-h, --help            print this message
+	EOF
+	[ -n "$1" ] && exit "$1"
+}
 
 while [ $# -gt 0 ]; do
 	case "$1" in
