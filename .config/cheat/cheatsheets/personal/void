@@ -1,6 +1,19 @@
-# delete old kernels 
+# delete old kernels
+
 cheat vkpurge
 
 # search package repositories
+
 xbps-query -Rs <package name>
 
+# dependency analysis
+
+| command                 | utility                                                               |
+| ----------------------- | --------------------------------------------------------------------- |
+| xbps-query -m           | List user-installed (explicit) packages                               |
+| xbps-query -l           | List all installed packages                                           |
+| xbps-query -x <package> | Show direct dependencies of a specific package                        |
+| xbps-query -X <package> | Show reverse dependencies (which packages depend on this one)         |
+| xbps-query -O           | List package orphans (installed as dependencies but no longer needed) |
+| xilog <package>         | Show installation date                                                |
+| xmandoc <manpage>       | Read manpage of possibly not installed package                        |

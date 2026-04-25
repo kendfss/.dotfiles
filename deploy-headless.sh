@@ -11,7 +11,7 @@ error() {
 }
 
 fatal() {
-	error "$@"
+	[ $# -gt 0 ] && error "$@"
 	exit 1
 }
 
@@ -106,6 +106,34 @@ helpText() {
 	fatal "This script must be run as root. Use 'sudo $self'."
 }
 
+user=kendfss
+id "$user" 2>/dev/null >/dev/null || while true; do
+	user="$(
+		printf 'pick a username: '
+		read -r user
+	)"
+	useradd -m -G wheel,users "$user" || continue
+	passwd "$user" || {
+		userdel -r "$user"
+		continue
+	}
+	break
+done
+
+userhome="$(cat /etc/passwd | grep "$user" | awk -F: '{print $6}')"
+mkdir -p "$userhome/.ssh" && {
+	echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGA7kpOkhqeoMp+MIkw/GshtGPWKuc5C7/apNjxNWC6h" >>"$userhome/.ssh/authorized_keys" # desktop
+	echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEXBhkv+CXgD0/a9taeOlf+Q6APZD9gPwQrntUjot+C4" >>"$userhome/.ssh/authorized_keys" # phone
+	chown -R "$user:$user" "$userhome/.ssh"
+	chmod 700 "$userhome/.ssh"
+	chmod 600 "$userhome/.ssh/authorized_keys"
+}
+
+if [ ! -f "/etc/sudoers.d/$user" ] && [ ! -n "$(id "$user" | grep wheel)" ]; then
+	echo "$user ALL=(ALL) ALL" >"/etc/sudoers.d/$user" || fatal failed to create sudoers entry for "'$user'"
+	chmod 440 "/etc/sudoers.d/$user"
+fi
+
 while [ $# -gt 0 ]; do
 	case "$1" in
 		-h | --help) helpText 0 ;;
@@ -131,22 +159,25 @@ for name in "$DOTFILES"/scripts/*; do
 	symlinkDialogue "$name" "$target" || exit $?
 done
 
-for name in "$DOTFILES"/etc/*; do
-	[ -d "$name" ] || continue
-	base="$(basename "$name")"
-	case "$base" in
-		sv) for path in "$name"/*; do
-			name="${path##*/}"
-			symlinkDialogue "$path" "/etc/sv/$name" || exit $?
-			symlinkDialogue "/etc/sv/$name" "/var/service/$name" || exit $?
-		done ;;
-		ly) symlinkDialogue $DOTFILES/etc/ly/config.ini /etc/ly/config.ini || exit $? ;;
-		*)
-			[ "$base" = "ly" ] && continue
-			symlinkDialogue "$name" "/etc/$base" || exit $?
-			;;
-	esac
-done
+# for name in "$DOTFILES"/etc/*; do
+# 	[ -d "$name" ] || continue
+# 	base="$(basename "$name")"
+# 	case "$base" in
+# 		sv) for path in "$name"/*; do
+# 			name="${path##*/}"
+# 			symlinkDialogue "$path" "/etc/sv/$name" || exit $?
+# 			symlinkDialogue "/etc/sv/$name" "/var/service/$name" || exit $?
+# 		done ;;
+# 		ly)
+# 			continue
+# 			symlinkDialogue $DOTFILES/etc/ly/config.ini /etc/ly/config.ini || exit $?
+# 			;;
+# 		*)
+# 			[ "$base" = "ly" ] && continue
+# 			symlinkDialogue "$name" "/etc/$base" || exit $?
+# 			;;
+# 	esac
+# done
 
 for name in "$DOTFILES/.config"/*; do
 	[ -d "$name" ] || continue
@@ -166,23 +197,26 @@ if [ -x "$(command -v xbps-install)" ]; then
 	xlocate -S
 
 	packages=''
-	echo clipnotify man-pages-posix zenity zsh acl-progs rsync zsh tmux wezterm kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer fzf clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist tabbed zathura zathura-pdf-mupdf pandoc psmisc lf coreutils mpv mpv-mpris playerctl nicotine+ lua-language-server StyLua taplo base-devel bat gcc make llvm xkill xfce4-screenshooter delta gallery-dl lsof ntfs-3g uv pup alsa-utils tree-sitter tree-sitter-cli rustup rust-analyzer mdBook | sed -E 's/\s+/\n/g' | while read -r package; do
-		command -v $package 2>&1 >/dev/null || {
+	echo man-pages-posix zsh acl-progs rsync zsh tmux helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer fzf clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist pandoc psmisc lf coreutils lua-language-server StyLua taplo base-devel bat gcc make llvm opendoas samba-libs \
+		delta gallery-dl lsof ntfs-3g uv pup alsa-utils tree-sitter tree-sitter-cli rustup rust-analyzer mdBook | sed -E 's/\s+/\n/g' | while read -r package; do
+		# zenity clipnotify kitty zathura zathura-pdf-mupdf tabbed mpv mpv-mpris playerctl nicotine+ xkill xfce4-screenshooter \
+		command -v $package >/dev/null 2>&1 || {
 			packages="${packages:+${packages} }$package"
 		}
 	done
 	[ ${#packages} -gt 0 ] && { xbps-install -Syu $packages || exit $?; }
+	chsh -s "$(which zsh)" "$user"
 
-	symlinkDialogue /usr/lib/mpv-mpris/mpris.so ~/.config/mpv/scripts/mpris.so || exit $?
+	# symlinkDialogue /usr/lib/mpv-mpris/mpris.so ~/.config/mpv/scripts/mpris.so || exit $?
 
-	[ -z "$(gh auth status | tr '[:upper:]' '[:lower:]' | rg -o 'logged in')" ] && { gh auth login || exit $?; }
+	[ -z "$(gh auth status | tr '[:upper:]' '[:lower:]' | rg -o 'logged in')" ] && error "run 'gh auth login' manually later for github cli access"
 
-	command -v json2go >/dev/null || go install github.com/Parutix/json2go@latest || exit $?
+	command -v json2go >/dev/null || doas -u "$user" go install github.com/Parutix/json2go@latest || exit $?
 
-	test -d "$HOME/.venv" || { test -e "$HOME/.venv" && fatal "$HOME/.venv exists but isn't a directory" && exit 1; } || uv venv "$HOME/.venv" || exit $?
+	test -d "$HOME/.venv" || { test -e "$HOME/.venv" && fatal "$HOME/.venv exists but isn't a directory"; } || uv venv "$HOME/.venv" || exit $?
 	uv pip install python send2trash click dill filetype || exit $?
 
-	gochain || fatal gochain exists but could not run it
+	gochain || fatal golang toolchain setup failed
 
 	for name in zsh-autosuggestions zsh-syntax-highlighting; do
 		[ ! -e "$ZSH_PLUGINS/$name" ] && { git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" || exit 1; }

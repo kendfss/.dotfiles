@@ -30,6 +30,10 @@
     "ytdl": {
       "enabled": true,
       "module": "yt-dlp"
+    },
+    "tumblr": {
+      "api-key": "$TUMBLR_CONSUMER",
+      "api-secret": "$TUMBLR_SECRET"
     }
   }
 }

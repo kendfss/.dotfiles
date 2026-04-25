@@ -1,0 +1,6 @@
+#!/bin/env sh
+
+qbittorrent 2>/dev/null 1>/dev/null &
+printf 'qbittorrent.pid => ' >&2
+printf '%s' "$!"
+printf '\n' >&2

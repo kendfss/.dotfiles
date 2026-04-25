@@ -1,0 +1,77 @@
+#!/bin/sh
+
+# join strings/lines with a separator
+
+self="$(basename "$0")"
+description="$(cat "$0" /dev/null </dev/null | sed '1d;2d' | head -1 | sed -E 's/^#\s*//')"
+
+set -eu
+
+need() {
+	code=0
+	while [ $# -gt 0 ]; do
+		command -v "$1" >/dev/null || {
+			echo "$self: couldn't find command/builtin: $1" >&2
+			code=1
+		}
+		shift
+	done
+	[ $code = 0 ] || exit $code
+}
+
+need bat >/dev/null || bat() {
+	cat
+}
+
+testing=false
+[ $testing = true ] && set -x
+
+sep=':'
+args=''
+
+helpText() {
+	cat <<EOF | bat -lman >&2
+$description
+
+usage:
+	$self [FLAGS] ARGS
+	... | $self [FLAGS]
+
+	flags:
+		-h, --help print this message
+		-s, --sep  separator between terms (default: '$sep')
+EOF
+	exit $1
+}
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-s | --sep)
+			sep=$2
+			shift
+			;;
+		-h | --help) helpText 0 ;;
+		-*)
+			echo "unrecognized flag: $1" >&2
+			exit 1
+			;;
+		*) args="$args$sep$1" ;;
+	esac
+	shift
+done
+
+case ${#args} in
+	0)
+		while read -r line; do
+			args="$args$sep$line"
+		done
+		[ ${#args} = 0 ] && helpText 1
+		;;
+	1)
+		echo "$1"
+		exit
+		;;
+	*) ;;
+esac
+
+echo "$args" | sed -E "s/^$sep//"

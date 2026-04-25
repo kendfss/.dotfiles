@@ -27,7 +27,7 @@ choices=""
 while [ $# -gt 0 ]; do
 	case "$1" in
 		-r | --raw) raw=true ;;
-		-*) echo unrecognized flag: "$1" ;;
+		-*) echo unrecognized flag: "$1" && exit 1 ;;
 		*) tmp="$tmp $1" ;;
 	esac
 	shift

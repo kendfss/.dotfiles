@@ -5,15 +5,14 @@ PATH="$PATH:$DOTFILES/scripts:$HOME/.local/bin:$HOME/go/bin"
 [ -z "$CLONEDIR" ] && export CLONEDIR=$HOME/gitclone/clones
 [ -z "$REPO_HOST" ] && export REPO_HOST=https://github.com
 
-
-[ -z "$DOTFILES" ] && echo "\$DOTFILES is undefined" && exit 1
+[ -z "$DOTFILES" ] && echo '$DOTFILES is undefined' && exit 1
 
 source "$DOTFILES/functions.zsh" || { echo "couldn't source functions" && exit 1; }
 
 for name in "$DOTFILES/.config"/*; do
-  [ -d "$name" ] || continue
-  local base="$(basename "$name")"
-  symlinkDialogue "$name" "$HOME/.config/$base" || exit $?
+	[ -d "$name" ] || continue
+	local base="$(basename "$name")"
+	symlinkDialogue "$name" "$HOME/.config/$base" || exit $?
 done
 # symlinkDialogue $HOME/.{dotfiles,config}/helix || exit $?
 # symlinkDialogue $HOME/.{dotfiles,config}/glow  || exit $?
@@ -21,55 +20,58 @@ done
 # symlinkDialogue $HOME/.{dotfiles,config}/cheat || exit $?
 # symlinkDialogue $HOME/.{dotfiles,termux}/boot  || exit $?
 
-for item in $DOTFILES/.*; do 
-  [ -f "$item" ] || continue
-  target="$HOME/$(basename "$item")"
-  symlinkDialogue "$item" "$target" || exit $?
+for item in $DOTFILES/.*; do
+	[ -f "$item" ] || continue
+	target="$HOME/$(basename "$item")"
+	symlinkDialogue "$item" "$target" || exit $?
 done
 
 for name in "$DOTFILES/scripts"/*; do
-    [ -x "$name" ] || continue
-    target="$TERMUX__PREFIX/bin/$(basename "$name")"
-    symlinkDialogue "$name" "$target" || exit $?
+	[ -x "$name" ] || continue
+	target="$TERMUX__PREFIX/bin/$(basename "$name")"
+	symlinkDialogue "$name" "$target" || exit $?
 done
 
 lines() {
-  for arg in "$@"; do
-    echo "$arg"
-  done
+	for arg in "$@"; do
+		echo "$arg"
+	done
 }
 
 if [[ -n "$(command -v pkg)" ]]; then
-  pkg update && pkg upgrade
+	pkg update && pkg upgrade
 
-  local packages=( )
-  local package
-  lines openssh fzf zsh tmux helix direnv ripgrep jq termux-services perl glow bat clang fd mpv mandoc iproute2 tree shellcheck git-delta | while read -r package; do
-    which "$package" && continue
-    packages+=("$package")
-  done
-  [ ${#packages} -gt 0 ] && { pkg install -y $packages || exit $?; }
+	local packages=()
+	local package
+	lines openssh fzf rsync zsh tmux helix direnv ripgrep jq termux-services perl glow bat clang fd mpv mandoc iproute2 tree shellcheck git-delta | while read -r package; do
+		which "$package" && continue
+		packages+=("$package")
+	done
+	[ ${#packages} -gt 0 ] && { pkg install -y $packages || exit $?; }
 
-  export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
-  mkdir -p "$ZSH_PLUGINS"
-  symlinkDialogue "$ZSH_PLUGINS" "$TERMUX__ROOTFS_DIR/usr/share/zsh/plugins" || exit $?
-  for name in zsh-{autosuggestions,syntax-highlighting}; do
-    [[ ! -e "$ZSH_PLUGINS/$name" ]] && { git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" && source "$ZSH_PLUGINS/$name/$name.zsh"; }
-  done
-  [[ ! -e "$ZSH_PLUGINS/zsh-sweep" ]] && { git clone https://github.com/psprint/zsh-sweep "$ZSH_PLUGINS/zsh-sweep" && source "$DOTFILES/.zshrc"; }
+	export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
+	mkdir -p "$ZSH_PLUGINS"
+	symlinkDialogue "$ZSH_PLUGINS" "$TERMUX__ROOTFS_DIR/usr/share/zsh/plugins" || exit $?
+	for name in zsh-{autosuggestions,syntax-highlighting}; do
+		[[ ! -e "$ZSH_PLUGINS/$name" ]] && { git clone --depth=1 "https://github.com/zsh-users/$name" "$ZSH_PLUGINS/$name" && source "$ZSH_PLUGINS/$name/$name.zsh"; }
+	done
+	[[ ! -e "$ZSH_PLUGINS/zsh-sweep" ]] && { git clone https://github.com/psprint/zsh-sweep "$ZSH_PLUGINS/zsh-sweep" && source "$DOTFILES/.zshrc"; }
 
-  export TMUX_PLUGINS="$HOME/.tmux/plugins"
-  local origin="$(pwd)"
-  mkdir -p "$TMUX_PLUGINS"
-  { [ ! -e "$CLONEDIR/tmux-plugins/tpm" ] && { clone tmux-plugins/tpm || { echo "couldn't clone tmux-plugins/tpm"; exit 1; }; }; } || cd "$CLONEDIR/tmux-plugins/tpm"
-  { symlinkDialogue "$(pwd)" "$TMUX_PLUGINS/tpm" && cd "$origin"; } || exit $?
+	export TMUX_PLUGINS="$HOME/.tmux/plugins"
+	local origin="$(pwd)"
+	mkdir -p "$TMUX_PLUGINS"
+	{ [ ! -e "$CLONEDIR/tmux-plugins/tpm" ] && { clone tmux-plugins/tpm || {
+		echo "couldn't clone tmux-plugins/tpm"
+		exit 1
+	}; }; } || cd "$CLONEDIR/tmux-plugins/tpm"
+	{ symlinkDialogue "$(pwd)" "$TMUX_PLUGINS/tpm" && cd "$origin"; } || exit $?
 
-  export BASH_PLUGINS="$DOTFILES/bash-plugins"
-  mkdir -p "$BASH_PLUGINS"
-  { [ ! -e "$BASH_PLUGINS/ble.sh" ] && { { git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git "$BASH_PLUGINS/ble.sh" || { echo "couldn't find, or clone, akinomyoga/ble.sh" && exit 1; }; } && make -C "$BASH_PLUGINS/ble.sh"; }; }
+	export BASH_PLUGINS="$DOTFILES/bash-plugins"
+	mkdir -p "$BASH_PLUGINS"
+	{ [ ! -e "$BASH_PLUGINS/ble.sh" ] && { { git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git "$BASH_PLUGINS/ble.sh" || { echo "couldn't find, or clone, akinomyoga/ble.sh" && exit 1; }; } && make -C "$BASH_PLUGINS/ble.sh"; }; }
 
 else
-  echo "pkg is not available. Make sure you have the package manager for termux installed." && exit 1
+	echo "pkg is not available. Make sure you have the package manager for termux installed." && exit 1
 fi
 
 export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+. "$(dirname "$0")/utils.sh"
+
+export DISPLAY="${DISPLAY:-:0}"
+XAUTHORITY="$(find /tmp -name '.Xauthority' -user kendfss 2>/dev/null | head -1)"
+export XAUTHORITY="${XAUTHORITY:-/home/kendfss/.Xauthority}"
+
+mkdir -p "$CLIPBOARD_BACKUP_FOLDER"
+
+old_clipboard="$(xclip -o -selection clipboard)"
+old_primary="$(xclip -o -selection primary)"
+[ -n "$old_clipboard" ] && writeToFile clipboard
+[ -n "$old_primary" ] && writeToFile primary
+
+# just in case writes become slow, we keep them in a separate loop
+while clipnotify; do
+	new_clipboard="$(xclip -o -selection clipboard)"
+	[ -n "$new_clipboard" ] && [ "$new_clipboard" != "$old_clipboard" ] && writeToFile clipboard
+	new_primary="$(xclip -o -selection primary)"
+	[ -n "$new_primary" ] && [ "$new_primary" != "$old_primary" ] && writeToFile primary
+done

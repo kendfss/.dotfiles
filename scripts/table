@@ -1,0 +1,134 @@
+#!/bin/env sh
+
+# print a table of the output(s) to passing multiple arguments to multiple commands
+
+self="$(basename "$0")"
+full_self=$0
+
+set -eu
+
+need() {
+	code=0
+	while [ $# -gt 0 ]; do
+		command -v "$1" >/dev/null || {
+			echo "$self: couldn't find command/builtin: $1" >&2
+			code=1
+		}
+		shift
+	done
+	[ $code = 0 ] || exit $code
+}
+
+need cat read column
+need bat >/dev/null || bat() {
+	cat
+}
+
+args=""
+commands=""
+accumulate=false
+unquote=false
+separator="timeout 1 cat"
+
+helpText() {
+	cat <<-EOF | bat -lman >&2
+		$(cat "$full_self" | head -3 | sed '1d;2d')
+
+		usage:
+		  $self [FLAGS] COMMANDS -- ARGS            # print a table of the output of ARGS
+		  ... | $self [FLAGS] COMMANDS              # print a table of output of line separated args
+
+		flags:
+		  -, --             treat everything else on the command line as an argument and read any arguments on stdin
+		  -h, --help        print this message
+		  -s, --separator   command that will separate piped input into lines (default: '$separator')
+		  -u, --unquote     remove double/single quotes from commands
+		  -v, --verbose     verbose log output 
+	EOF
+	# shellcheck disable=SC2086
+	exit $1
+}
+
+loadArgs() {
+	$separator | while read -r name; do
+		printf ":%s" "$name"
+	done
+	echo
+}
+
+tabulate() {
+	column -ts "$(printf '\t')"
+}
+
+error() {
+	echo "$self: $*" >&2
+	exit 1
+}
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		- | --) accumulate=true ;;
+		-h | --help) helpText 0 ;;
+		-v | --verbose) set -x ;;
+		-u | --unquote) unquote=true ;;
+		-s | --separator)
+			separator="$2"
+			shift
+			;;
+		-*)
+			[ $accumulate = true ] && {
+				args="${args:+${args}:}$1"
+				continue
+			}
+			arg="$(printf '%s' "$1" | tr -d '-')"
+			i=1
+			while [ $i -le "${#arg}" ]; do
+				char="$(printf '%s' "$arg" | cut -c "$i")"
+				case "$char" in
+					h) helpText 0 ;;
+					v) set -x ;;
+					u) unquote=true ;;
+					s)
+						[ -z "$arg" ] && {
+							separator="$2"
+							continue
+						}
+						separator="$arg"
+						arg=""
+						;;
+					*) error "unrecognized flag: $char" ;;
+				esac
+				i=$((i + 1))
+			done
+			;;
+		*)
+			if [ $accumulate = true ]; then
+				args="${args:+${args}:}$1"
+			else
+				commands="${commands:+${commands}:}$1"
+			fi
+			;;
+	esac
+	shift
+done
+
+if [ -z "$args" ] || [ $accumulate = true ]; then
+	args="$args:$(loadArgs)"
+fi
+
+[ -z "$args" ] && helpText 1
+
+args="${args#:}"
+old_ifs="$IFS"
+IFS=:
+# shellcheck disable=SC2086
+set -- $args
+IFS="$old_ifs"
+
+for arg in "$@"; do
+	printf '%s\n' "$commands" | sed -E 's/:+/\n/g' | while read -r cmd; do
+		[ $unquote = true ] && cmd="$(printf '%s' "$cmd" | sed -E 's/^"|"$//g' | sed -E "s/^'|'$//g")"
+		printf '%s\t' "$(${cmd} "$arg" | sed -E 's/\s+/\n/g' | j)"
+	done
+	echo
+done | tabulate

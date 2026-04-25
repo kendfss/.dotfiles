@@ -1,0 +1,10 @@
+#!/bin/env sh
+
+# report info about memory hogging process(es) after an Alt+MagicSysRq+F strike
+
+set -eu
+
+command -v rg 2>/dev/null >/dev/null || 
+
+sudo dmesg | rg -i 'oom|out of memory|killed process'
+

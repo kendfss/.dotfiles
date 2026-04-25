@@ -1,7 +1,10 @@
 # compatibility (silent failure) with bash
-[ $0 = "bash" ] && function zle() {
-	true
-} && alias bindkey=zle
+[ $0 = "bash" ] && {
+	function zle() {
+		true
+	}
+	alias bindkey=bind
+}
 
 expand-or-complete-with-dots() {
 	# Show dots while waiting for tab-completion
@@ -13,6 +16,7 @@ expand-or-complete-with-dots() {
 	zle expand-or-complete
 	zle redisplay
 }
+
 zle -N expand-or-complete-with-dots
 bindkey "^I" expand-or-complete-with-dots
 

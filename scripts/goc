@@ -1,5 +1,24 @@
 #!/bin/env zsh
 
+# pipe 'go doc' through bat
+
+self="$(basename "$ZSH_ARGZERO")"
+description="$(cat "$ZSH_ARGZERO" | sed '1d;2d' | head -1 | sed -E 's/^#\s*//')"
+
+need() {
+	code=0
+	while [ $# -gt 0 ]; do
+		command -v "$1" >/dev/null || {
+			echo "$self: couldn't find command/builtin: $1" >&2
+			code=1
+		}
+		shift
+	done
+	[ $code = 0 ] || exit $code
+}
+
+need go bat
+
 local change_dir=''
 local all=''
 local case=''
@@ -11,9 +30,13 @@ local unexported=''
 local paging=''
 while [ $# -gt 0 ]; do
 	case "$1" in
-		'')
-			go doc -u | bat -Pplgo --theme ansi
-			return $?
+		-h | -help)
+			go doc -h || :
+			exit
+			;;
+		--h | --help)
+			go help doc || :
+			exit
 			;;
 		'-C' | '--change-dir') shift && change_dir="-C $1" && shift && continue ;;
 		'-a' | '-all' | '--all') all='-all' && shift && continue ;;
@@ -49,10 +72,14 @@ while [ $# -gt 0 ]; do
 		*) break ;;
 	esac
 done
+
 local count=0
 local head=""
 local arg=''
 local paging="${paging:-auto}"
+
+[ $# = 0 ] && set -- "$PWD"
+
 for arg in "$@"; do
 	local blob="$(go doc $change_dir $all $case $cmd $http $short $source $unexported "$arg")"
 	local blob_head="$(printf '%s\n' "$blob" | sed -n 1p)"

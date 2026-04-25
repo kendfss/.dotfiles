@@ -23,9 +23,11 @@ quietly() {
 	done
 }
 
+command -v bat &>/dev/null || bat() { less; }
+
 helpText() {
-	cat <<-EOF
-		 usage: $self [FILE]...
+	cat <<-EOF | bat -lman
+		 usage: $self [FLAGS] [FILE]...
 		     a script installer for void-linux
 
 		     -d, --directory set the directory items will be linked into (defaults to ${default_dst})

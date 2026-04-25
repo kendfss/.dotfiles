@@ -1,0 +1,4 @@
+#!/bin/env sh
+
+tmux show-environment -t "$(tmux display -p '#S')" tmux_key_table | sed 's/tmux_key_table=//g'
+tmux refresh-client

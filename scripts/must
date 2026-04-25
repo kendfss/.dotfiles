@@ -1,0 +1,15 @@
+#!/bin/env sh
+
+sudo=''
+[ "$1" = sudo ] && {
+	sudo=pkexec
+	shift
+}
+
+count=0
+while ! $sudo "$@"; do
+	count=$((count + 1))
+done
+if ! [ $count -eq 0 ]; then
+	echo "Command succeeded after $count retries."
+fi

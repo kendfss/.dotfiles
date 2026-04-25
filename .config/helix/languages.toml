@@ -4,35 +4,29 @@
 # https://github-wiki-see.page/m/helix-editor/helix/wiki/Formatter-Configurations
 # https://docs.deno.com/runtime/getting_started/setup_your_environment/#helix
 
-[[language]]
-name       = "elvish"
-scope      = "source.elvish"
-file-types = ["conf","lfrc"]
-formatter  = { command = 'shfmt', args = ["-s", "-ci"] }
+# [[language]]
+# name       = "elvish"
+# scope      = "source.elvish"
+# file-types = ["conf","lfrc"]
+# formatter  = { command = 'shfmt', args = ["-s", "-ci"] }
 
 [[language]]
 name             = "go"
 scope            = "source.go"
 auto-format      = true
-file-types       = ["go", "kage"]
-language-servers = ["gopls", "golangci-lint-lsp"]
+file-types       = [ "go", "kage" ]
+language-servers = [ "gopls", "golangci-lint-lsp" ]
 formatter        = { command = "fmtgo" }
 
 [language-server.golangci-lint-lsp]
 command = "golangci-lint-langserver"
 
 [language-server.golangci-lint-lsp.config]
-command = [
-  "golangci-lint",
-  "run",
-  "--output.json.path=stdout",
-  "--show-stats=false",
-  "--issues-exit-code=1",
-]
+command = [ "golangci-lint", "run", "--output.json.path=stdout", "--show-stats=false", "--issues-exit-code=1" ]
 
 [language-server.lsp-ai]
 command = "lsp-ai"
-args    = ["--stdio", "--config", "~/.config/lsp-ai/config.json"]
+args    = [ "--stdio", "--config", "~/.config/lsp-ai/config.json" ]
 
 [language-server.gopls.config]
 diagnosticsTrigger          = "Save"
@@ -46,82 +40,71 @@ compositeLiteralTypes = true
 [[language]]
 name        = "rust"
 scope       = "source.rust"
-file-types  = ["rs"]
+file-types  = [ "rs" ]
 auto-format = true
 
 [[language]]
 name        = "v"
 scope       = "source.v"
 auto-format = true
-file-types  = ["v"]
+file-types  = [ "v" ]
 
 [[language]]
 name        = "python"
 scope       = "source.python"
 auto-format = true
-file-types  = ["py"]
+file-types  = [ "py" ]
 
 [[language]]
 name        = "lua"
 scope       = "source.lua"
 auto-format = true
-formatter   = { command = "stylua", args = ["-"] }
-file-types  = ["lua"]
+formatter   = { command = "stylua", args = [ "-" ] }
+file-types  = [ "lua" ]
 
 [[language]]
-name = "toml"
-scope = "source.toml"
+name        = "toml"
+scope       = "source.toml"
 auto-format = true
-file-types = ["toml"]
-formatter = { command = "taplo", args = [  "format",  "-o",  "align_entries=true",  "-o",  "align_comments=true",  "-o",  "compact_arrays=true",  "-o",  "inden_entries=true",  "-"] }
-
-# formatter   = { command = "taplo", args = ["format", "-o", "align_entries=true", "-o", "align_comments=true", "-o", "array_trailing_comma=true", "-o", "array_auto_expand=false", "-o", "array_auto_collapse=true", "-o", "compact_arrays=true", "-o", "compact_inline_tables=false", "-o", "inline_table_expand=true", "-o", "compact_entries=false", "-o", "column_width=80", "-o", "indent_tables=false", "-o", "indent_entries=false", "-o", "trailing_newline=true", "-o", "reorder_keys=false", "-o", "reorder_arrays=false", "-o", "reorder_inline_tables=false", "-o", "crlf=false", "-o", "allowed_blank_lines=2", "-o", "indent_string= ", "-"] }
+file-types  = [ "toml" ]
+formatter   = { command = "taplo", args = [ "format", "-o", "align_entries=true", "-o", "align_comments=true", "-o", "array_trailing_comma=true", "-o", "array_auto_expand=false", "-o", "array_auto_collapse=true", "-o", "compact_arrays=false", "-o", "compact_inline_tables=false", "-o", "inline_table_expand=true", "-o", "compact_entries=false", "-o", "column_width=80", "-o", "indent_tables=false", "-o", "indent_entries=false", "-o", "trailing_newline=true", "-o", "reorder_keys=false", "-o", "reorder_arrays=false", "-o", "reorder_inline_tables=false", "-o", "crlf=false", "-o", "allowed_blank_lines=2", "-o", "indent_string= ", "-" ] }
 
 [[language]]
-name = "sql"
-scope = "source.sql"
-formatter = { command = "sqlformat", args = [
-  "--reindent",
-  "--indent_width",
-  "2",
-  "--keywords",
-  "upper",
-  "--identifiers",
-  "lower",
-  "-",
-] }
-file-types = ["sql"]
+name       = "sql"
+scope      = "source.sql"
+file-types = [ "sql" ]
+formatter  = { command = "sqlformat", args = [ "--reindent", "--indent_width", "2", "--keywords", "upper", "--identifiers", "lower", "-" ] }
 
 [[language]]
 name        = "json"
 scope       = "source.json"
-file-types  = ["json"]
-formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "json"] }
+file-types  = [ "json" ]
+formatter   = { command = 'deno', args = [ "fmt", "-", "--ext", "json" ] }
 auto-format = true
 
 [[language]]
 name             = "javascript"
 scope            = "source.js"
-shebangs         = ["deno"]
-roots            = ["deno.json", "deno.jsonc", "package.json"]
-file-types       = ["js", "jsx"]
-formatter        = { command = 'deno', args = ["fmt", "-", "--ext", "js"] }
+shebangs         = [ "deno" ]
+roots            = [ "deno.json", "deno.jsonc", "package.json" ]
+file-types       = [ "js", "jsx" ]
+formatter        = { command = 'deno', args = [ "fmt", "-", "--ext", "js" ] }
 auto-format      = true
-language-servers = ["deno-lsp"]
+language-servers = [ "deno-lsp" ]
 
 [[language]]
 name             = "typescript"
 scope            = "source.ts"
-shebangs         = ["deno"]
-roots            = ["deno.json", "deno.jsonc", "package.json"]
-file-types       = ["ts", "tsx"]
-formatter        = { command = 'deno', args = ["fmt", "-", "--ext", "ts"] }
+shebangs         = [ "deno" ]
+roots            = [ "deno.json", "deno.jsonc", "package.json" ]
+file-types       = [ "ts", "tsx" ]
+formatter        = { command = 'deno', args = [ "fmt", "-", "--ext", "ts" ] }
 auto-format      = true
-language-servers = ["deno-lsp"]
+language-servers = [ "deno-lsp" ]
 
 [language-server.deno-lsp]
 command = "deno"
-args    = ["lsp"]
+args    = [ "lsp" ]
 
 [language-server.deno-lsp.config.deno]
 enable                                      = true
@@ -138,50 +121,50 @@ inlayHints.enumMemberValues.enabled         = true
 [[language]]
 name        = "markdown"
 scope       = "source.md"
-file-types  = ["md"]
-formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "md"] }
+file-types  = [ "md" ]
+formatter   = { command = 'deno', args = [ "fmt", "-", "--ext", "md" ] }
 auto-format = true
 
 [[language]]
 name        = "html"
 scope       = "source.html"
-file-types  = ["html", "htm", "nksf"]
-formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "html"] }
+file-types  = [ "html", "htm", "nksf" ]
+formatter   = { command = 'deno', args = [ "fmt", "-", "--ext", "html" ] }
 auto-format = true
 
 [[language]]
 name        = "css"
 scope       = "source.css"
-file-types  = ["css"]
-formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "css"] }
+file-types  = [ "css" ]
+formatter   = { command = 'deno', args = [ "fmt", "-", "--ext", "css" ] }
 auto-format = true
 
 [[language]]
 name        = "scss"
 scope       = "source.scss"
-file-types  = ["scss"]
-formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "scss"] }
+file-types  = [ "scss" ]
+formatter   = { command = 'deno', args = [ "fmt", "-", "--ext", "scss" ] }
 auto-format = true
 
 [[language]]
 name        = "sass"
 scope       = "source.sass"
-file-types  = ["sass"]
-formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "sass"] }
+file-types  = [ "sass" ]
+formatter   = { command = 'deno', args = [ "fmt", "-", "--ext", "sass" ] }
 auto-format = true
 
 [[language]]
 name        = "less"
 scope       = "source.less"
-file-types  = ["less"]
-formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "less"] }
+file-types  = [ "less" ]
+formatter   = { command = 'deno', args = [ "fmt", "-", "--ext", "less" ] }
 auto-format = true
 
 [[language]]
 name        = "yaml"
 scope       = "source.yaml"
-file-types  = ["yaml", "yml"]
-formatter   = { command = 'deno', args = ["fmt", "-", "--ext", "yaml"] }
+file-types  = [ "yaml", "yml" ]
+formatter   = { command = 'deno', args = [ "fmt", "-", "--ext", "yaml" ] }
 auto-format = true
 
 [[language]]
@@ -191,20 +174,38 @@ auto-format = true
 [[language]]
 name        = "bash"
 auto-format = true
-formatter   = { command = 'shfmt', args = ["-s", "-ci"] }
-# file-types  = ['zsh', 'sh', 'envrc']
-# file-types  = ['zsh', 'sh', 'envrc']
+formatter   = { command = 'shfmt', args = [ '-s', "-ci" ] }
+# indent      = { tab-width = 2, unit = " " }
+# file-types  = [ 'zsh', { glob = '.envrc' }, { glob = '.zprofile' }, { glob = '.zshrc' }, { glob = '.zshenv' } ]
+# formatter   = { command = 'shfmt', args = ["-s", "-ci"] }
+
+# [[language]]
+# name             = "sh"
+# scope            = 'source.sh'
+# injection-regex  = "(shell|sh)"
+# shebangs         = [ 'sh', 'dash', 'ash' ]
+# indent           = { tab-width = 2, unit = " " }
+# comment-token    = '#'
+# language-servers = [ 'bash-language-server' ]
+# grammar          = 'bash'
+# auto-format      = true
+# formatter        = { command = 'shfmt', args = [ '-p', '-s', "-ci" ] }
+# file-types       = [ "sh", "ash", "dash", { glob = '.sh_history' } ]
+
+# [[grammar]]
+# name   = "bash"
+# source = { git = "https://github.com/tree-sitter/tree-sitter-bash", rev = "487734f87fd87118028a65a4599352fa99c9cde8" }
 
 
 [[language]]
 name          = "numbat"
 scope         = "source.numbat"
-file-types    = ["nbt"]
-roots         = []
+file-types    = [ "nbt" ]
+roots         = [  ]
 comment-token = "#"
 grammar       = "numbat"
 # indent        = { tab-width = 2, unit = "  " }
 
 [[grammar]]
 name   = "numbat"
-source = { path = "/home/kendfss/.config/helix/grammars/sources/tree-sitter-numbat" }
+source = { git = 'https://github.com/irevoire/tree-sitter-numbat', rev = '4d9ce55767f7cc2a0ef97dd070de7e4519920607' }

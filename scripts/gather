@@ -1,0 +1,161 @@
+#!/bin/env bash
+
+# group files from current directory by name upto a trailing pattern
+
+self="$(basename "$0")"
+description="$(cat "$0" | sed '1d;2d' | head -1 | sed 's/^#\s*//')"
+
+set -euo pipefail
+
+need() {
+	code=0
+	while [ $# -gt 0 ]; do
+		command -v "$1" >/dev/null || {
+			echo "$self: couldn't find command/builtin: $1" >&2
+			code=1
+		}
+		shift
+	done
+	[ $code = 0 ] || exit $code
+}
+
+need cat mv shopt tree
+need bat &>/dev/null || bat() {
+	cat
+}
+
+pattern="_[0-9]+"
+extension="\.flp"
+ignore="^\s*$"
+nofix=false
+dry=false
+tree=false
+clean=false
+
+helpText() {
+	cat <<-EOF | bat -lman >&2
+		$description
+
+		usage:
+		  $self                             # group all fruity loops project files
+		  $self -e .zip                     # group all zip files whose names vary by some _\d+
+		  $self -e .zip -p '\s*\(\d+\)'     # group all zip files whose names vary by '(\d)'
+
+		flags:
+			-c, --clean       just fix the names, don't move otherwise
+		  -d, --dry         do not perform move operations
+		  -e, --extension   extension of the files of interest (default: '$(printf '%s' "$extension")')
+		  -h, --help        print this message
+		  -i, --ignore      ignore any files matching the regex pattern (default: '$(printf '%s' "$ignore")')
+		  -n, --nofix       do not replace spaces with underscores to fix file names 
+		  -p, --pattern     another parameter that contains something to ignore when comparing file names (default: '$(printf '%s' "$pattern")')
+		  -t, --tree        print file tree afterwards
+		  -v, --verbose     verbose log output 
+	EOF
+	exit $1
+}
+
+error() {
+	echo "$self: $*" >&2
+	exit 1
+}
+
+while (($#)); do
+	case "$1" in
+		-h | --help) helpText 0 ;;
+		-p | --pattern)
+			pattern="$2"
+			shift
+			;;
+		-p*) pattern="${1:2}" ;;
+		-e | --extension)
+			extension="$2"
+			shift
+			;;
+		-i | --ignore)
+			ignore="$2"
+			shift
+			;;
+		-c | --clean) clean=true ;;
+		-v | --verbose) set -x ;;
+		-e*) extension="${1:2}" ;;
+		-d | --dry) dry=true ;;
+		-n | --nofix) nofix=true ;;
+		-t | --tree) tree=true ;;
+		-*) error "unrecognized flag:" "$1" ;;
+		*) error "unexpected argument:" "$1" ;;
+	esac
+	shift
+done
+
+declare -A table=()
+
+include() {
+	echo "$1" | rg "$ignore" >/dev/null && return 1
+	return 0
+}
+
+match() {
+	echo "$1" | rg "$extension" >/dev/null || return 1
+}
+
+strip() {
+	echo "$1" | sed -E "s/$pattern//g;s/$extension$//" | fix
+}
+
+fix() {
+	local pat='s/ +/_/g;s/_+/_/g'
+	[ $# = 0 ] && {
+		[ $nofix = true ] && {
+			cat
+			return
+		}
+		sed -E "$pat"
+		return
+	}
+	[ $nofix = true ] && {
+		echo "$1"
+		return
+	}
+	echo "$1" | sed -E "$pat"
+}
+
+mv() {
+	[ $dry = true ] && {
+		echo mv "$@"
+		return
+	}
+	command mv "$@"
+}
+
+stripped=""
+shopt -s dotglob nullglob
+for file in *; do
+	[ ! -d "$file" ] || continue
+	include "$file" || continue
+	match "$file" || continue
+	stripped="$(strip "$file")"
+	if [[ ! -v table[$stripped] ]]; then
+		table[$stripped]="$file"
+	else
+		table[$stripped]="${table[$stripped]}:$file"
+	fi
+done
+
+for key in "${!table[@]}"; do
+	IFS=':' read -ra files <<<"${table[$key]}"
+	mkdir -p "$key" && for file in "${files[@]}"; do
+		fixed="$(fix "$file")"
+		if test -e "$key/$file"; then
+			error "collision: $file -> $key/$file"
+		elif test -e "$key/$fixed"; then
+			error "collision: $file -> $key/$fixed"
+		fi
+		[ "$fixed" = "$file" ] || mv "$file" "$fixed"
+		[ $clean = false ] && mv "$fixed" "$key"
+	done
+	[ $tree = false ] && echo "$key: ${#files[@]} files"
+done
+
+[ $tree = true ] && tree
+exit 0

@@ -1,0 +1,116 @@
+#!/bin/env zsh
+
+# send files over ssh using rsync
+
+self="$(basename "$ZSH_ARGZERO")"
+set -euo pipefail
+
+local destinations=()
+local files=()
+local directories=()
+local patterns=()
+local verbose=false
+local remove=false
+
+helpText() {
+	cat <<-EOF | bat -lman
+		usage:
+		 $self [FLAGS] ARGS
+
+		    send files to another device over ssh using rsync
+
+		 flags:
+		    -h, --help           print this message
+		    -p, --pattern        regex pattern to find files with (can be used more than once)
+		    -r, --rm, --remove   remove files after sending
+		    -t, --to             names of ssh devices to send to (can be used more than once; comma separated if so)
+		    -v, --verbose        include detailed positive output?
+	EOF
+	[ $# -gt 0 ] && exit $1
+	exit 1
+}
+
+error() {
+	echo "$@" >&2
+}
+
+fatal() {
+	[ $# -gt 0 ] && error "$@"
+	exit 1
+}
+
+verbose() {
+	[ $verbose = true ] && echo "$@"
+}
+
+rm() {
+	[ $remove = true ] && command rm "$@"
+}
+
+while (($#)); do
+	case "$1" in
+		-t | --to)
+			echo "$1" | sed -E 's/,/\n/g' | while read -r dst; do
+				destinations+=("$dst")
+			done
+			;;
+		-p | --pattern) patterns+=("$1") ;;
+		-h | --help) helpText 0 ;;
+		-v | --verbose) verbose=true ;;
+		-r | --remove | --rm) remove=true ;;
+		-*) fatal "unrecognized flag: $1" ;;
+		*)
+			if [ -f "$1" ]; then
+				files+=("$1")
+			elif [ -d "$1" ]; then
+				directories+=("$1")
+			else
+				error "'$1' is not a file or folder"
+			fi
+			;;
+	esac
+	shift
+done
+
+[ ${#patterns} = 0 ] && patterns=(".")
+[ ${#destinations} = 0 ] && destinations=("hp17")
+[ ${#files} = 0 -a ${#directories} = 0 ] && helpText 1
+
+for dir in $directories; do
+	for pat in $patterns; do
+		fd --type f "$pat" "$dir" | while read -r pth; do
+			files+=("$path")
+		done
+	done
+done
+
+# files=( ${(f)"$(fd --type f . Music/kendfss)"} )
+total=${#files}
+count=0
+
+for dst in $destinations; do
+	for name in $files; do
+		((count++))
+		folder="/mnt/elements/a12/$(dirname "$name")"
+		verbose "[$count/$total] Processing: $name"
+		if ssh "$dst" -- mkdir -p "$folder"; then
+			if rsync -av --ignore-existing --progress "$name" hp17:"$folder/"; then
+				[ ${#destinations} = 1 ] && {
+					rm "$name"
+					verbose "✓ Success: $name"
+				}
+			else
+				echo "✗ rsync failed: $name"
+			fi
+		else
+			echo "✗ mkdir failed: $folder"
+		fi
+	done
+	echo "Complete: $count/$total files sent to $dst"
+done
+
+[ ${#destinations} -gt 1 ] && {
+	for file in $files; do
+		rm "$file"
+	done
+}

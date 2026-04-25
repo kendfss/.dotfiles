@@ -1,0 +1,116 @@
+#!/bin/env sh
+
+# print the mount point of the given file(s)
+
+self="$(basename "$0")"
+description="$(cat "$0" /dev/null </dev/null | sed '1d;2d' | head -1 | sed -E 's/^#\s*//')"
+
+set -eu
+
+need() {
+	code=0
+	while [ $# -gt 0 ]; do
+		command -v "$1" >/dev/null || {
+			echo "$self: couldn't find command/builtin: $1" >&2
+			code=1
+		}
+		shift
+	done
+	[ $code = 0 ] || exit $code
+}
+
+need findmnt cat read column
+need bat >/dev/null || bat() {
+	cat
+}
+
+helpText() {
+	cat <<-EOF | bat -lman >&2
+		$description
+
+		usage:
+		  $self [FLAGS] FILES             # print the mount points of incident files
+		  ... | $self [FLAGS]             # print the mount points of line separated files
+
+		flags:
+		  -, --             treat everything else on the command line as an argument and read any arguments on stdin
+		  -h, --help        print this message
+		  -t, --table       print a table of files and their mounts
+		  -v, --verbose     verbose log output 
+	EOF
+	# shellcheck disable=SC2086
+	exit $1
+}
+
+args=""
+table=false
+accumulate=false
+
+loadArgs() {
+	timeout 1 cat | while read -r name; do
+		printf ":%s" "$name"
+	done
+}
+
+tabulate() {
+	[ $table = true ] && {
+		column -ts "$(printf '\t')"
+		return
+	}
+	cat
+}
+
+error() {
+	echo "$self: $*" >&2
+	exit 1
+}
+
+while [ $# -gt 0 ]; do
+	if [ $accumulate = true ]; then
+		args="$args:$1"
+	else
+		case "$1" in
+			- | --) accumulate=true ;;
+			-t | --table) table=true ;;
+			-h | --help) helpText 0 ;;
+			-v | --verbose) set -x ;;
+			-*)
+				arg="$(printf '%s' "$1" | tr -d '-')"
+				i=1
+				while [ $i -le "${#arg}" ]; do
+					char="$(printf '%s' "$arg" | cut -c "$i")"
+					case "$char" in
+						t) table=true ;;
+						h) helpText 0 ;;
+						v) set -x ;;
+						*) error "unrecognized flag: -$char" ;;
+					esac
+					i=$((i + 1))
+				done
+				;;
+			*) args="${args:+${args}:}$1" ;;
+		esac
+	fi
+	shift
+done
+
+if [ -z "$args" ] || [ $accumulate = true ]; then
+	args="$(loadArgs)"
+fi
+
+[ -z "$args" ] && helpText 1
+
+args="${args#:}"
+
+old_ifs="$IFS"
+IFS=:
+# shellcheck disable=SC2086
+set -- $args
+IFS="$old_ifs"
+
+for arg in "$@"; do
+	[ $table = true ] && {
+		printf "%s\t" "$arg"
+	}
+	findmnt --noheadings --output SOURCE --target "$arg"
+done | tabulate

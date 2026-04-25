@@ -5,9 +5,9 @@ startup
 
 ## install
 
-```bash
-sudo ln -s $DOTFILES/services/brightness /etc/sv/brightness
-sudo ln -s $DOTFILES/services/brightness /var/service/brightness
+```zsh
+sudo ln -s {$DOTFILES,}/etc/sv/brightness
+sudo ln -s {/etc/sv,/var/service}/brightness     # saves re-making 2 links on change of origin
 ```
 
 ## monitoring

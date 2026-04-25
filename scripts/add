@@ -60,7 +60,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if $graphical; then
-	git status -s 2>/dev/null | grep -E '\?\?' | column -tH1 -s $' ' | fzf --preview '{ test -f {} && bat {} && exit; } || ls {}' | xargs -n git add
+	git status -s 2>/dev/null | grep -E '\?\?' | column -tH1 -s $' ' | fzf --preview '{ test -f {} && bat {} && exit; } || ls {}' | xargs -d '\n' git add
 fi
 
 local files=""

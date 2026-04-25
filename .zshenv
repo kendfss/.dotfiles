@@ -24,6 +24,8 @@ export DOTFILES=$HOME/.dotfiles
 export ZDOTDIR="$DOTFILES"
 export CONFIG=$HOME/.config
 export MTPTAB=$DOTFILES/mtptab.toml
+export SCRIPTS="$DOTFILES/scripts"
+
 # echo $DOTFILES $ZSH_PLUGINS
 [ -x "$(which bat)" ] && export MANPAGER="$HOME/.dotfiles/scripts/manpager"
 [ -d "$DOTFILES/zsh-plugins" ] && export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
@@ -33,7 +35,7 @@ if [ -x "$(command -v clang)" ]; then
 fi
 
 # Python/UV related
-[ -d "$HOME/.venv" ] && export VIRTUAL_ENV=$HOME/.venv && source "$HOME"/.venv/bin/activate
+[ -d "$HOME/.venv" ] && export VIRTUAL_ENV=$HOME/.venv && source "$HOME/.venv/bin/activate"
 
 # Dart/Flutter related
 [ -d "$HOME/dartsdk" ] && export PATH="$PATH:$HOME/dartsdk/dart-sdk/bin"
@@ -93,7 +95,6 @@ fi
 [ -d "$TERMUX__ROOTFS_DIR" ] && export PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/local/bin:$TERMUX__ROOTFS_DIR/usr/bin"
 [ -d "$HOME/.elan" ] && export PATH="$PATH:$HOME/.elan/bin"
 
-PATH="$PATH:$DOTFILES/scripts"
 if [ -d "$TERMUX__PREFIX" ]; then
 	export PLAYPATH="$HOME/storage/music"
 else
@@ -107,5 +108,3 @@ export SKIM_DEFAULT_OPTIONS="-m --tiebreak index --bind='tab:toggle,ctrl-a:selec
 export FZF_DEFAULT_OPTS="$SKIM_DEFAULT_OPTIONS"
 
 [ -d "$HOME/.wine/drive_c/bin" ] && export PATH="$PATH:$HOME/.wine/drive_c/bin"
-
-export PATH="$(echo "$PATH" | sed 's/::/:/g' | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
