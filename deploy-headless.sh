@@ -235,7 +235,9 @@ if [ -x "$(command -v xbps-install)" ]; then
 		}
 	done
 	[ ${#packages} -gt 0 ] && { xbps-install -Syu $packages || exit $?; }
-	chsh -s "$(which zsh)" "$user"
+	su - "$user" <<-EOF
+		chsh -s "$(which zsh)" "$user"
+	EOF
 	# symlinkDialogue /usr/lib/mpv-mpris/mpris.so ~/.config/mpv/scripts/mpris.so || exit $?
 
 	[ -z "$({ gh auth status || fatal; } | { tr '[:upper:]' '[:lower:]' || fatal; } | { rg -o 'logged in' || fatal; })" ] && error "run 'gh auth login' manually later for github cli access"
