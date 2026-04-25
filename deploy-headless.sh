@@ -180,8 +180,8 @@ done
 
 [ -z "$(command -v xbps)" ] && { { curl -sL "https://github.com/kendfss/xbps/releases/latest/download/xbps_linux_$(uname -m).tar.gz" | tar -xz -O xbps | tee /usr/bin/xbps >/dev/null && chmod +x /usr/bin/xbps && echo "personal xbps successfully installed"; } || fatal couldn\'t install personal xbps; } || error personal xbps already installed
 
-export CLONEDIR=$HOME/gitclone/clones && { mkdir -p "$CLONEDIR" || fatal "was not able to create \"\$CLONEDIR=$CLONEDIR\""; }
-mkdir -p "$HOME/.config" || fatal "couldn't make ~/.config directory"
+export CLONEDIR="$userhome/gitclone/clones" && { mkdir -p "$CLONEDIR" || fatal "was not able to create \"\$CLONEDIR=$CLONEDIR\""; }
+mkdir -p "$userhome/.config" || fatal "couldn't make ~/.config directory"
 
 for name in "$DOTFILES"/scripts/*; do
 	[ -x "$name" ] || continue
@@ -212,12 +212,12 @@ done
 for name in "$DOTFILES/.config"/*; do
 	[ -d "$name" ] || continue
 	base="$(basename "$name")"
-	symlinkDialogue "$name" "$HOME/.config/$base" || exit $?
+	symlinkDialogue "$name" "$userhome/.config/$base" || exit $?
 done
 
 for item in "$DOTFILES"/.*; do
 	[ -f "$item" ] || continue
-	target="$HOME/$(basename "$item")"
+	target="$userhome/$(basename "$item")"
 	symlinkDialogue "$item" "$target" || exit $?
 done
 
@@ -242,7 +242,7 @@ if [ -x "$(command -v xbps-install)" ]; then
 
 	command -v json2go >/dev/null || doas -u "$user" go install github.com/Parutix/json2go@latest || exit $?
 
-	test -d "$HOME/.venv" || { test -e "$HOME/.venv" && fatal "$HOME/.venv exists but isn't a directory"; } || uv venv "$HOME/.venv" || exit $?
+	test -d "$userhome/.venv" || { test -e "$userhome/.venv" && fatal "$userhome/.venv exists but isn't a directory"; } || uv venv "$userhome/.venv" || exit $?
 	doas -u "$user" uv python install || exit $?
 	doas -u "$user" uv pip install python send2trash click dill filetype || exit $?
 
@@ -257,7 +257,7 @@ if [ -x "$(command -v xbps-install)" ]; then
 	}
 	symlinkDialogue "$ZSH_PLUGINS" "/usr/share/zsh/plugins" || exit $?
 
-	export TMUX_PLUGINS="$HOME/.tmux/plugins"
+	export TMUX_PLUGINS="$userhome/.tmux/plugins"
 	mkdir -p "$TMUX_PLUGINS"
 	[ ! -d "$TMUX_PLUGINS/tpm" ] && { git clone --depth=1 "https://github.com/tmux-plugins/tpm" "$TMUX_PLUGINS/tpm" || fatal could not clone \$TMUX_PLUGINS/tpm; }
 
@@ -265,7 +265,7 @@ if [ -x "$(command -v xbps-install)" ]; then
 		xbps-install -Syu nodejs && npm i -g bash-language-server awk-language-server yaml-language-server deno
 	} || fatal "couldn't install node and npm isn't available"; }
 
-	[ -d "$HOME/.cargo" ] && . "$HOME/.cargo/env"
+	[ -d "$userhome/.cargo" ] && . "$userhome/.cargo/env"
 
 else
 	fatal "xbps-install is not available. Make sure you have the package manager for Void Linux installed."
