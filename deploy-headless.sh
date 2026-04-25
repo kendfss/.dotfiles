@@ -97,7 +97,7 @@ id "$user" 2>/dev/null >/dev/null || while true; do
 	break
 done
 
-[ '#' = "$(cat /etc/sudoers | grep '%wheel' | head -1 | sed -E 's/./&\n' | head -1)" ] && {
+[ '#' = "$({ cat /etc/sudoers || exit 1; } | { grep '%wheel' || exit 1; } | { head -1 || exit 1; } | { sed -E 's/./&\n/' || exit 1; } | { head - || exit 1; })" ] && {
 	error "you need to enable the %wheel group members to use sudo. press enter to continue"
 	read -r null
 	echo "$null" >/dev/null
@@ -105,7 +105,7 @@ done
 	fatal run this script again
 }
 
-userhome="$(cat /etc/passwd | grep "$user" | awk -F: '{print $6}')"
+userhome="$({ cat /etc/passwd || exit 1; } | { grep "$user" || exit 1; } | { awk -F: '{print $6}' || exit 1; })"
 mkdir -p "$userhome/.ssh" && {
 	echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGA7kpOkhqeoMp+MIkw/GshtGPWKuc5C7/apNjxNWC6h" >>"$userhome/.ssh/authorized_keys" # desktop
 	echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEXBhkv+CXgD0/a9taeOlf+Q6APZD9gPwQrntUjot+C4" >>"$userhome/.ssh/authorized_keys" # phone
@@ -119,9 +119,9 @@ if [ ! -f "/etc/sudoers.d/$user" ] && [ ! -n "$(id "$user" | grep wheel)" ]; the
 	chmod 440 "/etc/sudoers.d/$user"
 fi
 
-export DOTFILES="$user/.dotfiles"
+export DOTFILES="$userhome/.dotfiles"
 export ZDOTDIR="$DOTFILES"
-export PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$user/.local/bin:$user/go/bin"
+export PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$userhome/.local/bin:$userhome/go/bin"
 export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
 mkdir -p "$ZSH_PLUGINS"
 
