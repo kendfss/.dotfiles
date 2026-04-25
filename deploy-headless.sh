@@ -243,8 +243,15 @@ if [ -x "$(command -v xbps-install)" ]; then
 	command -v json2go >/dev/null || doas -u "$user" go install github.com/Parutix/json2go@latest || exit $?
 
 	test -d "$userhome/.venv" || { test -e "$userhome/.venv" && fatal "$userhome/.venv exists but isn't a directory"; } || uv venv "$userhome/.venv" || exit $?
-	doas -u "$user" uv python install || exit $?
-	doas -u "$user" uv pip install python send2trash click dill filetype || exit $?
+	# doas -u "$user" uv python install || exit $?
+	# doas -u "$user" uv pip install python send2trash click dill filetype || exit $?
+	su - "$user" <<-'EOF'
+		    export UV_PYTHON=/usr/bin/python3
+		    uv python install 3.12
+		    [ -e "$userhome/.venv" ] || uv venv $userhome/.venv
+		    source ~/.venv/bin/activate
+		    uv pip install send2trash click dill filetype
+	EOF
 
 	gochain || fatal golang toolchain setup failed
 
