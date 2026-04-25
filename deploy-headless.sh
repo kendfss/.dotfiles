@@ -112,13 +112,21 @@ id "$user" 2>/dev/null >/dev/null || while true; do
 		printf 'pick a username: '
 		read -r user
 	)"
-	useradd -m -G wheel,users "$user" || continue
+	useradd -m -G wheel,users,sudoers "$user" || continue
 	passwd "$user" || {
 		userdel -r "$user"
 		continue
 	}
 	break
 done
+
+[ '#' = "$(cat /etc/sudoers | grep '%wheel' | head -1 | sed -E 's/./&\n' | head -1)" ] && {
+	error "you need to enable the %wheel group members to use sudo. press enter to continue"
+	read -r null
+	echo "$null" >/dev/null
+	visudoers
+	fatal run this script again
+}
 
 userhome="$(cat /etc/passwd | grep "$user" | awk -F: '{print $6}')"
 mkdir -p "$userhome/.ssh" && {
