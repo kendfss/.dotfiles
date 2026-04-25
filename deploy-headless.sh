@@ -244,7 +244,7 @@ if [ -x "$(command -v xbps-install)" ]; then
 
 	command -v json2go >/dev/null || doas -u "$user" go install github.com/Parutix/json2go@latest || exit $?
 
-	test -d "$userhome/.venv" || { test -e "$userhome/.venv" && fatal "$userhome/.venv exists but isn't a directory"; } || uv venv "$userhome/.venv" || exit $?
+	# test -d "$userhome/.venv" || { test -e "$userhome/.venv" && fatal "$userhome/.venv exists but isn't a directory"; } || uv venv "$userhome/.venv" || exit $?
 	# doas -u "$user" uv python install || exit $?
 	# doas -u "$user" uv pip install python send2trash click dill filetype || exit $?
 	# su - "$user" <<-'EOF'
