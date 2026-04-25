@@ -148,8 +148,8 @@ check symlinkDialogue gochain
 assure chpst runit tr coreutils || exit $?
 need curl uv go bat git
 
-symlinkDialogue() { HOME="$userhome" USER="$user" command symlinkDialogue "@"; }
-gochain() { HOME="$userhome" USER="$user" command gochain "@"; }
+symlinkDialogue() { HOME="$userhome" USER="$user" command symlinkDialogue "$@"; }
+gochain() { HOME="$userhome" USER="$user" command gochain "$@"; }
 
 helpText() {
 	cat <<-EOF | bat -lman >&2
