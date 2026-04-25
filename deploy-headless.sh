@@ -35,7 +35,7 @@ assure() {
 	# Re-set positional params to the missing pairs
 	# shellcheck disable=SC2086
 	set -- $missing # intentional word splitting
-	xbps-install $xbps_flags "$@" || return $?
+	xbps-install -Syu "$@" || return $?
 	while [ $# -gt 0 ]; do
 		bin="$1" pkg="$2"
 		if ! command -v "$bin" >/dev/null 2>&1; then
@@ -119,6 +119,25 @@ if [ ! -f "/etc/sudoers.d/$user" ] && [ ! -n "$(id "$user" | grep wheel)" ]; the
 	chmod 440 "/etc/sudoers.d/$user"
 fi
 
+timeout 2 ping google.com || {
+	mkdir -p "/var/service" || fatal
+	[ ! -e "/var/service/wpa_supplicant" ] && {
+		ln -fs /etc/sv/wpa_supplicant /var/service/wpa_supplicant || fatal "couldn't setup wpa_supplicant for wifi. link {/etc/sv,/var/service}/wpa_supplicant"
+		sv restart wpa_supplicant
+	}
+	[ ! -e "/var/service/dhcpcd" ] && {
+		ln -fs /etc/sv/dhcpcd /var/service/dhcpcd || fatal "couldn't setup dhcpcd for wifi. link {/etc/sv,/var/service}/dhcpcd"
+		sv restart dhcpcd
+	}
+}
+
+[ 0 = "$(cat /etc/doas.conf | wc -l)" ] && {
+	cat <<-EOF
+		permit persist :root
+		permit persist setenv {PATH=$PATH} :wheel
+	EOF
+}
+
 export DOTFILES="$userhome/.dotfiles"
 export ZDOTDIR="$DOTFILES"
 export PATH="$DOTFILES/scripts:$PATH:/usr/local/go/bin:$userhome/.local/bin:$userhome/go/bin"
@@ -128,6 +147,9 @@ mkdir -p "$ZSH_PLUGINS"
 check symlinkDialogue gochain
 assure chpst runit tr coreutils || exit $?
 need curl uv go bat git
+
+symlinkDialogue() { HOME="$userhome" USER="$user" command symlinkDialogue "@"; }
+gochain() { HOME="$userhome" USER="$user" command gochain "@"; }
 
 helpText() {
 	cat <<-EOF | bat -lman >&2
@@ -205,7 +227,7 @@ if [ -x "$(command -v xbps-install)" ]; then
 	xlocate -S
 
 	packages=''
-	echo man-pages-posix zsh acl-progs rsync zsh tmux helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer fzf clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist pandoc psmisc lf coreutils lua-language-server StyLua taplo base-devel bat gcc make llvm opendoas samba-libs \
+	echo man-pages-posix zsh acl-progs rsync tmux helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer fzf clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist pandoc psmisc lf coreutils lua-language-server StyLua taplo base-devel bat gcc make llvm opendoas samba-libs \
 		delta gallery-dl lsof ntfs-3g uv pup alsa-utils tree-sitter tree-sitter-cli rustup rust-analyzer mdBook | sed -E 's/\s+/\n/g' | while read -r package; do
 		# zenity clipnotify kitty zathura zathura-pdf-mupdf tabbed mpv mpv-mpris playerctl nicotine+ xkill xfce4-screenshooter \
 		command -v $package >/dev/null 2>&1 || {
@@ -214,7 +236,6 @@ if [ -x "$(command -v xbps-install)" ]; then
 	done
 	[ ${#packages} -gt 0 ] && { xbps-install -Syu $packages || exit $?; }
 	chsh -s "$(which zsh)" "$user"
-
 	# symlinkDialogue /usr/lib/mpv-mpris/mpris.so ~/.config/mpv/scripts/mpris.so || exit $?
 
 	[ -z "$(gh auth status | tr '[:upper:]' '[:lower:]' | rg -o 'logged in')" ] && error "run 'gh auth login' manually later for github cli access"
@@ -222,7 +243,8 @@ if [ -x "$(command -v xbps-install)" ]; then
 	command -v json2go >/dev/null || doas -u "$user" go install github.com/Parutix/json2go@latest || exit $?
 
 	test -d "$HOME/.venv" || { test -e "$HOME/.venv" && fatal "$HOME/.venv exists but isn't a directory"; } || uv venv "$HOME/.venv" || exit $?
-	uv pip install python send2trash click dill filetype || exit $?
+	doas -u "$user" uv python install || exit $?
+	doas -u "$user" uv pip install python send2trash click dill filetype || exit $?
 
 	gochain || fatal golang toolchain setup failed
 
