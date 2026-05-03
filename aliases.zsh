@@ -13,6 +13,7 @@ alias upper='tr "[:lower:]" "[:upper:]"'
 alias lower='tr "[:upper:]" "[:lower:]"'
 alias words='tr -cs "[:alpha:]" "\n"'
 alias freqs='sort | uniq -c | sort -n'
+alias mime='file -b --mime-type'
 
 if [ -d "$TERMUX__HOME" ]; then
 	alias cpv="rsync -poghb --backup-dir=$TERMUX__PREFIX/tmp/rsync -e /dev/null --progress --"

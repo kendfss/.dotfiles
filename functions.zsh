@@ -403,17 +403,18 @@ gofiles() {
 }
 
 cheat() {
-	for pth in {$HOME/{.local,go}/,/{usr/,}{s,}}bin/cheat; do [[ -x $pth ]] && local cmd=$pth && break; done
-	[[ -z $cmd ]] && echo cannot find executable >/dev/stderr && return 1
-	case $1 in
+	command -v cheat &>/dev/null || {
+		echo cannot find executable >/dev/stderr && return 1
+	}
+	case "$1" in
 		'-s' | '-v' | '-e')
-			$cmd $*
+			command cheat $*
 			;;
 		'--conf')
-			glow -p $($cmd $*) && $cmd $*
+			command glow -p $(command cheat $*) && command cheat $*
 			;;
 		*)
-			$cmd $* | glow
+			command cheat $* | glow
 			;;
 	esac
 }
