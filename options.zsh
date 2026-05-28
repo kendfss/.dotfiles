@@ -58,4 +58,5 @@ setopt MULTI_OS             # Can pipe to mulitple outputs
 setopt INTERACTIVE_COMMENTS # Allows comments in interactive shell.
 setopt RC_EXPAND_PARAM      # Abc{$cool}efg where $cool is an array surrounds all array variables individually
 unsetopt FLOW_CONTROL       # Ctrl+S and Ctrl+Q usually disable/enable tty input. This disables those inputs
+setopt BEEP                 # enable terminal beeping
 # setopt vi

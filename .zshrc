@@ -10,6 +10,7 @@ source "$DOTFILES/functions.zsh"
 source "$DOTFILES/keybindings.zsh"
 source "$DOTFILES/options.zsh"
 source "$DOTFILES/history.zsh"
+source "$DOTFILES/hooks.zsh"
 [ -z "$SKIPPROFILE" ] && source "$DOTFILES/.zprofile" # Setup our profile post-login
 source "$DOTFILES/spectrum.zsh"                       # Make nice colors available
 source "$DOTFILES/prompts.zsh"                        # Setup our PS1, PS2, etc.
@@ -20,7 +21,13 @@ zstyle ':chpwd:*' recent-dirs-max 5
 
 [ -x "$(command -v direnv)" ] && eval "$(direnv hook zsh)"
 
-[ -d "$TERMUX__PREFIX" ] && [ -z "$(pgrep sshd)" ] && [ -x "$(command -v sshd)" ] && { "$DOTFILES/boot/sshd" || echo unable to start sshd; }
+if [ -d "$TERMUX__PREFIX" ]; then
+	[ -z "$(pgrep sshd)" ] && [ -x "$(command -v sshd)" ] && { "$DOTFILES/boot/sshd" || echo unable to start sshd; }
+elif [ ! -e /0 ] || [ ! "$(realpath /0)" = "/dev/null" ]; then
+	echo "creating link(/dev/null => /0)"
+	sudo ln -fs /dev/null /0
+	sudo chown "$USER:$USER" /0
+fi
 
 if [ -d "$ZSH_PLUGINS" ]; then
 	[ -d "$ZSH_PLUGINS/zsh-sweep" ] && {

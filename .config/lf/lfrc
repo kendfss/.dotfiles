@@ -1,4 +1,10 @@
+set shell zsh
+set shellopts '-euopipefail'
 set previewer ~/.dotfiles/scripts/lf-preview
+# set drawbox # borders around columns
+# set info size:time
+
+map <space> ${{ : }}
 
 cmd edit-config ${{
     $EDITOR ~/.config/lf/lfrc
@@ -17,6 +23,10 @@ cmd wiki ${{
 }}
 
 map w wiki
+
+
+map <tab> toggle
+map <enter> $ mpv "$f"
 
 cmd follow-link %{{
   lf -remote "send $id select \"$(readlink -- "$f" | sed 's/\\/\\\\/g;s/"/\\"/g')\""

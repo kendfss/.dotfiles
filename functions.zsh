@@ -1,6 +1,87 @@
 # https://zsh.sourceforge.io/Doc/Release/Conditional-Expressions.html
 autoload -Uz add-zsh-hook
 
+gallery-dl() {
+	local flags=()
+	local args=()
+	local browser="$(xdg-settings get default-web-browser | awk -F. '{print $1}')"
+	while (($#)); do
+		case "$1" in
+			http* | https*) args+=("$1") ;;
+			--browser)
+				browser="$2"
+				shift
+				;;
+			-*) flags+=("$1") ;;
+		esac
+		shift
+	done
+	((${#args})) || {
+		echo "$0: no args received" >&2
+		return 1
+	}
+	while true; do
+		local count=${#args}
+		set -- $args
+		local ctr=0
+		local fails=()
+		printf "%s\n" "$*"
+		while (($#)); do
+			ctr=$((ctr + 1))
+			printf "%d/%d: " "$ctr" "$count"
+			printf "%s\n" "$1"
+			if command gallery-dl --cookies-from-browser "$browser" "${flags[@]}" "$1"; then
+				:
+			else
+				fails+=("$1")
+			fi
+			shift
+		done
+		((${#fails})) && args=("${fails[@]}") && continue
+		break
+	done
+}
+
+unr() {
+	awk -v RS="" -v ORS="" '
+  { 
+    # Replace all internal newlines and consecutive whitespace with a single space
+    gsub(/[ \t\r\n]+/, " ", $0); 
+    
+    # Print the paragraph. If it is not the first paragraph, prepend a blank line.
+    print (NR == 1 ? "" : "\n\n") $0; 
+  } 
+  END { printf "\n" } # Add exactly one trailing newline for a valid POSIX file
+'
+}
+
+chad() {
+	# Perform an HTTP GET request on the current page URL with the `ask` query
+
+	# The question should be specific, self-contained, and written in natural
+	# language. The response will contain a direct answer to the question and relevant
+	# excerpts and sources from the documentation.
+
+	# Use this mechanism when the answer is not explicitly present in the current
+	# page, you need clarification or additional context, or you want to retrieve
+	# related documentation sections.
+
+	curl -L "https://chadboyce.gitbook.io/notes/lf.md?ask=$(jq -sRr @uri <(printf '%s ' "$@"))"
+}
+
+smpl() {
+	local flags=()
+	local name=()
+	while (($#)); do
+		case "$1" in
+			-*) flags+=("$1") ;;
+			*) name+=("$1") ;;
+		esac
+		shift
+	done
+	command smpl "${flags[@]}" "$(printf "%s " "${name[@]}" | to fopa | rev | awk '{print $1}' | rev)"
+}
+
 source_if() {
 	while (($#)); do
 		[ -e "$1" ] && source "$1"
@@ -629,13 +710,6 @@ gmt() {
 
 gmi() {
 	go mod init "$REPO_HOST/$USER/$(basename "$(pwd)")"
-}
-
-grab() {
-	for arg in "$@"; do
-		local name="$(namespacer "$(basename "$(echo "$arg" | cut -d'?' -f1)")")"
-		curl "$arg" -o "$name" 2>/dev/null && echo "$name"
-	done
 }
 
 clean() {

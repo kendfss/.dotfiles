@@ -11,6 +11,18 @@
 # formatter  = { command = 'shfmt', args = ["-s", "-ci"] }
 
 [[language]]
+name                 = "typst"
+scope                = "source.typst"
+injection-regex      = "typ(st)?"
+file-types           = [ "typst", "typ" ]
+comment-token        = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+language-servers     = [ "tinymist" ]
+indent               = { tab-width = 2, unit = "  " }
+auto-format          = true
+formatter            = { command = 'typstyle' }
+
+[[language]]
 name             = "go"
 scope            = "source.go"
 auto-format      = true

@@ -16,7 +16,7 @@ old_primary="$(xclip -o -selection primary)"
 # just in case writes become slow, we keep them in a separate loop
 while clipnotify; do
 	new_clipboard="$(xclip -o -selection clipboard)"
-	[ -n "$new_clipboard" ] && [ "$new_clipboard" != "$old_clipboard" ] && writeToFile clipboard
+	[ -n "$new_clipboard" ] && [ "$new_clipboard" != "$old_clipboard" ] && writeToFile clipboard "$new_clipboard"
 	new_primary="$(xclip -o -selection primary)"
-	[ -n "$new_primary" ] && [ "$new_primary" != "$old_primary" ] && writeToFile primary
+	[ -n "$new_primary" ] && [ "$new_primary" != "$old_primary" ] && writeToFile primary "$new_primary"
 done

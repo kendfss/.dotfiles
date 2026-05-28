@@ -1,4 +1,10 @@
-# Set important shell variables
+SUDO_ASKPASS="$(command -v gnome-ssh-askpass 2>/dev/null)"
+[ -x "$SUDO_ASKPASS" ] && export SUDO_ASKPASS
+SUDO_EDITOR="$(command -v hx 2>/dev/null)"
+[ -x "$SUDO_EDITOR" ] && export SUDO_EDITOR
+export ABDUCO_CMD="dvtm -m '^['"
+export GH_TELEMETRY=false
+export DO_NOT_TRACK=true
 export EDITOR=hx          # Set default editor
 export VISUAL=hx          # Set default editor
 export PAGER=less         # Set default pager

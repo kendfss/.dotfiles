@@ -1,0 +1,181 @@
+#!/bin/env sh
+
+# fzf based browser
+
+self="$(basename "$0")"
+description="$(cat "$0" | head -3 | tail -1 | sed -E 's:^# ::')"
+
+set -eu
+
+testing=true
+
+RED=$(printf '\033[31m')
+GREEN=$(printf '\033[32m')
+BLUE=$(printf '\033[34m')
+YELLOW=$(printf '\033[33m')
+MAGENTA=$(printf '\033[35m')
+CYAN=$(printf '\033[36m')
+BOLD=$(printf '\033[1m')
+BLINK=$(printf '\033[5m')
+UNDERLINE=$(printf '\033[4m')
+STRIKEOUT=$(printf '\033[9m')
+RESET=$(printf '\033[0m')
+
+style() {
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			red) printf '%s' "$RED" ;;
+			green) printf '%s' "$GREEN" ;;
+			blue) printf '%s' "$BLUE" ;;
+			yellow) printf '%s' "$YELLOW" ;;
+			magenta) printf '%s' "$MAGENTA" ;;
+			cyan) printf '%s' "$CYAN" ;;
+			blink) printf '%s' "$BLINK" ;;
+			underline) printf '%s' "$UNDERLINE" ;;
+			strikeout) printf '%s' "$STRIKEOUT" ;;
+			bold) printf '%s' "$BOLD" ;;
+			*) break ;;
+		esac
+		shift
+	done
+	# shellcheck disable=SC2068
+	[ $# -gt 0 ] && printf '%s' "$1" && shift && [ $# -gt 0 ] && printf ' %s' $@
+	printf '%s' "$RESET"
+}
+
+alias red='style red'
+alias green='style green'
+alias blue='style blue'
+alias yellow='style yellow'
+alias magenta='style magenta'
+alias cyan='style cyan'
+alias white='style white'
+alias bold='style bold'
+alias blink='style blink'
+alias underline='style underline'
+alias strikeout='style strikeout'
+reset() {
+	printf '%s' "$RESET"
+}
+
+help_text() {
+	printf '%s' "$RESET"
+	cat <<-EOF #| bat -lman >&2
+		$(cyan usage): $(style bold green "$self") [$(blue FLAGs)] [$(blue URLs)]
+
+		$(style blink magenta "$description")
+
+		$(blue supported flags):
+		  $(yellow -h, --help)        print this message
+	EOF
+	exit "$1"
+}
+
+debug() {
+	[ $testing = false ] || {
+		# $verbose && set -x
+		echo "$RED$*$RESET"
+		# $verbose && set +x
+	}
+}
+
+dread() {
+	# shellcheck disable=SC3061
+	# shellcheck disable=SC2162
+	[ $testing = false ] || {
+		echo "${RED}[$self.debug]: waiting for line feed$RESET"
+		read _
+	}
+}
+
+error() {
+	echo "$self: $*" >&2
+}
+
+fatal() {
+	error "$@"
+	exit 1
+}
+
+while getopts "h" opt; do
+	case "$opt" in
+		h) help_text 0 ;;
+		*) fatal unrecognized flag "'$opt'" ;;
+	esac
+done
+shift $((OPTIND - 1))
+
+choices=""
+
+while [ $# -gt 0 ]; do
+	link="$1"
+	index=0
+	while true; do
+		# protocol="$(printf '%s\n' "$link" | grep -o '^\w+://')"
+		# link="$(printf '%s\n' "$link" | sed 's!^\w+://!!;s://:/:')"
+		link="$(printf '%s\n' "$link" | grep -o '^\w+://')$(printf '%s\n' "$link" | sed 's!^\w+://!!;s://:/:')"
+		base="$(echo "$link" | cut -d/ -f4- | rev | cut -d/ -f2- | rev)"
+		[ "$(echo "$base" | sed 's:[^/]::g' | wc -c)" -le 2 ] || base="$(dirname "$base")"
+		debug base: "$base"
+		choice=""
+		debug link: "$link"
+		blob="$(curl -SsL "$link" | pup 'a[href] attr{href}')"
+		hrefs="$(printf '%s\n' "$blob" | grep -v "^((/?$base/?)?\s*|/+|\?.+)$" | sed 's/^..\/?$//' | sort -h || echo)"
+		dirs="$(printf '%s\n' "$hrefs" | grep '/$' || echo)"
+		files="$(printf '%s\n' "$hrefs" | grep '[^/]$' || echo)"
+		printf '%s\n' "$GREEN$dirs$RESET"
+		printf '%s\n' "$BLUE$files$RESET"
+		choice="$(
+			{
+				echo return "'$link'"
+				[ -n "$(dirname "$link" | awk '/[a-zA-Z]+:\/\// {print $1}')" ] && echo ..
+				printf '%s\n' "$dirs"
+				printf '%s\n' "$files"
+			} |
+				grep -v '^\s*$' |
+				nl |
+				fzf --with-nth 2.. --preview "
+					{	[ '{1}' = '1' ] && echo '$link'; } ||
+					{ [ '{2}' = '..' ] && echo '$(dirname "$link")'; } ||
+					echo '$(printf '%s' "$link" | sed 's:/\s*$::')/${choice#../}{2}'
+				" --bind 'start:pos(2)' --sync
+		)"
+		read -r index choice <<-EOF
+			$choice
+		EOF
+		# choice="$(printf '%s\n' "$choice" | sed 's:/\s*$::')"
+		debug chose: "$choice"
+		debug index: "$index"
+		case "$index" in
+			0) fatal index is zero ;;
+			1) break ;;
+			2)
+				if [ "$choice" = '..' ]; then
+					link="$(dirname "$link")"
+				else
+					link="$link/$choice"
+				fi
+				;;
+			*) link="$link/$choice" ;;
+		esac
+		# choices="$choices $choice"
+		debug "$RED---$RESET"
+		# dread
+	done
+	choices="$choices $link"
+	shift
+	debug "$RED====$RESET"
+done
+
+debug "$RED<--->$RESET"
+
+# shellcheck disable=SC2086
+printf '%s\n' $choices | grep -Ev '^(\s*|break|\.\.)$'
+
+_() {
+	echo "$RED"
+	echo "$GREEN"
+	echo "$BLUE"
+	echo "$BOLD"
+	echo "$RESET"
+}

@@ -243,6 +243,7 @@ if [ -x "$(command -v xbps-install)" ]; then
 	[ -z "$({ gh auth status || fatal; } | { tr '[:upper:]' '[:lower:]' || fatal; } | { rg -o 'logged in' || fatal; })" ] && error "run 'gh auth login' manually later for github cli access"
 
 	command -v json2go >/dev/null || doas -u "$user" go install github.com/Parutix/json2go@latest || exit $?
+	command -v cheat >/dev/null || doas -u "$user" go install github.com/cheat/cheat/cmd/cheat@latest || exit $?
 
 	# test -d "$userhome/.venv" || { test -e "$userhome/.venv" && fatal "$userhome/.venv exists but isn't a directory"; } || uv venv "$userhome/.venv" || exit $?
 	# doas -u "$user" uv python install || exit $?

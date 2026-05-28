@@ -1,0 +1,82 @@
+#!/bin/env sh
+
+# Convert space-delimited URLs to queryless, deduplicated paths
+
+set -eu
+
+self="$(basename "$0")"
+
+# Default behavior: eliminate query redundancy
+ELIM_QUERY=1
+
+stdout=false
+
+# Parse flags
+while getopts "nh-" opt; do
+	case $opt in
+		n) ELIM_QUERY=0 ;; # No elimination (preserve queries)
+		-) stdout=true ;;
+		h)
+			cat <<-EOF
+				Usage: $self [-n] [URL...]
+				  -n    Disable query redundancy elimination (preserve ?... fragments)
+				  -h    Show this help
+
+				Accepts URLs as arguments, from stdin (pipe or redirect), or from \`p\` command.
+				Converts space-delimited URLs to line-separated, normalized, deduplicated form.
+			EOF
+			exit 0
+			;;
+		*) exit 1 ;;
+	esac
+done
+shift $((OPTIND - 1))
+
+# Build the sed pipeline based on -n flag
+if [ "$ELIM_QUERY" -eq 1 ]; then
+	# Strip queries before path normalization
+	QUERY_SED='s/\?.*//g;'
+else
+	QUERY_SED=''
+fi
+
+# Main pipeline function
+normalize() {
+	sed -E 's/\s\|.+//g;s/(%20|\s|\|)+/\n/g' | rg -v '^\s*$' | sort -h | uniq -i |
+		sed -E '
+		# Remove space-pipe-anything patterns 
+		# s/\s\|.+//g;
+		# Convert spaces, %20, pipes, and newlines to actual newlines
+		s/(%20|\s|\|)+/\n/g;
+		# Optional: strip queries if -n not given
+		'"$QUERY_SED"'
+		# Remove trailing fragments after hash
+		s/#.*$//;
+		# Strip trailing slashes, hashes, etc.
+		s:[\/#]+$::g;
+		# Remove common cruft path components (case insensitive)
+		s:[\/](media|posts|home|videos|store|shorts|c[0-9]+|support|profile(card)?|trial|comments|reels|submitted|featured|#_tabVideos|_tabVideos|posts)/?\s*$::gi;
+		# Remove any remaining trailing slashes after that
+		s:/$::g
+	' | grep -v '^\s*$' | sort -h | uniq -i
+}
+
+# Determine input source
+if [ $stdout = true ]; then
+	cat | normalize
+elif [ $# -gt 0 ]; then
+	# Arguments provided - treat each as a URL (space-delimited within each arg)
+	printf '%s\n' "$@" | normalize
+elif [ -t 0 ]; then
+	# No arguments and stdin is a terminal (not piped/redirected)
+	# Fall back to `p` command
+	if command -v p >/dev/null 2>&1; then
+		p | normalize
+	else
+		echo "$self: error: no input from stdin or arguments, and 'p' command not found" >&2
+		exit 1
+	fi
+else
+	# Stdin has data (piped or redirected)
+	cat | normalize
+fi

@@ -1,0 +1,122 @@
+#!/bin/env zsh
+
+# choose processes to terminate from fzf
+
+local self="$(basename "$0")"
+local description="$(cat "$0" | head -3 | tail -1 | sed -E 's/^#\s*//')"
+
+set -euo pipefail
+
+local killer="kill -9"
+local queerer="ps aux"
+local column=2
+local patterns=()
+local dry=false
+local fast=false
+local insensitive=''
+
+error() {
+	echo "$@" >&2
+}
+
+fatal() {
+	[ $# -gt 0 ] && error "$@"
+	exit 1
+}
+
+command -v bat &>/dev/null || bat() { cat "$@"; }
+
+fzf() {
+	[ $fast = true ] && {
+		cat
+		return
+	}
+	command fzf
+}
+
+helpText() {
+	cat <<-EOF | bat -lman
+		usage:
+		  $self [FLAGS] REGEXES
+
+		$description
+
+		flags:
+		  -c, --column            column to extract PIDs from (default: '$column')
+		  -d, --dry, --dry-run    dry run. just print the PIDs and exit
+		  -f, --fast              don't invoke fzf, just print/kill and exit
+		  -h, --help              print this message and exit
+		  -i, --insensitive       case insensitve program matching 
+		  -k, --killer            program to kill processes with (default: '$killer')
+		  -q, --queerer           program to match for patterns and extract PIDs (default: '$queerer')
+	EOF
+	[ $# -gt 0 ] && exit $1
+	exit 1
+}
+
+while (($#)); do
+	case "$1" in
+		-k | --killer)
+			killer="$2"
+			shift
+			;;
+		-q | --querer)
+			queerer="$2"
+			shift
+			;;
+		-c | --column)
+			column=$2
+			shift
+			;;
+		-i | --insensitive) insensitive='-i' ;;
+		-d | --dry | --dry-run) dry=true ;;
+		-h | --help) helpText 0 ;;
+		-f | --fast) fast=true ;;
+		-*) fatal unrecognized command: $1 ;;
+		*) patterns+=("$1") ;;
+	esac
+	shift
+done
+
+[ ${#patterns} -gt 0 ] || {
+	error no patterns specified
+	helpText 1
+}
+
+command -v rg &>/dev/null || {
+	error ripgrep not found.
+	printf 'use extended grep? [Yn]:'
+	read -r resp
+	case "$resp" in
+		'' | y | yes) rg() { grep -E "$@"; } ;;
+		*) fatal aborting ;;
+	esac
+}
+
+kill() {
+	[ $dry = true ] && {
+		echo "$@"
+		return
+	}
+	command ${=killer} "$@"
+}
+
+extract() {
+	[ $dry = true ] && {
+		awk "$(printf '{print $%s "%s" $11, $12, $13, $14}' "$column" "\t")" | column -ts $'\t'
+		return
+	}
+	awk "$(printf '{print $%s}' "$column")"
+}
+
+local pids=()
+
+for pat in $patterns; do
+	${=queerer} | sed -E '1d' | rg $insensitive "$pat"
+done | sort -u | fzf | extract | while read -r pid; do
+	pids+=("$pid")
+done
+
+for pid in $pids; do
+	kill "$pid"
+done

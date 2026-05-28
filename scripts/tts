@@ -6,11 +6,33 @@ root="$HOME/.local/share/piper"
 model="$root/en_GB-southern_english_female-low/en_GB-southern_english_female-low.onnx"
 exe="$root/piper"
 
+echo=false
+content=""
+
 if [ $# -gt 0 ]; then
-	content="$*"
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			-e | --echo) echo=true ;;
+			*) if [ $# = 0 ]; then
+				content="$1"
+			else
+				content="$content $1"
+			fi ;;
+		esac
+	done
 else
-	content="$(cat)"
+	content="$(timeout .7 cat)"
 fi
+
+set -- $content
+
+aplay() {
+	[ $echo = true ] && {
+		command aplay "$@"
+		return $?
+	}
+	cat
+}
 
 # echo "$content" | tr '\n' ' ' | $exe -m "$model" -f /dev/stdout --sentence-silence 0.5 --output-raw | aplay -f S16_LE -r 16000 -c 1
 echo "$content" | tr '\n' ' ' | $exe -m "$model" -f \- --sentence-silence 0.5 --output-raw | aplay -f S16_LE -r 16000 -c 1

@@ -23,3 +23,6 @@ export PATH
 if [ -z "$TMUX" ] && [ -z "$SSH_TTY" ] && [ -z "$SSH_CONNECTION" ]; then
     exec tmux
 fi
+
+# Typst REPL completion
+[ -f ~/.config/typrepl/completion.bash ] && source ~/.config/typrepl/completion.bash

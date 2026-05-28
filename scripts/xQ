@@ -1,8 +1,8 @@
-#!/bin/env sh
+#!/bin/env bash
 
 # query xbps
 
-set -eu
+set -euo pipefail
 
 testing=fale
 [ $testing = true ] && set -x
@@ -43,7 +43,7 @@ search() {
 if [ $raw = false ]; then
 	choices="$(for arg in "$@"; do
 		search "$arg"
-	done | fzf | awk '{print $2}' | sed -E 's/-[0-9_.]+$//')"
+	done | sort -h | column -ts $'\t' | fzf | awk '{print $2}' | sed -E 's/-[0-9_.]+$//')"
 else
 	for arg in "$@"; do
 		search "$arg"
@@ -54,4 +54,5 @@ code=$?
 
 [ -n "$choices" ] || exit $code
 
+echo installing: "$choices"
 eval 'sudo xbps-install -Su $choices'

@@ -1,0 +1,8 @@
+#!/bin/env zsh
+
+
+while (($#)); do
+	yt-dlp -x --audio-format mp3 --audio-quality 9 "$1"
+	shift
+done
+	

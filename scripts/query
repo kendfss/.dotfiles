@@ -9,7 +9,7 @@ testing=false
 
 fn() {
 	local query=""
-	local browser=chromium
+	local browser="$(xdg-settings get default-web-browser | awk -F. '{print $1}')"
 	[ $# -gt 0 ] && {
 		case "$1" in
 			ff | firefox)

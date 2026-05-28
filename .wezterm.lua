@@ -2,6 +2,12 @@ local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 
 config.audible_bell = "SystemBeep"
+wezterm.on("bell", function(window, pane)
+	-- os.execute("aplay /usr/share/sounds/alsa/Noise.wav 2>/dev/null &")
+	os.execute("aplay /usr/share/sounds/speech-dispatcher/test.wav 2>/dev/null &")
+	-- os.execute("aplay /usr/share/live-audio/beep.wav 2>/dev/null &")
+end)
+
 config.visual_bell = {
 	fade_in_function = "EaseIn",
 	fade_in_duration_ms = 150,
@@ -11,9 +17,6 @@ config.visual_bell = {
 config.colors = {
 	visual_bell = "#202020",
 }
-wezterm.on("bell", function(window, pane)
-	wezterm.log_info("the bell was rung in pane " .. pane:pane_id() .. "!")
-end)
 
 -- Font
 -- config.font = wezterm.font("Cascadia Code PL", { weight = "Bold" })
@@ -66,6 +69,15 @@ config.keys = {
 	{ key = "Equal", mods = "CTRL", action = wezterm.action.IncreaseFontSize },
 	{ key = "Minus", mods = "CTRL", action = wezterm.action.DecreaseFontSize },
 	{ key = "0", mods = "CTRL", action = wezterm.action.ResetFontSize },
+
+	{
+		key = "s",
+		mods = "CTRL|SHIFT",
+		action = wezterm.action_callback(function(window, pane)
+			window:perform_action(wezterm.action.SelectTextAtMouseCursor("Semantic"), pane)
+			-- Now you can use Shift+Arrows to extend selection
+		end),
+	},
 
 	-- bind -N "shift window to left" -n C-S-Left swap-window -d -t -1
 	-- bind -N "shift window to right" -n C-S-Right swap-window -d -t +1
@@ -200,8 +212,8 @@ config.keys = {
 	{ key = "F4", mods = "ALT", action = wezterm.action.CloseCurrentTab({ confirm = true }) },
 
 	-- Leader key bindings
-	{ key = "c", mods = "CTRL|SHIFT", action = wezterm.action.SpawnTab("CurrentPaneDomain") },
-	{ key = "x", mods = "CTRL|SHIFT", action = wezterm.action.CloseCurrentPane({ confirm = true }) },
+	-- { key = "c", mods = "CTRL|SHIFT", action = wezterm.action.SpawnTab("CurrentPaneDomain") },
+	-- { key = "x", mods = "CTRL|SHIFT", action = wezterm.action.CloseCurrentPane({ confirm = true }) },
 
 	-- -- Pass through Alt+Arrow keys to the terminal
 	-- { key = "LeftArrow", mods = "ALT", action = wezterm.action.SendKey({ key = "LeftArrow", mods = "ALT" }) },

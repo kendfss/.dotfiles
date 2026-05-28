@@ -1,11 +1,11 @@
 #!/bin/env zsh
 
 if [ -n "$(command -v xclip)" ]; then
-	xclip -i -selection clipboard
+	exec xclip -i -selection clipboard >/dev/null 2>&1
 elif [ -n "$(command -v termux-clipboard-set)" ]; then
-	termux-clipboard-set
+	exec termux-clipboard-set
 else
-	echo no clipboard setter found
+	echo no clipboard setter found >&2
 	exit 1
 fi
 exit $?

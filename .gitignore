@@ -1,3 +1,6 @@
+.ignore
+blob*.json
+schema*.json
 .config/helix/grammars/
 scripts/jellyfin
 .autoenv.zsh

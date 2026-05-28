@@ -4,8 +4,10 @@ if [[ $SHELL == *"zsh" ]]; then
 	alias help=run-help
 fi
 
+alias dvtm="dvtm -m '^['"
 alias .="cd $DOTFILES"
 alias ~="cd $HOME"
+alias ..="cd .."
 alias sed="sed -E"
 alias spaced='tr "[:space:]" " "'
 alias lined='tr "[:space:]" "\n"'
@@ -14,6 +16,7 @@ alias lower='tr "[:upper:]" "[:lower:]"'
 alias words='tr -cs "[:alpha:]" "\n"'
 alias freqs='sort | uniq -c | sort -n'
 alias mime='file -b --mime-type'
+alias when='ls -1ctr'
 
 if [ -d "$TERMUX__HOME" ]; then
 	alias cpv="rsync -poghb --backup-dir=$TERMUX__PREFIX/tmp/rsync -e /dev/null --progress --"
@@ -25,6 +28,8 @@ else
 	alias a12='ssh a12'
 	alias a12t='ssh a12t'
 fi
+
+command -v abduco &>/dev/null && alias a=abduco
 
 if [ -x "$(command -v sk)" ] && [ -x "$(command -v fzf)" ]; then
 	echo "WARNING both fzf and skim/sk installed!" >&2
