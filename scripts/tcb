@@ -1,6 +1,38 @@
-#!/bin/env sh
+#!/bin/env zsh
 
 # copy tmux's buffer to system clipboard
+
+get_host_alias_for_ip() {
+	local target_ip="$1"
+	local current_host=""
+
+	while read -r line; do
+		# Start of a Host block
+		if [[ $line =~ ^[[:space:]]*Host[[:space:]]+([^*]+)$ ]]; then
+			current_host="${match[1]}"
+		# HostName line within a block
+		elif [[ -n $current_host ]] && [[ $line =~ ^[[:space:]]*HostName[[:space:]]+([0-9.]+)$ ]]; then
+			if [[ ${match[1]} == "$target_ip" ]]; then
+				echo "$current_host"
+				return 0
+			fi
+			current_host=""
+		fi
+	done <~/.ssh/config
+
+	return 1
+}
+
+# [ -z "${SSH_CONNECTION:}" ] || {
+# 	src_ip="$(printf '%s' "$SSH_CLIENT" | awk '{print $1}')"
+# 	read -r host user <<-eof
+# 		$(ssh -G "$src_ip" | grep -E '^(host|user)\b' | awk '{print $2}' | tr '\n' ' ')
+# 	eof
+# 	addr="$user@$host"
+# 	echo "$addr" >&2
+# 	ssh "$addr" -- printf '%s' "$(cat)" \| c
+# 	exit $?
+# }
 
 if [ $# = 0 ]; then
 	[ -n "$TERMUX__PREFIX" ] && {

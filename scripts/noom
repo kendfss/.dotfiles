@@ -1,0 +1,7 @@
+#!/bin/env zsh
+
+# convert text into numbers char by char. doesn't operate on spaces or punctuation, yet
+
+alias sed="sed -E"
+
+sed 's:.:&\n:g' | tr '[:upper:]' '[:lower:]' | sed "$(print -l {a..z} | cat -n | awk '{print "s:"$2":"$1":g"}' | tr '\n' \; | sed 's:;$::')" | grep -Ev '^\s*$' | tr '[:space:]' ' ' | sed 's: $::'

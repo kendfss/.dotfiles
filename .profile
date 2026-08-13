@@ -12,41 +12,40 @@ export DOTFILES=$HOME/.dotfiles
 
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
-    # include .bashrc if it exists
-    if [ -f "$HOME/.bashrc" ]; then
-        . "$HOME/.bashrc"
-    fi
+	# include .bashrc if it exists
+	if [ -f "$HOME/.bashrc" ]; then
+		. "$HOME/.bashrc"
+	fi
+	[ -d "$HOME/.cargo" ] && . "$HOME/.cargo/env"
 fi
 
 # set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
+if [ -d "$HOME/bin" ]; then
+	PATH="$HOME/bin:$PATH"
 fi
 
 # set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
+if [ -d "$HOME/.local/bin" ]; then
+	PATH="$HOME/.local/bin:$PATH"
 fi
 
-
-if [[ -f $(command -v go) ]]; then
-    export PATH="$PATH:$(go env GOROOT):$(go env GOPATH)"
+if [ -x "$(command -v go)" ]; then
+	export PATH="$PATH:$(go env GOROOT):$(go env GOPATH)"
 fi
 
 PATH="$PATH:$TERMUX__ROOTFS_DIR/usr/bin:$TERMUX__ROOTFS_DIR/bin:$TERMUX__ROOTFS_DIR/usr/sbin:$TERMUX__ROOTFS_DIR/sbin:$TERMUX__ROOTFS_DIR/usr/local/bin"
 export DOTFILES=$HOME/.dotfiles
-export PROFILE=$DOTFILES/.zprofile
-export RC=$DOTFILES/.zshrc
-export ENV=$DOTFILES/.zshenv
+# export PROFILE=$DOTFILES/.zprofile
+# export RC=$DOTFILES/.zshrc
+# export ENV=$DOTFILES/.zshenv
 
-[ -d "$HOME/.cargo" ] && . "$HOME/.cargo/env"
 [ -x "$(command -v clang)" ] && export CC=clang
 
 PATH="$HOME/.elan/bin:$PATH"
+export PATH
 
 # export PYENV_ROOT="$HOME/.pyenv"
 # command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 # eval "$(pyenv init -)"
 
-export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"
-
+# export PATH="$(echo $PATH | tr ':' '\n' | sort -u | tr '\n' ':' | sed 's/:$//g')"

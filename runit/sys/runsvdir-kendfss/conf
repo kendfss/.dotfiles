@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+self="$(realpath "$0")"
+root="$(dirname "$self")"
+user="$(basename "$root" | sed 's:^runsvdir-::')"
+home="/home/$user"
+
+groups="$(id -Gn "$user" | tr ' ' ':')"
+svdir="$home/services"

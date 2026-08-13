@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# remember to link this to /etc/sv/mpd/run
+
+exec 2>&1
+[ -e conf ] && . ./conf
+# install -d -m 0755 -o mpd -g mpd /run/mpd
+# install -d -m 0755 -o $USER /run/mpd
+mkdir -p /tmp/mpd
+exec mpd --no-daemon ${OPTS:-}

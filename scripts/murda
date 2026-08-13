@@ -13,6 +13,7 @@ local column=2
 local patterns=()
 local dry=false
 local fast=false
+local regex=false
 local insensitive=''
 
 error() {
@@ -69,6 +70,7 @@ while (($#)); do
 			shift
 			;;
 		-i | --insensitive) insensitive='-i' ;;
+		-r | --regex) insensitive='-i' ;;
 		-d | --dry | --dry-run) dry=true ;;
 		-h | --help) helpText 0 ;;
 		-f | --fast) fast=true ;;
@@ -112,8 +114,15 @@ extract() {
 local pids=()
 
 for pat in $patterns; do
-	${=queerer} | sed -E '1d' | rg $insensitive "$pat"
-done | sort -u | fzf | extract | while read -r pid; do
+	if ! $regex; then
+		case "$pat" in
+			'['*) ;;
+			*) pat="[${pat[1]}]${pat[2,-1]}" ;;
+		esac
+	fi
+	# error "pat: $pat"
+	${=queerer} | sed -E '1d' | grep -E $insensitive "$pat"
+done | sort -u | rg -v "$0" | fzf | extract | while read -r pid; do
 	pids+=("$pid")
 done
 

@@ -1,8 +1,120 @@
-#!/bin/env sh
+#!/bin/env zsh
+
+# repository cloner
 
 set -eu
 
-cmd="$(basename "$0")"
+self="$(basename "$0")"
+desc="$(cat "$0" | head -3 | tail -1 | sed 's:^\s*::')"
+
+error() {
+	printf '%s:' "$self" >&2
+	printf ' %s' $@ >&2
+	printf '\n' >&2
+}
+
+fatal() {
+	error "$@"
+	exit 1
+}
+
+clone_dir="${CLONES:-$PWD}"
+owner="${SUDO_USER:-$(logname)}"
+host="github"
+deep=false
+
+# echo "\$PWD: $PWD" >>/tmp/clone.debug
+# echo "\$(pwd): $(pwd)" >>/tmp/clone.debug
+# echo "\$clone_dir: $clone_dir" >>/tmp/clone.debug
+
+typeset -A host_commands=(
+	[darcs]=darcs
+	[github]=git
+	[tilde]=git
+	[srht]=git
+	[gitlab]=git
+	[codeberg]=git
+	[freedesktop]=git
+)
+
+typeset -A host_urls=(
+	[darcs]=https://hub.darcs.net
+	[github]=https://github.com
+	[tilde]=https://tildegit.com
+	[srht]=https://sr.ht
+	[gitlab]=https://gitlab.com
+	[codeberg]=https://codeberg.org
+	[freedesktop]=https://gitlab.freedesktop.org
+)
+
+typeset -A depths=(
+	[darcs]=--lazy
+	[git]=--depth=1
+)
+
+hosts1="${(k)host_commands[@]}"
+hosts2="${(k)host_urls[@]}"
+
+[ "${hosts1}" = "${hosts2}" ] || fatal internal: host urls disagree with commands
+
+hosts="${hosts1[@]}"
+
+command -v bat &>/dev/null || bat() { less --tilde -F; }
+
+help_info() {
+	cat <<-eof | bat -lman
+		usage: $self [FLAG]... [REPO]...
+
+		$desc
+
+		flags:
+		  -h, --help             print this message and exit
+		  -c, --clone-dir        directory to keep clone(s) in ${clone_dir:+(default: $clone_dir)}
+		  -d, --deep             clone a repository deeply instead of a shallowly
+		  -o, --owner            name of the developer (for cases where none can be parsed from the elements) ${owner:+(default: $owner)}
+		  -r, --repo-host        name of the host to query for the repo (default: $host) (options: $hosts)
+
+	eof
+	(($#)) || fatal internal: help exit code unspecified
+	exit $1
+}
+
+repos=()
+
+while (($#)); do
+	case "$1" in
+		-h* | --help) help_info 0 ;;
+		-d | --deep) deep=true ;;
+		-d*)
+			deep=true
+			argv[1]="-${1##-d}"
+			continue
+			;;
+		-r | --repo-host)
+			host="$2"
+			shift
+			;;
+		-r*)
+			host="${1##-r}"
+			;;
+		-o | --owner)
+			owner="$2"
+			shift
+			;;
+		-o*) owner="${1##-o}" ;;
+		-c | --clone-dir)
+			clone_dir="$2"
+			shift
+			;;
+		-c*) clone_dir="${1##-c}" ;;
+		*) repos+=("$1") ;;
+	esac
+	shift
+done
+
+((${#repos})) || fatal no repositories specified
+
+set -- "${repos[@]}"
 
 slashed() {
 	case "$1" in
@@ -12,48 +124,51 @@ slashed() {
 }
 
 take() {
-	$(command -v mkdir) -p "$1" || return $?
+	command mkdir -p "$1"
 	cd "$1"
 }
 
-# goto() {
-# 	cd "$1" || return $?
-# 	echo "$1"
+# depth="--depth=1"
+# dev=""
+
+# [ "$1" = "-d" ] && {
+# 	depth=""
+# 	shift 1
 # }
 
-[ $# -eq 0 ] && {
-	echo "$cmd: no args received" >&2
-	return 1
-}
+# slashed "$dev" || {
+# 	owner="$1"
+# 	shift 1
+# }
 
-depth="--depth=1"
-dev=""
+# args="$*"
+# [ $# -eq 0 ] && {
+# 	args="$args $owner"
+# 	owner="$USER"
+# }
 
-[ "$1" = "-d" ] && {
-	depth=""
-	shift 1
-}
+depth='' # due to strictness
+$deep || depth="$depths[$host_commands[$host]]"
 
-slashed "$dev" || {
-	dev="$1"
-	shift 1
-}
+cmd=$host_commands[$host]
+url=$host_urls[$host]
 
-args="$*"
-[ $# -eq 0 ] && {
-	args="$args $dev"
-	dev="$USER"
-}
-
-echo "$args" | while read repo; do
+for repo in "$@"; do
+	_url=''
+	case "$repo" in
+		http://* | https://* | ssh://*) _url="$(sed 's%^\w+://\w+(\.\w)+%%' <<<"$repo")" ;;
+		*) _url="$url" ;;
+	esac
+	local dev=''
 	slashed "$repo" && dev="$(basename "$(dirname "$repo")")"
-	repo=$(basename "$repo")
-	pth="$CLONEDIR/$dev/$repo"
+	[ -n "$dev" ] || dev="$owner"
+	repo="$(basename "$repo")"
+	pth="$clone_dir/$dev/$repo"
 	if [ -d "$pth" ]; then
-		echo "$cmd: already have $dev/$repo" >&2
+		error "already have $dev/$repo"
 	else
-		echo "$cmd: fetching $dev/$repo" >&2
-		take "$CLONEDIR/$dev" && git clone $depth "$REPO_HOST/$dev/$repo" "$repo" >&2
+		error "fetching $dev/$repo" # using error instead of echo so that only directory names are printed to stdout which lets wrappers easily navigate into the right directory
+		take "$clone_dir/$dev" && $cmd clone $depth "$_url/$dev/$repo" "$repo" >&2
 	fi
 	echo "$pth"
 done

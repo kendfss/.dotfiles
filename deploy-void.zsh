@@ -166,7 +166,7 @@ if [ -x "$(command -v xbps-install)" ]; then
 	xlocate -S
 
 	packages=''
-	echo clipnotify man-pages-posix zenity zsh acl-progs rsync zsh tmux wezterm kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer fzf clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist tabbed zathura zathura-pdf-mupdf pandoc psmisc lf coreutils mpv mpv-mpris playerctl nicotine+ lua-language-server StyLua taplo base-devel bat gcc make llvm xkill xfce4-screenshooter delta gallery-dl lsof ntfs-3g uv pup alsa-utils tree-sitter tree-sitter-cli rustup rust-analyzer mdBook | sed -E 's/\s+/\n/g' | while read -r package; do
+	echo clipnotify man-pages-posix zenity zsh acl-progs rsync zsh tmux wezterm kitty helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq fzf shellcheck wget htop tree glow typst tinymist tabbed zathura zathura-pdf-mupdf pandoc psmisc lf coreutils mpv mpv-mpris playerctl nicotine+ lua-language-server StyLua taplo base-devel bat gcc make llvm xkill xfce4-screenshooter delta gallery-dl lsof ntfs-3g uv pup alsa-utils tree-sitter tree-sitter-cli rustup xbps-command-not-found xbps-triggers | sed -E 's/\s+/\n/g' | while read -r package; do
 		command -v $package 2>&1 >/dev/null || {
 			packages="${packages:+${packages} }$package"
 		}

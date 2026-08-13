@@ -1,15 +1,87 @@
-#!/bin/env sh
+#!/bin/env bash
 
-sudo=''
-[ "$1" = sudo ] && {
-	sudo=pkexec
-	shift
+# run a command until it exits with status 0
+
+self="$(basename "$0")"
+desc="$(realpath "$0" | xargs cat | head -3 | tail -1)"
+
+error() {
+	printf '%s:' "$self"
+	# shellcheck disable=SC2068
+	printf ' %s' $@
+	printf '\n'
 }
 
+fatal() {
+	error "$@"
+	exit 1
+}
+
+help() {
+	cat <<-eof | bat -lmd
+		usage: $self [arg]...
+
+		$desc
+
+		flags:
+		  -h, --help          print this message and exit
+		  
+	eof
+	(($#)) || fatal no exit code given to helper
+	# shellcheck disable=SC2086
+	exit $1
+}
+
+is_assignment() {
+	local arg="$1"
+	if [[ $arg =~ ^[a-zA-Z_][a-zA-Z0-9_]*=[^=]*$ ]]; then
+		if [[ ! $arg =~ [[:space:]] ]]; then
+			return 0
+		fi
+	fi
+	return 1
+}
+
+flagged=false
 count=0
-while ! $sudo "$@"; do
+args=()
+vars=()
+cmd=""
+sudo=false
+
+while (($#)); do
+	$flagged || {
+		case "$1" in
+			--help | -h*) help 0 ;;
+			*) ;;
+		esac
+	}
+
+	if is_assignment "$1"; then
+		vars+=("$1")
+	else
+		if [ -z "$cmd" ]; then
+			case "$1" in
+				sudo | pkexec) sudo=true ;;
+				*) cmd="$1" ;;
+			esac
+		else
+			args+=("$1")
+		fi
+	fi
+
+	flagged=true
+	shift
+done
+
+if $sudo; then
+	full=(pkexec env "${vars[@]}" "$cmd" "${args[@]}")
+else
+	full=(env "${vars[@]}" "$cmd" "${args[@]}")
+fi
+
+while ! "${full[@]}"; do
 	count=$((count + 1))
 done
-if ! [ $count -eq 0 ]; then
-	echo "Command succeeded after $count retries."
-fi
+
+[ $count = 0 ] || echo "Command succeeded after $count retries."

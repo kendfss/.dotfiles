@@ -1,0 +1,90 @@
+#!/bin/env zsh
+
+# report info about extensions of files
+
+set -eu
+
+self="$(realpath "$0" | xargs -d '\n' basename)"
+desc="$(cat "$0" | head -3 | tail -1)"
+
+dirs=()
+count=''
+shallow=false
+
+error() {
+	printf '%s:' "$self" >&2
+	# shellcheck disable=SC2068
+	printf ' %s' $@ >&2
+	printf '\n' >&2
+}
+
+fatal() {
+	error "$@"
+	exit 1
+}
+
+have() {
+	command -v "$1" >/dev/null 2>/dev/null
+}
+
+have bat || bat() { less; }
+
+help_info() {
+	cat <<-eof | bat -lman
+		usage: $self [FLAG]... [ARG]...
+
+		$desc
+
+		flags:
+		  -h, --help              print this message and exit
+		  -c, --count             count number of files per extension
+		  -s, --shallow           only check top level file extensions
+	eof
+	(($#)) || fatal internal: no exit code specified for help info
+	exit "$1"
+}
+
+while (($#)); do
+	case "$1" in
+		'') ;;
+		-h* | --help) help_info 0 ;;
+		-c | --count) count='-c' ;;
+		-s | --shallow) shallow=true ;;
+		-s*)
+			shallow=true
+			argv[1]="-${1##-s}"
+			continue
+			;;
+		-c*)
+			count='-c'
+			argv[1]="-${1##-c}"
+			continue
+			;;
+		*) dirs+=("$1") ;;
+	esac
+	shift
+done
+
+files=()
+
+if have fd; then
+	depth='-d1'
+	$shallow || depth=''
+	fd -utf $depth . "${dirs[@]}"
+else
+	depth='-maxdepth 0'
+	$shallow || depth=''
+	find "${dirs[@]}" $depth -type f
+fi | grep -Ev '^\s*$' | while read -r file; do
+	files+=("$file")
+done
+
+((${#files})) || fatal no files found
+
+alias reduce='sort | uniq'
+
+if have rg; then
+	printf '%s\n' ${files[@]} | rg -o '\.((tar)\.)?\w+$'
+else
+	printf '%s\n' ${files[@]} | grep -Eo '\.((tar)\.)?\w+$'
+fi | reduce $count | sort

@@ -85,15 +85,15 @@ check() {
 
 user=kendfss
 id "$user" 2>/dev/null >/dev/null || while true; do
-	user="$(
-		printf 'pick a username: '
-		read -r user
-	)"
-	useradd -m -G wheel,users,sudoers "$user" || continue
-	passwd "$user" || {
-		userdel -r "$user"
+	printf 'pick a username (default: %s): ' "$user"
+	read -r _user
+	[ -n "$_user" ] || _user="$user"
+	useradd -m -G wheel,users "$_user" || continue
+	passwd "$_user" || {
+		userdel -r "$_user"
 		continue
 	}
+	user="$_user"
 	break
 done
 
@@ -119,7 +119,7 @@ if [ ! -f "/etc/sudoers.d/$user" ] && [ ! -n "$(id "$user" | grep wheel)" ]; the
 	chmod 440 "/etc/sudoers.d/$user"
 fi
 
-timeout 2 ping google.com || {
+ping -c 1 google.com || {
 	mkdir -p "/var/service" || fatal
 	[ ! -e "/var/service/wpa_supplicant" ] && {
 		ln -fs /etc/sv/wpa_supplicant /var/service/wpa_supplicant || fatal "couldn't setup wpa_supplicant for wifi. link {/etc/sv,/var/service}/wpa_supplicant"
@@ -131,12 +131,12 @@ timeout 2 ping google.com || {
 	}
 }
 
-[ 0 = "$(cat /etc/doas.conf | wc -l)" ] && {
-	cat <<-EOF
-		permit persist :root
-		permit persist setenv {PATH=$PATH} :wheel
-	EOF
-}
+# [ 0 = "$(cat /etc/doas.conf | wc -l)" ] && {
+# 	cat <<-EOF
+# 		permit persist :root
+# 		permit persist setenv {PATH=$PATH} :wheel
+# 	EOF
+# }
 
 export DOTFILES="$userhome/.dotfiles"
 export ZDOTDIR="$DOTFILES"

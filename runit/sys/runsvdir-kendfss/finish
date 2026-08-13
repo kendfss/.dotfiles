@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+set -eu
+
+self="$(realpath "$0")"
+root="$(dirname "$self")"
+
+[ ! -e "$root/conf" ] || . "$root/conf"
+
+sv -w600 force-stop "$svdir/"\*

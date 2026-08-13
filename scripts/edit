@@ -1,0 +1,53 @@
+#!/bin/env zsh
+
+# edit files from remote devices using ssh
+
+set -euo pipefail
+
+self="$(basename "$ZSH_ARGZERO")"
+desc="$(cat "$ZSH_ARGZERO" | head -3 | tail -1 | sed -E 's:^#\s*::')"
+
+remote=''
+files=()
+
+error() {
+	printf '%s:' "$self" >&2
+	printf ' %s' $@ >&2
+	printf '\n' >&2
+}
+
+fatal() {
+	error "$@"
+	exit 1
+}
+
+command -v bat &>/dev/null || bat() { less; }
+
+help_text() {
+	cat <<-eof | bat -lman
+		usage: $self [FLAG:+ARG] [FILE]...
+
+		$desc
+
+		flags:
+		  -h, --help       print this message and exit
+		  -r, --remote     name of the device to fetch files from
+
+	eof
+}
+
+while (($#)); do
+	case "$1" in
+		-r | --remote)
+			remote="$2"
+			shift
+			;;
+		-h | --help) help_text 0 ;;
+		-*) fatal unsupported flag: "'$1'" ;;
+		*) files+=("$1") ;;
+	esac
+	shift
+done
+
+[ ${#files} -gt 0 ] || fatal no files specified
+[ -n "$remote" ] || fatal no remote specified

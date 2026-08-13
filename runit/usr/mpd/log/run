@@ -1,0 +1,8 @@
+#!/bin/sh
+
+root="$(realpath "$0" | xargs -d '\n' dirname | xargs -d '\n' dirname)"
+[ -e "$root/conf" ] && . "$root/conf"
+
+mkdir -p /tmp/mpd
+
+exec svlogd -tt /tmp/mpd

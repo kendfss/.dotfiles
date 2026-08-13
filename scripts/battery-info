@@ -11,4 +11,4 @@ fi
 
 state=$(echo "$state" | tr '[:upper:]' '[:lower:]' | sed 's/discharging/▮/;s/charging/↯/;s/full/✔/;s/"//g')
 
-printf "%s%%(%s)\n" "$percentage" "$state"
+printf "%s(%s%%)\n" "$state" "$percentage"

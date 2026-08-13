@@ -1,8 +1,23 @@
-#!/bin/env bash
+#!/bin/env zsh
 
-# query xbps
+# query xbps and choose packages from fzf
 
 set -euo pipefail
+
+self="$(basename "$ZSH_ARGZERO")"
+desc="$(cat "$ZSH_ARGZERO" | head -3 | tail -1)"
+
+error() {
+	printf '%s:' "$self" >&2
+	# shellcheck disable=SC2068
+	printf ' %s' $@ >&2
+	printf '\n' >&2
+}
+
+fatal() {
+	error "$@"
+	exit 1
+}
 
 testing=fale
 [ $testing = true ] && set -x
@@ -21,38 +36,102 @@ need awk || { need gawk && alias awk=gawk; }
 need sed grep fzf
 
 raw=false
-tmp=""
-choices=""
+yes=false
+tmp=()
+
+command -v bat &>/dev/null || bat() { less; }
+
+help_info() {
+	cat <<-eof | bat -lman
+		usage: $self [FLAG]... [PACKAGE]...
+
+		$desc
+
+		flags:
+		  -h, --help            print this message and exit
+		  -r, --raw             print results and exit
+		  -y, --yes             autoaccept installation
+	eof
+	(($#)) || fatal internal: no exit code given to helper
+	exit "$1"
+}
 
 while [ $# -gt 0 ]; do
 	case "$1" in
+		-h* | --help) help_info 0 ;;
 		-r | --raw) raw=true ;;
+		-y | --yes) yes=true ;;
+		-y*)
+			yes=true
+			argv[1]="${1##-y}"
+			continue
+			;;
+		-r*)
+			raw=true
+			argv[1]="${1##-r}"
+			continue
+			;;
 		-*) echo unrecognized flag: "$1" && exit 1 ;;
-		*) tmp="$tmp $1" ;;
+		*) tmp+=("$1") ;;
 	esac
 	shift
 done
 
 # shellcheck disable=SC2086
-set -- $tmp
+set -- "${tmp[@]}"
 
+# error "$@"
 search() {
-	xbps-query -Rs "$1" | grep -E "] (\w+(-)?)*$1((-)?\w+)*-" | grep "$1"
+	{ xbps-query -Rs "$1" | grep -E "$(printf '] (\w+(-)?)*%s((-)?\w+)*-' "$1")" | grep -E "$1"; } || true
 }
 
-if [ $raw = false ]; then
-	choices="$(for arg in "$@"; do
-		search "$arg"
-	done | sort -h | column -ts $'\t' | fzf | awk '{print $2}' | sed -E 's/-[0-9_.]+$//')"
-else
+cleanup() {
+	awk '{ lines[NR]=$0; status[NR]=$1; name[NR]=$2; $1=$2=""; desc[NR]=substr($0,3)
+          if (length(name[NR]) > max) max=length(name[NR]) }
+        END { for (i=1;i<=NR;i++) printf "%s\t%-*s\t%s\n", status[i], max, name[i], desc[i] }
+    ' | column -ts $'\t'
+}
+
+choices=()
+$raw && {
+	# error raw
 	for arg in "$@"; do
+		echo "err: $arg" >/dev/stderr
 		search "$arg"
+	done |
+		sort -h |
+		cleanup |
+		uniq
+	exit $?
+}
+
+tmp="$(mktemp)" || fatal "couldn't source bindings"
+grep '^export' "$DOTFILES/.zshenv" | grep -E 'FZF|SKIM' >"$tmp"
+. "$tmp"
+rm "$tmp"
+
+for arg in "$@"; do
+	search "$arg"
+done |
+	sort -h |
+	cleanup |
+	uniq |
+	fzf -n2 |
+	awk '{print $2}' |
+	sed -E 's:-[0-9_\.]+$::' |
+	while read -r pkg; do
+		choices+=("$pkg")
 	done
-fi
 
 code=$?
 
-[ -n "$choices" ] || exit $code
+((${#choices})) || exit $code
 
-echo installing: "$choices"
-eval 'sudo xbps-install -Su $choices'
+if $yes; then
+	yes='-y'
+else
+	yes=''
+fi
+
+echo installing: "${choices[@]}" >&2
+while ! pkexec xbps-install -Su $yes "${choices[@]}"; do :; done

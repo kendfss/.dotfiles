@@ -1,0 +1,75 @@
+#!/bin/env zsh
+
+# a du wrapper with delusions of grandeur
+
+set -euo pipefail
+
+self="$(realpath "$0")"
+desc="$(cat "$self" | head -3 | tail -1)"
+
+# shellcheck disable=2068
+error() {
+	printf '%s:' "$self" >&2
+	printf ' %s' $@ >&2
+	printf '\n' >&2
+}
+
+fatal() {
+	error "$@"
+	exit 1
+}
+
+command -v bat &>/dev/null || bat() { less; }
+
+args=()
+dirs=false
+files=false
+
+help_text() {
+	cat <<-eof | bat -lman
+		usage: $self [FLAG]... [PATH]...
+
+		$desc
+
+		flags:
+		  -h, --help              print this message and exit
+		  -d, --dirs              focus on directories
+		  -f, --files             focus on files
+	eof
+	(($#)) || fatal no exit code given to "$0"
+	exit "$1"
+}
+
+# shellcheck disable=2034
+while (($#)); do
+	case "$1" in
+		-d | --dirs) dirs=true ;;
+		-f | --files) files=true ;;
+		-d*) argv[1]="-${1#-d}" && dirs=true && continue ;;
+		-f*) argv[1]="-${1#-f}" && files=true && continue ;;
+		*) args+=("$1") ;;
+	esac
+	shift
+done
+
+fn=''
+if $files && $dirs; then
+	fn='du -xsh "%s"/(.|)* 2>/dev/null'
+elif $files; then
+	fn='du -xsh "%s"/(.|)*(.) 2>/dev/null'
+elif $dirs; then
+	fn='du -xsh "%s"/(.|)*(/) 2>/dev/null'
+else
+	fn='du -xsh "%s"/(.|)* 2>/dev/null'
+fi
+
+((${#args})) || args+=("$PWD")
+set -- "${args[@]}"
+
+for arg in "$@"; do
+	[ -f "$arg" ] || {
+		eval "$(printf "$fn" "$arg")"
+		continue
+	}
+	du -xsh $arg 2>/dev/null
+done | sort -h

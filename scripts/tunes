@@ -1,0 +1,131 @@
+#!/bin/env zsh
+
+# query music under directories with optional playback
+
+set -euo pipefail
+
+self="$(basename "$ZSH_ARGZERO")"
+desc="$(cat "$ZSH_ARGZERO" | head -3 | tail -1)"
+
+local play=false
+local yes=false
+local sort=false
+local shuffle=false
+local items=()
+
+helpText() {
+	cat <<-eof | bat -lman
+		usage: $self
+
+		$desc
+
+		flags:
+		  -h, --help        print this message and exit
+		  -p, --play        playback via mpv
+		  -s, --sort        sort audio files by name
+		  -S, --shuffle     sort audio files by name
+		  -y, --yes         loop forever
+	eof
+	(($#)) || fatal no exit code for help text
+	exit $1
+}
+
+error() {
+	printf '%s:' "$self" >&2
+	printf ' %s' $@ >&2
+	printf '\n' >&2
+}
+
+fatal() {
+	error "$@"
+	exit 1
+}
+
+sort() {
+	$sort || {
+		cat
+		return
+	}
+	command sort -n
+}
+
+shuf() {
+	$shuffle || {
+		cat
+		return
+	}
+	command shuf
+}
+
+while (($#)); do
+	case "$1" in
+		-p | --play) play=true ;;
+		-p*)
+			play=true
+			argv[1]="-${1##-p}"
+			continue
+			;;
+		-y | --yes) yes=true ;;
+		-y*)
+			yes=true
+			argv[1]="-${1##-y}"
+			continue
+			;;
+		-S | --shuffle) shuffle=true ;;
+		-s | --sort) sort=true ;;
+		-S*)
+			sort=true
+			argv[1]="-${1##-S}"
+			continue
+			;;
+		-s*)
+			sort=true
+			argv[1]="-${1##-s}"
+			continue
+			;;
+		--help | -h*) helpText 0 ;;
+		-*)
+			fatal "unrecognized flag: $1"
+			;;
+		*) items+=("$1") ;;
+	esac
+	shift
+done
+((${#items})) || items=("$(pwd)")
+
+$sort && $shuffle && fatal why sort and shuffle?
+
+if $yes; then
+	_fn() { yes "$@"; }
+else
+	_fn() { printf '%s\n' $@; }
+fi
+_fn "$(
+	local i=${#items}
+	local dirs=()
+	while ((i)); do
+		local item="$items[$i]"
+		i=$((i - 1))
+		[ -L "$item" ] && item="$(realpath "$item")"
+		[ -f "$item" ] && [[ $item =~ "\.(${MUSIC_FORMATS})" ]] && {
+			echo "$item"
+			continue
+		}
+		[ -d "$item" ] && {
+			dirs+=("$item")
+			continue
+		}
+		fatal "not a viable file or directory: $item"
+	done
+	# for dir in "$@"; do
+	# 	# eval "ls $dir/**.($MUSIC_FORMATS)" | tr '\n' '\0' | xargs -0I{} echo {}
+	# 	# fd --type f "\.($MUSIC_FORMATS)" | sort | to -d '\s+' echo | while read -r line; do mpv --no-video "$line"; done
+	# done
+	fd --type f "\.($MUSIC_FORMATS)" "${dirs[@]}" | sort | shuf
+)" | {
+	if $play; then
+		xargs -d '\n' mpv --no-video
+	else
+		cat
+	fi
+}

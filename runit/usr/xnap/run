@@ -1,0 +1,7 @@
+#!/bin/sh
+
+root="$(realpath "$0" | xargs -d '\n' dirname)"
+[ -e "$root/conf" ] && . "$root/conf"
+
+exec 2>&1
+exec xnap

@@ -1,0 +1,50 @@
+#!/bin/env zsh
+
+set -euo pipefail
+
+self="$(basename "$ZSH_ARGZERO")"
+desc="$(realpath "$ZSH_ARGZERO" | xargs -d '\n' cat | head -3 | tail -1)"
+
+# Declare associative array OUTSIDE the loop
+typeset -A all_deps=()
+typeset -A pkg_deps=()
+
+resolve_deps() {
+	local pkg="$1"
+	local out
+
+	# Check if already processed
+	if ((${+pkg_deps[$pkg]})); then
+		return
+	fi
+
+	# Mark as processed
+	pkg_deps[$pkg]=1
+
+	# Get dependencies
+	out="$(xbps-query -X "$pkg" 2>/dev/null | sed -E 's:-[0-9\-\._]+$::' || true)"
+	# echo "$pkg: $out" >&2
+	# Recursively resolve each dependency
+	while read -r dep; do
+		[[ -z $dep ]] && continue
+		resolve_deps "$dep"
+	done <<<"$out"
+}
+
+for arg in "$@"; do
+	# pkg_deps=()
+	resolve_deps "$arg"
+
+	echo "Dependencies for $arg:"
+	for key in ${(k)pkg_deps[@]}; do
+		printf '\t%s\n' "$key"
+		count=0
+		if ((${+all_deps[$key]})); then
+			count=$all_deps[$key]
+		fi
+		all_deps[$key]=$((count + 1))
+	done
+	echo "Total: ${#pkg_deps[@]} packages"
+	echo "pkg_deps: ${(kv)pkg_deps}"
+done
+echo "all_deps: ${(kv)all_deps}"

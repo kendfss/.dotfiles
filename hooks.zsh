@@ -1,9 +1,29 @@
-set-title() {
+preexec() {
+	set-window-title "$(derive-window-title "$@")"
+}
+
+precmd() {
+	set-window-title "${1:-${BY:-$TERM}($(pexp '%(3C.%-1d:%1~.%1~)'))}"
+}
+
+set-window-title() {
 	# set the title of a terminal's window
 	case "${BY:-$TERM}" in
 		screen*) print -Pn "\033k$*\033\\" ;;
 		tmux*) print -n "\ePtmux;\e\e]0;$*\a\e\\" ;;
-		xterm* | rxvt* | *wezterm* | *kitty*) print -Pn "\033]0;$*\007" ;;
+		xterm* | rxvt* | *ghostty* | *wezterm* | *kitty*) print -Pn "\033]0;$*\007" ;;
+		dvtm*) echo -ne "\033]0;$*\007" ;;
+		*) print -Pn "\033k$*\033\\" ;;
+	esac
+}
+
+set-tab-title() {
+	while true; do echo todo; done
+	# set the title of a terminal's window
+	case "${BY:-$TERM}" in
+		screen*) print -Pn "\033k$*\033\\" ;;
+		tmux*) print -n "\ePtmux;\e\e]0;$*\a\e\\" ;;
+		xterm* | rxvt* | *ghostty* | *wezterm* | *kitty*) print -Pn "\033]0;$*\007" ;;
 		dvtm*) echo -ne "\033]0;$*\007" ;;
 		*) print -Pn "\033k$*\033\\" ;;
 	esac
@@ -25,20 +45,23 @@ prompt-prefix() {
 	cd "$origin"
 }
 
-precmd() {
-	set-title "${1:-${BY:-$TERM}($(pexp '%(3C.%-1d:%1~.%1~)'))}"
-}
-
 expand-vars() {
 	# expand strings containing environment variables without using parameter expansion which breaks shfmt
 	printf '%s ' $@ | sed 's: :\n:g' | while read -r term; do
-		printf '%s\n' "$term" | sed 's:/:\n:g' | while read -r part; do
-			case "$part" in
-				'$'*) eval "echo \"$part\"" ;;
-				*) printf '%s\n' "$part" ;;
-			esac
-		done | tr '\n' '/' | sed 's:/$::'
-		echo
+		case "$term" in
+			'|' | '&' | '&&') ;;
+			*)
+				printf '%s\n' "$term" | sed 's:/:\n:g' | while read -r part; do
+					case "$part" in
+						'$('*) printf '%s\n' "$(printf '%s' "$part" | sed 's:^\$\(::;s:\)$::')" ;;
+						'${'*) printf '%s\n' "$(printf '%s' "$part" | sed 's:^\$\{::;s/(:.+|\})$//')" ;;
+						'$'*) eval "echo \"$part\"" ;;
+						*) printf '%s\n' "$part" ;;
+					esac
+				done | tr '\n' '/' | sed 's:/$::'
+				echo
+				;;
+		esac
 	done | tr '\n' ' ' | sed 's: $::'
 	echo
 }
@@ -62,21 +85,25 @@ cmd-words() {
 	echo "${words[@]}"
 }
 
-preexec() {
+derive-window-title() {
 	local cmd="${1%% *}"
 	local rgs="${1#* }"
-	local exp
+	local exp="${BY:-$TERM}($cmd)"
 	local dir
+	local words
 	[ "$PWD" = "$HOME" ] || dir="$(pexp '%(3C.%-1d:%1~.%1~)')"
 	cmd-words $rgs | while read -r term; do
 		words+=("$term")
 	done
 	case "$cmd" in
-		jellyfin | gallery-dl | yt-dlp) exp="$cmd" ;;
-		sudo | exec | preexec | precmd | watch | time | timeout) exp="${cmd}(${words[1]})" ;;
-		hx) exp="$cmd($(cmd-words $rgs | sed 's/\s+/:/g'))" ;;
-		*) exp="${BY:-$TERM}($cmd)" ;;
+		'LANG=C.UTF-8') exp="$rgs" ;;
+		tmux | herdr | jellyfin | gallery-dl | yt-dlp) exp="$cmd" ;;
+		sudo | exec | preexec | precmd | time | timeout) exp="${cmd}(${words[1]})" ;;
+		watch) exp="${cmd}(${words[2]})" ;;
+		hx | mpv) exp="$cmd($(cmd-words $rgs | sed 's/\s+/:/g'))" ;;
+		yes) exp="$(printf '%s\n' "$(printf '%s' "$part" | sed 's:^.+\|\s*::')")" ;;
+		*) ;;
 	esac
-	title="$exp${dir:+ :: $dir}"
-	set-title "$title"
+	local title="$exp${dir:+ :: $dir}"
+	echo "$title"
 }

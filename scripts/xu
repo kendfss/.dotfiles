@@ -1,5 +1,19 @@
 #!/bin/env sh
 
+self="$(basename "$0")"
+
+error() {
+	printf '%s:' "$self" >&2
+	# shellcheck disable=SC2068
+	printf ' %s' $@ >&2
+	printf '\n' >&2
+}
+
+fatal() {
+	error "$@"
+	exit 1
+}
+
 if [ -x "$(command -v sk)" ]; then
 	finder=sk
 elif [ -x "$(command -v fzf)" ]; then
@@ -9,4 +23,15 @@ else
 	exit 1
 fi
 
-sudo xbps-install -Syu $(xbps-install -nSu | cut -f1 -d' ' | sed 's/-[^-]*$//g' | $finder | tr '\n' ' ')
+tmp="$(mktemp)" || fatal "couldn't source bindings"
+grep '^export' "$DOTFILES/.zshenv" | grep -E 'FZF|SKIM' >"$tmp"
+. "$tmp"
+rm "$tmp"
+
+# shellcheck disable=SC2046
+choices="$(xbps-install -nSu | cut -f1 -d' ' | sed 's/-[^-]*$//g' | $finder | tr '\n' ' ')"
+
+[ -n "$choices" ] || exit
+
+# shellcheck disable=SC2086
+while ! pkexec xbps-install -Syu $choices; do :; done

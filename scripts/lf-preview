@@ -54,7 +54,14 @@ case "$(file -Lb --mime-type -- "$1")" in
 		image "${CACHE}.jpg" "$2" "$3" "$4" "$5"
 		;;
 	text/* | application/json | application/javascript) bat "$1" 2>/dev/null ;;
-	# audio/*) mpv --no-video "$1" ;;
+	# audio/*)
+	# 	[ -e /tmp/mpv_preview.pid ] && cat /tmp/mpv_preview.pid | while read -r line; do kill -9 "$line"; done
+	# 	mpv --no-video --really-quiet "$1" &
+	# 	pid="$!"
+	# 	echo "$pid" >>/tmp/mpv_preview.pid
+	# 	exit
+	# 	# wait $pid
+	# 	;;
 	audio/*) echo "audio" ;;
 	# *) lesspipe "$1" || bat "$1" 2>/dev/null || echo "couldn't open file" ;;
 	*) lesspipe "$1" || echo "couldn't open file" ;;

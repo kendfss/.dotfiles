@@ -6,6 +6,8 @@
 	alias bindkey=bind
 }
 
+command -v setxkbmap &>/dev/null && setxkbmap -option caps:none
+
 expand-or-complete-with-dots() {
 	# Show dots while waiting for tab-completion
 	# toggle line-wrapping off and back on again
@@ -32,8 +34,11 @@ bindkey '^[[3;3~' kill-word
 }
 
 case "$TERM" in
-	xterm) bindkey "ÿ" backward-kill-word ;&
-	xterm* | *kitty | wezterm)
+	xterm)
+		bindkey "ÿ" backward-kill-word
+		bindkey "M-^?" backward-kill-word
+		;&
+	xterm* | *kitty | *wezterm* | *ghostty*)
 		bindkey "^[^?" backward-kill-word
 		bindkey "^[[F" end-of-line
 		bindkey "^[[H" beginning-of-line

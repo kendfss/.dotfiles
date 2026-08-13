@@ -1,0 +1,14 @@
+#!/bin/sh
+
+self="$(realpath "$0")"
+HOME="$(dirname "$self" | xargs -d '\n' dirname | xargs -d '\n' dirname)"
+USER="$(basename "$HOME")"
+
+export USER="$USER"
+export HOME="$HOME"
+export DISPLAY=:0
+export XAUTHORITY="$HOME/.Xauthority"
+export XDG_CONFIG_HOME="$HOME/.config"
+
+# echo "$self" "$HOME" "$USER" "$DISPLAY" "$XAUTHORITY" "$XDG_CONFIG_HOME"
+# exit

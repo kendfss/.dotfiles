@@ -1,15 +1,143 @@
 # https://zsh.sourceforge.io/Doc/Release/Conditional-Expressions.html
 autoload -Uz add-zsh-hook
 
+# [ -x "$(command -v tmux 2>/dev/null)" ] && tmux() {
+# 	(($#)) || exec command tmux
+# 	[ "$1" = "@" ] || exec command tmux
+# 	command tmux "$@"
+# }
+
+mkhx() {
+	clone helix-editor/helix
+	git pull
+	cargo build --locked
+	sudo mv target/release/hx /usr/local/bin
+}
+
+wpax() {
+	# send network credentials to wpa_supplicant, or sdout, from NetworkManager
+	local name ssid psk blob
+	sudo rg -l ssid /etc/NetworkManager | fzf --preview "sudo rg '(ssid|psk)=' {}" | while read -r name; do
+		blob="$(sudo cat "$name" | rg '(ssid|psk)=' | awk -F= '{print $2}')"
+		ssid="$(head -1 <<<"$blob")"
+		[ -z "$(sudo rg "$ssid" /etc/wpa_supplicant/wpa_supplicant.conf)" ] || continue
+		psk="$(tail -1 <<<"$blob")"
+		blob="$(wpa_passphrase "$ssid" "$psk")"
+		if (($#)); then
+			printf '%s\n' "$blob"
+		else
+			sudo tee -a /etc/wpa_supplicant/wpa_supplicant.conf <<<"$blob"
+		fi
+	done
+}
+
+safe() {
+	local item
+	while read -r item; do strings "$item" | sort -u | rg -qio "kendfss|kenneth.?sabalo|kenneth|sabalo|elisandro|santana|de.?faria" && echo "$item"; done
+}
+
+xy() {
+	setopt localoptions pipefail
+	xbps-query -L | awk '{print $2}' | xargs -d '\n' curl -L 2>/0 | pup 'a attr{href}' | egrep '\.xbps$' | sed -E 's:\-[0-9\._]+.+$::;' | sort -u | fzf --preview 'xbps-query -RS {}'
+}
+
+fzm() {
+	fzf --preview-window='hidden' --bind='tab:toggle+hide-preview,btab:hide-preview+show-preview,up:up+hide-preview,down:down+hide-preview' "$@"
+}
+
+amdahl() {
+	python -c 'import os; print(os.cpu_count())'
+}
+
+pluck() {
+	local ctr=${1:-0}
+	while read -r line; do
+		((ctr)) || {
+			echo "$line"
+			return
+		}
+		ctr=$((ctr - 1))
+	done
+}
+
+command -v xlocate &>/dev/null && xl() {
+	for arg in "$@"; do
+		xlocate "/$arg" | grep -E "/$arg\$"
+	done
+}
+
+tabulate() {
+	awk '{ lines[NR]=$0; status[NR]=$1; name[NR]=$2; $1=$2=""; desc[NR]=substr($0,3)
+          if (length(name[NR]) > max) max=length(name[NR]) }
+        END { for (i=1;i<=NR;i++) printf "%s\t%-*s\t%s\n", status[i], max, name[i], desc[i] }
+    ' | column -ts $'\t'
+}
+
+[ -x "$(command -v tmux 2>/dev/null)" ] && tmux() {
+	(($#)) || exec command tmux
+	[ "$1" = "@" ] || exec command tmux "$@"
+	shift
+	command tmux "$@"
+}
+
+[ -x "$(command -v herdr 2>/dev/null)" ] && herdr() {
+	(($#)) || {
+		[ -n "$(ps aux | grep '[h]erdr')" ] || exec command herdr --no-session
+		exec command herdr
+	}
+	[ "$1" = "@" ] || exec command herdr "$@"
+	shift
+	command herdr "$@"
+}
+
+command -v namespacer &>/dev/null || namespacer() { echo "$@_2"; }
+
+command -v mpv &>/dev/null && mpv() {
+	preexec "mpv $*"
+	command mpv "$@"
+}
+
+urand() {
+	cat /dev/urandom | head -c $1 | xxd -p | awk '{print strtonum("0x" $1)}' | tr -d '\n' | xargs echo
+}
+
+subs() {
+	for arg in "$@"; do
+		local len=${#arg}
+		for ((i = 1; i <= len; i++)); do
+			echo "${arg[1,-$i]}"
+		done
+	done
+}
+
+swop() {
+	tmp="$(mktemp)"
+	cat "$1" | tee "$tmp" >/dev/null
+	cat "$2" | tee "$1" >/dev/null
+	cat "$tmp" | tee "$2" >/dev/null
+	rm "$tmp"
+}
+
+sh() {
+	# ENV='' PROFILE='' RC='' SHELL=sh PS1='$(pwd) >>> ' command sh "$@"
+	ENV='' PS1='$(pwd) >>> ' command sh "$@"
+}
+
 gallery-dl() {
 	local flags=()
 	local args=()
+	local once=false
 	local browser="$(xdg-settings get default-web-browser | awk -F. '{print $1}')"
 	while (($#)); do
 		case "$1" in
 			http* | https*) args+=("$1") ;;
+			--once) once=true ;;
 			--browser)
 				browser="$2"
+				shift
+				;;
+			-d | -D)
+				flags+=("$1" "$2")
 				shift
 				;;
 			-*) flags+=("$1") ;;
@@ -20,24 +148,25 @@ gallery-dl() {
 		echo "$0: no args received" >&2
 		return 1
 	}
+	# browser=${browser:+--cookies-from-browser $browser}
+	[ -z "$browser" ] || browser=("--cookies-from-browser" $browser)
 	while true; do
 		local count=${#args}
 		set -- $args
 		local ctr=0
 		local fails=()
-		printf "%s\n" "$*"
+		printf 'args:'
+		printf "\t%s\n" "$*"
 		while (($#)); do
 			ctr=$((ctr + 1))
 			printf "%d/%d: " "$ctr" "$count"
 			printf "%s\n" "$1"
-			if command gallery-dl --cookies-from-browser "$browser" "${flags[@]}" "$1"; then
-				:
-			else
+			if ! command gallery-dl "${browser[@]}" "${flags[@]}" "$1"; then
 				fails+=("$1")
 			fi
 			shift
 		done
-		((${#fails})) && args=("${fails[@]}") && continue
+		[ $once = true ] || { ((${#fails})) && args=("${fails[@]}") && continue; }
 		break
 	done
 }
@@ -79,7 +208,12 @@ smpl() {
 		esac
 		shift
 	done
-	command smpl "${flags[@]}" "$(printf "%s " "${name[@]}" | to fopa | rev | awk '{print $1}' | rev)"
+	command smpl "${flags[@]}" "$(
+		{
+			printf "%s" "${name[1]}"
+			printf " %s" "${name[2,-1]}"
+		} | to fopa | rev | awk '{print $1}' | rev
+	)"
 }
 
 source_if() {
@@ -108,24 +242,24 @@ recover() {
 	done
 }
 
-ext() {
-	local arg
-	for arg in "$@"; do
-		[ ! -f "$arg" ] && continue
-		{ local base="$(basename "$arg")" && local ext="${base##*.}"; } || return $?
-		[ "$ext" = "$base" ] && continue
-		echo "$ext"
-	done
-}
+# ext() {
+# 	local arg
+# 	for arg in "$@"; do
+# 		[ ! -f "$arg" ] && continue
+# 		{ local base="$(basename "$arg")" && local ext="${base##*.}"; } || return $?
+# 		[ "$ext" = "$base" ] && continue
+# 		echo "$ext"
+# 	done
+# }
 
-exts() {
-	if [ "$1" = "-s" ]; then
-		shift 1
-		ext "$@" | sort -ui
-	else
-		ext "$@"
-	fi
-}
+# exts() {
+# 	if [ "$1" = "-s" ]; then
+# 		shift 1
+# 		ext "$@" | sort -ui
+# 	else
+# 		ext "$@"
+# 	fi
+# }
 
 take() {
 	# Make a directory and cd into it
@@ -187,6 +321,7 @@ surl() {
 }
 
 clone() {
+	# local lines="$(ENV="" command clone "$@")"
 	local lines="$(command clone "$@")"
 	local dir="$(echo "$lines" | tail -n1)"
 	[ $(echo "$lines" | wc -l) -gt 1 ] && echo "$lines"
@@ -201,20 +336,21 @@ padd() {
 }
 
 def() {
-	local fname=~/self.notes/definitions
-	local term=$1
-	shift 1
-	[[ -f $fname ]] && former=$(cat "$fname") && rm "$fname"
-	local extended=$(printf "%s\n\t%s\n%s" "$term" "$*" "$former")
-	echo "$extended" >"$fname"
-}
-
-defs() {
-	$EDITOR ~/self.notes/definitions
-}
-
-cdefs() {
-	cat ~/self.notes/definitions
+	local fname="$NOTES/definitions"
+	case $# in
+		0) $EDITOR "$fname" && return ;;
+		1) case "$1" in
+			-c | --cat) cat "$fname" ;;
+			*) echo "$0: unsupported argument: $1" >&2 && return 1 ;;
+		esac ;;
+		*)
+			local term="$1"
+			shift 1
+			[ -f "$fname" ] && former=$(cat "$fname") && rm "$fname"
+			local extended=$(printf "%s\n\t%s\n%s" "$term" "$*" "$former")
+			echo "$extended" >"$fname"
+			;;
+	esac
 }
 
 amend() {
@@ -325,8 +461,17 @@ fext() {
 }
 
 note() {
-	local fname=~/self.notes/notes
-	[[ -f $fname ]] && former=$(cat "$fname") && rm "$fname"
+	local fname="$NOTES/notes"
+	case $# in
+		0) $EDITOR "$fname" ;;
+		1) case "$1" in
+			-c | --cat) cat "$fname" && return ;;
+			def | define) shift && def "$@" && return ;;
+			post) shift && post "$@" && return ;;
+			*) ;;
+		esac ;;
+	esac
+	[ -f "$fname" ] && former=$(cat "$fname") && rm "$fname"
 	local extended=$*"\n"$former
 	echo "$extended" >"$fname"
 }
@@ -452,14 +597,49 @@ rjustify() {
 	done
 }
 
+is_assignment() {
+	local arg="$1"
+	# Must contain exactly one '=' that's not at the beginning
+	# and not part of an operator like +=, -=, etc.
+	if [[ $arg =~ ^[a-zA-Z_][a-zA-Z0-9_]*=[^=]*$ ]]; then
+		# Check that there's no space before or after the '='
+		if [[ ! $arg =~ [[:space:]] ]]; then
+			return 0
+		fi
+	fi
+	return 1
+}
+
 please() {
 	local count=0
-	while ! "$@"; do
+	local args=()
+	local vars=()
+	local cmd=""
+	local sudo=false
+	while (($#)); do
+		if is_assignment "$1"; then
+			vars+=("$1")
+		else
+			if [ -z "$cmd" ]; then
+				case "$1" in
+					sudo | pkexec) sudo=true ;;
+					*) cmd="$1" ;;
+				esac
+			else
+				args+=("$1")
+			fi
+		fi
+		shift
+	done
+	if $sudo; then
+		local full=(pkexec env "${vars[@]}" "$cmd" "${args[@]}")
+	else
+		local full=(env "${vars[@]}" "$cmd" "${args[@]}")
+	fi
+	while ! "$full[@]"; do
 		count=$((count + 1))
 	done
-	if [[ ! $count -eq 0 ]]; then
-		echo "Command succeeded after $count retries."
-	fi
+	[ $count = 0 ] || echo "Command succeeded after $count retries."
 }
 
 errc() {
@@ -501,11 +681,16 @@ cheat() {
 }
 
 ipof() {
-	if [ $# = 0 ]; then
-		printf "local:  %s\n" "$(ip addr show | awk '/^\s+inet\s/{print $2}' | tail -n1)"
-		printf "remote: %s\n" "$(curl ipecho.net/plain 2>/dev/null)"
+	(($#)) || {
+		{
+			printf "global\t%s\n" "$(curl ipecho.net/plain 2>/dev/null)"
+			ip addr show | egrep "^\s+inet\s" | egrep -v '\blo\b' | while read -r line; do
+				read -A parts <<<"$line"
+				printf '%s\t%s\n' "${parts[-1]}" "${parts[2]}"
+			done
+		} | sort | column -ts $'\t'
 		return
-	fi
+	}
 	# Return the IP of the host of the given urls
 	for arg in "$@"; do
 		ping -q -c1 -t1 $arg | tr -d '()' | awk '/^PING/{print $3}'
@@ -522,14 +707,29 @@ nuke() {
 }
 
 nukef() {
-	local pth="$(pwd)"
-	cd .. && command rm -rf "$pth"
+	fn() {
+		echo "$1"
+		command rm -rf "$1" || return $?
+	}
+	local count=${1:-1}
+	while [ $count -gt 0 ]; do
+		local pth="$(pwd)"
+		case "$pth" in
+			'/' | "$HOME" | "$CLONES" | "$CLONES/$USER") return 1 ;;
+			*) ;;
+		esac
+		cd .. && { fn "$pth" || return $?; }
+		count=$((count - 1))
+	done
 }
 
-mass() {
-	ls -a | xargs -n1 du -sh | sort -h
-	# du -sh (.|)* 2>/dev/null | sort -h
-}
+# alias mass="du -xsh $(pwd)/(.|)* 2>/dev/null | sort -h"
+
+# mass() {
+# 	du -xsh $(pwd)/(.|)* 2>/dev/null | sort -h
+# }
+
+# mass() {}
 
 weigh() {
 	for arg in "$@"; do
@@ -596,12 +796,6 @@ frc() {
 	# Get the frame rate and codec of a given video
 	for name in "$@"; do
 		ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,r_frame_rate -of default=noprint_wrappers=1:nokey=1 "$name" | tr '\n' ' ' && echo
-	done
-}
-
-tunes() {
-	for dir in "$@"; do
-		eval "ls $dir/**.($MUSIC_FORMATS)" | tr '\n' '\0' | xargs -0I{} echo {}
 	done
 }
 

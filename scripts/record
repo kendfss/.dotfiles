@@ -1,38 +1,68 @@
-#!/bin/sh
 #!/usr/bin/env bash
 
+RECORDING_DIR="${SCREEN_RECORDINGS:-$HOME/rec}"
+mkdir -p "$RECORDING_DIR"
+
+cleanup() {
+	echo "Cleaning up..."
+	if [[ -f /tmp/recpid ]]; then
+		kill -TERM "$(cat /tmp/recpid)" 2>/dev/null || true
+		rm -f /tmp/recpid
+	fi
+	if [[ -f /tmp/audpid ]]; then
+		kill -TERM "$(cat /tmp/audpid)" 2>/dev/null || true
+		rm -f /tmp/audpid
+	fi
+	rm -f /tmp/recordingicon
+	exit 0
+}
+
+trap cleanup SIGINT SIGTERM EXIT
+
 record() {
-  # Toggle on mic
-  amixer set Capture toggle
+	amixer set Capture toggle >/dev/null 2>&1
 
-  # Original command for my own screen: :0.0+1920,0 ensures only 2nd monitor is captured
-  # -c:v sets codec, in this case, H.264; -qp 0 ensures lossless
+	DIMENSIONS="$(xdpyinfo | awk '/dimensions/{print $2}')"
+	TIMESTAMP="$(date '+%a__%b%d__%H_%M_%S')"
 
-  # ffmpeg -s 1920x1200 -f x11grab -r 30 -i :0.0+1920,0 -c:v h264 -qp 0 "$HOME/rec/video_$(date '+%a__%b%d__%H_%M_%S').mkv" &
+	# Record video
+	ffmpeg -s "$DIMENSIONS" -f x11grab -r 30 -i :0.0 -c:v h264 -qp 0 "$RECORDING_DIR/video_$TIMESTAMP.mkv" &
+	echo $! >/tmp/recpid
 
-  # Generic command to record at your screen dimensions
-  ffmpeg -s "$(xdpyinfo | awk '/dimensions/{print $2}')" -f x11grab -r 30 -i :0.0 -c:v h264 -qp 0 "$HOME/video_$(date '+%a__%b%d__%H_%M_%S').mkv" &
-  echo $! > /tmp/recpid
+	# Record audio
+	ffmpeg -f alsa -i default -af "afftdn=nf=-75" "$RECORDING_DIR/audio_$TIMESTAMP.wav" &
+	echo $! >/tmp/audpid
 
-  # Specify alsa device with hw:0 etc.
-  # Filters audio noise with noise floor
-  ffmpeg -f alsa -i default -af "afftdn=nf=-75" "$HOME/audio_$(date '+%a__%b%d__%H_%M_%S').wav" &
-  echo $! > /tmp/audpid
-
-  echo "Rec •" > /tmp/recordingicon && pkill -RTMIN+3 dwmblocks
-
-  notify-send -t 500 -h string:bgcolor:#a3be8c "Recording started & mic toggled"
+	# Xfce notification
+	notify-send -t 2000 -i media-record "Recording Started" "Screen recording is now active (mic toggled)"
 }
 
 end() {
-  kill -15 "$(cat /tmp/recpid)" "$(cat /tmp/audpid)" && rm -f /tmp/recpid /tmp/audpid
+	if [[ -f /tmp/recpid ]]; then
+		local recpid=$(cat /tmp/recpid)
+		if kill -0 "$recpid" 2>/dev/null; then
+			kill -TERM "$recpid"
+		fi
+		rm -f /tmp/recpid
+	fi
 
-  amixer set Capture toggle
+	if [[ -f /tmp/audpid ]]; then
+		local audpid=$(cat /tmp/audpid)
+		if kill -0 "$audpid" 2>/dev/null; then
+			kill -TERM "$audpid"
+		fi
+		rm -f /tmp/audpid
+	fi
 
-  echo "" > /tmp/recordingicon && pkill -RTMIN+3 dwmblocks
+	amixer set Capture toggle >/dev/null 2>&1
 
-  notify-send -t 500 -h string:bgcolor:#bf616a "Recording ended & mic toggled"
+	# Xfce notification
+	notify-send -t 2000 -i media-record "Recording Ended" "Recording saved to $RECORDING_DIR"
 }
 
-# If the recording pid exists, end recording. If not, start recording
-([ -f /tmp/recpid ] && end && exit 0) || record
+# Toggle recording
+if [[ -f /tmp/recpid ]] && kill -0 "$(cat /tmp/recpid)" 2>/dev/null; then
+	end
+else
+	record
+fi

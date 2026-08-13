@@ -1,4 +1,8 @@
 #!/bin/env zsh
 
-git push "$@"
+case "$1" in
+	-t | --tag | --tags) git push origin $(git tag | tail -1) ;;
+	*) git push "$@" ;;
+esac
+
 exit $?

@@ -1,0 +1,58 @@
+#!/bin/env bash
+
+# link the services where they need to go. user services sit in home. system services go to var and etc
+
+set -euo pipefail
+
+full_self="$(realpath "$0")"
+self="$(basename "$0")"
+utils="$(dirname "$full_self" | xargs -d '\n' dirname)/scripts/utils.sh"
+dir="$(dirname "$full_self")"
+sys="$dir/sys"
+usr="$dir/usr"
+. "$utils" # contains: fatal, error
+
+[ "$(id -u)" -ne 0 ] && fatal "This script must be run as root. Use 'sudo $self'."
+
+user="${user:-$(logname)}"
+case "$user" in
+	'' | root) fatal "there must be a lesser user associated with this root session. you can set it manually by running as: user=name $self" ;;
+	*) ;;
+esac
+
+lynk() {
+	local source="$1"
+	local target="$2"
+	[ "$#" = 2 ] || fatal have "$#" args, want 2
+	[ -e "$target" ] || {
+		ln -s "$source" "$target" || fatal fail on link
+		return 0
+	}
+	[ "$source" != "$target" ] || return 0
+	local real
+	real="$(realpath "$target")"
+	[ "$real" != "$source" ] || return 0
+	local aka=''
+	[ "$real" = "$target" ] || aka="(aka $real) "
+	error "replacing $target ${aka}"
+	error "with      $source"
+	read -rp "confirm: [Yn] " resp
+	case "$(tr '[:upper:]' '[:lower:]' <<<"$resp")" in
+		y | yes | '')
+			error "moving '$target' to '${target}.bk'"
+			mv "$target" "$target.bk"
+			;;
+		*) fatal "didn't set link for '$source'" ;;
+	esac
+	ln -s "$source" "$target" || fatal fail on link
+}
+
+for name in "$sys"/*; do
+	[ -d "$name" ] || continue
+	base="$(basename "$name")"
+	targets=("/etc/sv/$base" "/var/service/$base")
+	lynk "$name" "${targets[0]}"
+	lynk "$name" "${targets[1]}"
+done
+
+lynk "$usr" "/home/$user/services"

@@ -6,7 +6,6 @@
 theme = 'transparent'
 
 [editor]
-insecure               = true
 shell                  = [ 'zsh', '-c' ]
 line-number            = 'relative'
 idle-timeout           = 3000
@@ -24,6 +23,11 @@ color-modes            = true
 bufferline             = 'multiple'
 true-color             = true
 default-yank-register  = '£'
+
+[editor.workspace-trust]
+level   = "servers"
+prompt  = true
+trusted = [ '*' ]
 
 [editor.clipboard-provider.custom]
 yank  = { command = 'p' }
@@ -54,48 +58,55 @@ max-depth  = 3
 enable = true
 
 [keys.normal]
-tab       = 'no_op'
-z         = [ 'delete_char_forward', 'move_next_word_end', 'move_prev_word_start', 'delete_selection_noyank' ]
-'%'       = 'match_brackets'
-'A-/'     = 'toggle_comments'
-'A-?'     = 'toggle_block_comments'
-'|'       = { '\' = 'shell_keep_pipe', '|' = 'shell_pipe' }
-'?'       = { '/' = 'shell_insert_output', '?' = 'shell_append_output' }
-'!'       = 'shell_pipe_to'
-'$'       = ':run-shell-command'
-S-left    = 'goto_previous_buffer'
-S-right   = 'goto_next_buffer'
-'A-;'     = 'remove_primary_selection'
-A-w       = ':w!'
-A-S-w     = [ ':write-all!', ':write-all!', 'normal_mode' ]
-A-c       = ':clipboard-yank'
-A-r       = ':config-reload'
-A-d       = [ 'save_selection', 'extend_line', 'yank', 'paste_after', 'move_line_up', 'jump_backward', 'move_line_down' ]
-A-left    = 'move_prev_word_start'
-A-right   = 'move_next_word_end'
-A-S-left  = 'extend_to_line_start'
-A-S-right = 'extend_to_line_end'
-A-up      = 'goto_prev_paragraph'
-A-down    = 'goto_next_paragraph'
-space     = { '%' = ':vsplit', '"' = ':hsplit', c = 'completion' }
-f         = { c = 'find_next_char', t = 'find_till_char', C = 'find_prev_char', T = 'till_prev_char', f = 'file_picker', l = ':log-open', b = 'match_brackets', d = 'file_picker_in_current_buffer_directory' }
-C-up      = 'half_page_up'
-C-down    = 'half_page_down'
-C-l       = 'split_selection_on_newline'
-Z         = { Z = ':q!' }
-0         = 'goto_line_start'
-A-n       = ':new'
-'ret'     = 'add_newline_below'
-O         = [ 'add_newline_above', 'move_line_up' ]
-'+'       = 'extend_search_next'
-'minus'   = 'extend_search_prev'
-del       = 'trim_selections'
-'#'       = { '#' = 'select_register', ret = 'insert_register', tab = 'copy_between_registers', backspace = ':clear-register' }
+F           = ':format'
+tab         = 'no_op'
+z           = [ 'delete_char_forward', 'move_next_word_end', 'move_prev_word_start', 'delete_selection_noyank' ]
+'%'         = 'match_brackets'
+'A-/'       = 'toggle_comments'
+'A-?'       = 'toggle_block_comments'
+'|'         = { '\' = 'shell_keep_pipe', '|' = 'shell_pipe' }
+'?'         = { '/' = 'shell_insert_output', '?' = 'shell_append_output' }
+'!'         = 'shell_pipe_to'
+'$'         = ':run-shell-command'
+S-left      = 'goto_previous_buffer'
+S-right     = 'goto_next_buffer'
+'A-;'       = 'remove_primary_selection'
+A-w         = ':w!'
+A-S-w       = [ ':write-all!', ':write-all!', 'normal_mode' ]
+A-c         = ':clipboard-yank'
+A-r         = ':config-reload'
+A-d         = [ 'save_selection', 'extend_line', 'yank', 'paste_after', 'move_line_up', 'jump_backward', 'move_line_down' ]
+A-left      = 'move_prev_word_start'
+A-right     = 'move_next_word_end'
+A-S-left    = 'extend_to_line_start'
+A-S-right   = 'extend_to_line_end'
+A-up        = 'goto_prev_paragraph'
+A-down      = 'goto_next_paragraph'
+space       = { '%' = ':vsplit', '"' = ':hsplit', c = 'completion' }
+f           = { c = 'find_next_char', t = 'find_till_char', C = 'find_prev_char', T = 'till_prev_char', f = 'file_picker', l = ':log-open', b = 'match_brackets', d = 'file_picker_in_current_buffer_directory' }
+C-up        = 'half_page_up'
+C-down      = 'half_page_down'
+C-l         = 'split_selection_on_newline'
+Z           = { Z = ':q!' }
+0           = 'goto_line_start'
+A-n         = ':new'
+'ret'       = 'add_newline_below'
+O           = [ 'add_newline_above', 'move_line_up' ]
+'+'         = 'extend_search_next'
+'minus'     = 'extend_search_prev'
+A-del       = [ 'save_selection', 'collapse_selection', 'move_char_right', 'yank', 'delete_char_forward', 'move_char_left', 'jump_forward' ]
+A-backspace = [ 'save_selection', 'collapse_selection', 'move_char_left', 'yank', 'move_char_right', 'delete_char_backward', 'jump_forward' ]
+del         = [ 'save_selection', 'collapse_selection', 'move_char_right', 'delete_char_forward', 'move_char_left', 'jump_forward' ]
+backspace   = [ 'save_selection', 'collapse_selection', 'delete_char_backward', 'jump_forward' ]
+'#'         = { '#' = 'select_register', ret = 'insert_register', tab = 'copy_between_registers', backspace = ':clear-register' }
+u           = [ 'save_selection', 'undo', 'jump_forward' ]
+U           = [ 'save_selection', 'redo', 'jump_forward' ]
+S-w         = ':write --no-format'
 
 [keys.normal.w]
 t     = 'transpose_view'
 w     = ':write'
-x     = ':x'
+x     = ':wqa'
 q     = { q = ':quit', a = ':quit-all' }
 up    = 'jump_view_up'
 down  = 'jump_view_down'
@@ -110,6 +121,7 @@ l   = [ 'extend_line', 'change_selection_noyank' ]
 w   = [ 'move_next_word_end', 'move_prev_word_start', 'change_selection_noyank' ]
 
 [keys.normal.c]
+j = [ 'trim_selections', 'yank_joined_to_clipboard' ]
 c = [ 'trim_selections', ':clipboard-yank' ]
 a = [ 'save_selection', 'select_all', ':clipboard-yank', 'jump_backward' ]
 t = [ 'find_till_char', 'change_selection_noyank' ]
@@ -126,33 +138,21 @@ o = { l = [ 'extend_line', 'delete_selection_noyank', 'paste_before' ], w = [ 'm
 a = { a = [ 'select_all', 'delete_selection_noyank', ':clipboard-paste-before' ], p = [ 'select_all', 'delete_selection_noyank', 'paste_before' ] }
 
 [keys.normal.y]
+j = [ 'save_selection', 'trim_selections', 'yank_joined', 'jump_backward' ]
 y = 'yank'
 c = [ 'trim_selections', 'yank' ]
 a = [ 'save_selection', 'select_all', 'yank', 'jump_backward' ]
 t = [ 'find_till_char', 'change_selection' ]
 T = [ 'till_prev_char', 'change_selection' ]
-# l = [ 'save_selection', 'extend_line', 'trim_selections', 'yank', 'jump_backward' ]
 l = [ 'save_selection', 'extend_line', 'yank', 'jump_backward' ]
-# l = [ 'extend_line', 'yank' ]
 d = ':yank-diagnostic £'
 
 
 [keys.normal.x]
+j = [ 'save_selection', 'trim_selections', 'yank_joined', 'delete_selection_noyank', 'jump_backward' ]
 a = [ 'select_all', 'trim_selections', 'yank', 'select_all', 'delete_selection' ]
-c = 'delete_char_forward'
-C = 'delete_char_backward'
-x = [ 'trim_selections', 'yank', 'delete_selection' ]
+x = [ 'yank', 'delete_selection' ]
 l = { l = [ 'extend_line', 'yank', 'delete_selection', 'move_line_up' ], t = [ 'extend_line', 'trim_selections', 'delete_selection' ] }
-
-# [keys.normal.y]
-# c = [ 'trim_selections', ':clipboard-yank' ]
-# y = 'yank'
-# x = { x = [ 'yank', 'delete_selection' ], l = [  ] }
-# w = [ 'save_selection', 'move_prev_word_start', 'move_next_word_end', 'yank', 'jump_backward' ]
-# l = [ 'save_selection', 'extend_line', 'yank', 'jump_backward' ]
-# a = [ 'save_selection', 'select_all', 'yank', 'jump_backward' ]
-# s = ':clipboard-yank'
-# j = { j = 'yank_joined', c = ':clipboard-yank-join' }
 
 [keys.normal.l]
 c   = 'completion'
@@ -161,6 +161,7 @@ h   = 'hover'
 '?' = 'signature_help'
 l   = [ ':lsp-restart', ':reload-all' ]
 r   = 'rename_symbol'
+b   = ':set-language bash'
 
 [keys.normal.b]
 right = 'goto_next_buffer'
@@ -181,13 +182,6 @@ l   = [ 'extend_line', 'delete_selection_noyank', 'goto_line_end' ]
 d   = 'delete_selection_noyank'
 'w' = [ 'move_next_word_end', 'move_prev_word_start', 'delete_selection_noyank' ]
 'W' = [ 'move_next_long_word_end', 'move_prev_long_word_start', 'delete_selection_noyank' ]
-
-# [keys.normal.d.x]
-# w = [ 'move_next_word_end', 'move_prev_word_start', 'yank', 'delete_selection' ]
-# e = [ 'extend_next_word_end', 'delete_selection' ]
-# l = [ 'extend_line', 'delete_selection', 'move_line_up', 'goto_line_end' ]
-# x = 'delete_selection'
-# a = [ 'select_all', ':clipboard-yank', 'delete_selection_noyank' ]
 
 [keys.normal.s]
 r     = [ 'delete_selection_noyank', 'paste_before' ]
@@ -257,7 +251,7 @@ c   = 'completion'
 o   = ':lsp-workspace-command'
 h   = 'hover'
 '?' = 'signature_help'
-l   = [ ':lsp-restart', ':reload-all' ]
+l   = [ ':reload-all', ':lsp-restart' ]
 r   = 'rename_symbol'
 
 [keys.select.c]

@@ -4,32 +4,121 @@
 
 set -euopipefail
 
-testing=false
-[ $testing = true ] && set -x
+self="$(basename "$ZSH_ARGZERO")"
+desc="$(cat "$ZSH_ARGZERO" | head -3 | tail -1 | sed 's:^#\s*::')"
 
-fn() {
-	local query=""
-	local browser="$(xdg-settings get default-web-browser | awk -F. '{print $1}')"
-	[ $# -gt 0 ] && {
-		case "$1" in
-			ff | firefox)
-				browser="firefox"
-				shift
-				;;
-			ch | chromium)
-				browser="chromium"
-				shift
-				;;
-			*)
-				query="$(echo "$@")"
-				break
-				;;
-		esac
-	}
-	[ -z "$query" ] && query="$(xclip -o -selection primary 2>/dev/null || xclip -o -selection clipboard 2>/dev/null || exit 1)"
-	printf 'https://duckduckgo.com?q=%s' "$query" | sed -E 's/\s+/%20/g' | xargs -I{} $browser '{}'
-	return $?
+testing=false
+$testing && set -x
+
+typeset -A engineTable=(
+	[duckduckgo]=https://duckduckgo.com
+	[claude]=https://claude.ai/new
+)
+
+typeset -A aliasTable=(
+	[ddg]=duckduckgo
+	[c]=claude
+)
+
+browser="$(xdg-settings get default-web-browser | awk -F. '{print $1}')"
+engine=duckduckgo
+selection="primary"
+query=()
+prompt=false
+
+command -v bat &>/dev/null || bat() { less; }
+
+error() {
+	printf '%s:' "$self"
+	printf ' %s' $@
+	printf '\n'
 }
 
-fn "$@"
+fatal() {
+	error "$@"
+	exit 1
+}
+
+help_text() {
+	cat <<-eof | bat -lman
+		usage: $self [FLAG]... [SEARCH_TERM]...
+
+		$desc
+
+		flags:
+		  -h, --help          print this message and exit
+		  -b, --browser       set the name of the executable to invoke for the browser (default: $browser)
+		  -e, --engine        set the name of the executable to invoke for the browser (default: $browser)
+		  -s, --source        xclip source to read input from (default: $selection)
+		  -p, --prompt        create a popup that prompts for input
+	eof
+	(($#)) || fatal no exit code specified for help text
+	exit $1
+}
+
+while (($#)); do
+	case "$1" in
+		-h | --help) help_text 0 ;;
+		-p | --prompt) prompt=true ;;
+		-p*) prompt=true && argv[1]="-${1#-f}" && continue ;;
+		-s | --sel | --selection)
+			selection="$2"
+			shift
+			;;
+		-s*) selection="${1#-s}" ;;
+		-b | --browser)
+			browser="$2"
+			shift
+			;;
+		-b*) browser="${1#-b}" ;;
+		-e | --engine) engine="$2" && shift ;;
+		-e*) engine="${1#-e}" ;;
+		-*) fatal unexpected arg: "'$1'" ;;
+		*) query+=("$1") ;;
+	esac
+	shift
+done
+
+# TODO engine validation: skipping for now in the interest of flexibility
+# [ -n "${engineTable[$engine]}" ] || [ -n "${engineTable[${aliasTable[$engine]}]}" ] || fatal unsupported engine: "$engine"
+if [ -n "${engineTable[$engine]}" ]; then
+	engine="${engineTable[$engine]}"
+elif [ -n "${engineTable[${aliasTable[$engine]}]}" ]; then
+	engine="${engineTable[${aliasTable[$engine]}]}"
+elif [ -z "$engine" ]; then
+	fatal no engine specified
+fi
+
+fn() {
+	local search=''
+	if (($#)); then
+		# search="$(printf 'https://duckduckgo.com?q=%s' "$(xclip -o -selection $selection | sed -E 's/\s+/%20/g')")"
+		search="$*"
+	else
+		search="$(xclip -o -selection $selection)"
+	fi
+	# echo "$@"
+	case "$search" in
+		http://* | https://* | file://*) ;;
+		*)
+			search="$(printf '%s?q=%s' "$engine" "$search" | sed -E 's/\s+/%20/g')"
+			;;
+	esac
+	echo "$search"
+	$browser "$search"
+}
+
+if $prompt; then
+	text="$(zenity --entry --title "$browser($selection)" --text "wha blo?")"
+	((${#text})) || exit 1
+	fn "$text"
+elif ((${#query})); then
+	fn "$(
+		printf '%s' "${query[1]}"
+		((${#query[2,-1]})) && printf ' %s' ${query[2,-1]}
+	)"
+else
+	fn "$(xclip -o -selection $selection)"
+fi
+
 exit $?

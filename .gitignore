@@ -1,3 +1,5 @@
+*.squares
+squares.txt
 .ignore
 blob*.json
 schema*.json
@@ -34,6 +36,7 @@ sketch.zsh
 *dump
 sizemap.txt
 .zsh_sessions/
+supervise/
 cache
 default
 default.zip

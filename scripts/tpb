@@ -2,6 +2,75 @@
 
 # print the contents of tmux's buffer
 
+get_host_alias_for_ip() {
+	local target_ip="$1"
+	local current_host=""
+
+	while read -r line; do
+		# Start of a Host block
+		if [[ $line =~ ^[[:space:]]*Host[[:space:]]+([^*]+)$ ]]; then
+			current_host="${match[1]}"
+		# HostName line within a block
+		elif [[ -n $current_host ]] && [[ $line =~ ^[[:space:]]*HostName[[:space:]]+([0-9.]+)$ ]]; then
+			if [[ ${match[1]} == "$target_ip" ]]; then
+				echo "$current_host"
+				return 0
+			fi
+			current_host=""
+		fi
+	done <~/.ssh/config
+
+	return 1
+}
+
+addr_for_ip() {
+	target="$1"
+	cat ~/.ssh/config |
+		grep -Ei '^host[ \t]*' |
+		awk '{print $2}' |
+		xargs -n1 ssh -G 2>/dev/null |
+		grep -Ei '^host(name)?\b' |
+		awk '{print $2}' |
+		xargs -n2 echo |
+		# while read -r host username hostname; do
+		while read -r host hostname; do
+			[ "$hostname" = "$target" ] || continue
+			# echo "$username@$host"
+			echo "$host"
+		done
+	return 1
+}
+
+if [ -n "$SSH_CONNECTION" ]; then
+	client_ip=$(echo "$SSH_CONNECTION" | awk '{print $1}')
+
+	if host_alias=$(get_host_alias_for_ip "$client_ip"); then
+		# if host_alias=$(addr_for_ip "$client_ip"); then
+		echo "Connecting to $host_alias ($client_ip)" >&2
+		exec ssh -T "$host_alias" -- tpb
+	else
+		echo "No config found for $client_ip" >&2
+		exit 1
+		# exec ssh -T -p 8022 u0_a481@"$client_ip" -- tpb
+	fi
+fi
+
+# [ -z "$SSH_CONNECTION" ] || {
+# 	echo "$SSH_CONNECTION"
+# 	echo "$SSH_CLIENT"
+# 	echo "$SSH_CONNECTION" | awk '{print $1}' | xargs ssh -G | rg '^(host(name)?|user)\b'
+# 	echo "$SSH_CONNECTION" | awk '{print $1}' | xargs ssh -G | rg '^(host(name)?|user)\b'
+# 	exit
+# 	src_ip="$(printf '%s' "$SSH_CONNECTION" | awk '{print $3}')"
+# 	read -r host user <<-eof
+# 		$(ssh -G "$src_ip" | grep -E '^(host|user)\b' | awk '{print $2}' | tr '\n' ' ')
+# 	eof
+# 	addr="$user@$host"
+# 	echo "$addr" >&2
+# 	ssh "$addr" -- tpb
+# 	exit $?
+# }
+
 if [ $# = 0 ]; then
 	tmux save-buffer -
 else

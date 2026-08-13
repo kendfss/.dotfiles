@@ -1,100 +1,143 @@
 #!/bin/sh
 
-# a chached downloader, initially written for ghs with the future in mind.
-
-self=$(basename "$ZSH_ARGZERO")
+# a POSIX compliant chacher/downloader, initially written for kendfss/ghs with the future in mind.
 
 set -eu
 testing=false
 [ $testing = true ] && set -x
 
-helpText() {
-	cat <<-EOF
-		usage: $self [OPTION]... [URL]...
-		     a script for caching file downloads
+self=$(basename "$0")
+desc="$(cat "$0" | head -3 | tail -1 | sed -E 's:^#\s*::')"
 
-		  flags:
-		     -c, --command   command to use when downloading files
-		                     default: just a plain curl with the '-o' for naming and -L to follow redirects
-		     -d, --directory use the given directory as a cache (it won't be created for you)
-		                     default: .
-		     -r, --read      read file contents to stdout after downloading
-
-		  file names will be stripped of slashes and colons by replacing them with hyphens and
-		  then trimming sequences of repeated hyphens
-	EOF
-}
-
-need() {
-	while [ $# -gt 0 ]; do
-		[ -x "$(command -v "$1")" ] || {
-			echo "$self: couldn't find $1" >&2
-			return 1
-		}
-		shift
-	done
-}
-
-need curl || exit $?
+command -v bat >/dev/null 2>/dev/null || bat() { less; }
 
 dir='.'
 cmd=''
 read=false
-
+cont=false
+based=false
 args=''
 SEP="£"
+
+help_text() {
+	cat <<-EOF | bat -lman
+		usage: $self [OPTION]... [URL]...
+
+		$desc
+
+		flags:
+		   -C, --continue  continue download from earlier (only works with curl)
+		   -b, --based     always use basename of the url as the file's name
+		   -c, --command   command to use when downloading files. expected to download file to stdout (default: curl -L)
+		   -d, --directory use the given directory as a cache (it won't be created for you) (default: $dir)
+		   -h, --help      print this message and exit
+		   -r, --read      read file contents to stdout after downloading
+
+		file names will be stripped of slashes and colons by replacing them with hyphens and
+		then trimming sequences of repeated hyphens
+	EOF
+	[ $# -gt 0 ] || exit 1
+	# shellcheck disable=SC2086
+	exit $1
+}
+
+need() {
+	while [ $# -gt 0 ]; do
+		[ -x "$(command -v "$1")" ] || fatal "couldn't find $1"
+		shift
+	done
+}
+
+fatal() {
+	error "$@"
+	exit 1
+}
+
+error() {
+	printf '%s:' "$self" >&2
+	# shellcheck disable=SC2068
+	printf ' %s' $@ >&2
+	echo >&2
+}
+
+need curl
 
 while [ $# -gt 0 ]; do
 	case "$1" in
 		-d | --dir)
 			dir="$2"
-			shift 2
+			shift
 			;;
 		-c | --command | command)
 			cmd="$2"
-			shift 2
+			shift
 			;;
 		-r | --read | read)
 			read=true
-			shift
 			;;
-		-rd | rd)
-			read=true
-			dir="$2"
-			shift 2
-			;;
-		-rc | rc)
-			read=true
-			cmd="$2"
-			shift 2
-			;;
+		-C | --continue | continue) cont=true ;;
+		-b | --based | based) based=true ;;
 		-h | --help | help)
-			helpText
-			exit 0
+			help_text 0
 			;;
 		-)
 			args="$args$SEP$(p)"
 			shift
 			;;
 		-*)
-			echo "unrecognized flag '$1'" >&2
-			helpText >&2
-			exit 1
+			hasd="$(printf '%s' "$1" | sed 's:[^d]::g')"
+			hasc="$(printf '%s' "$1" | sed 's:[^c]::g')"
+			if [ ${#hasd} = 0 ] || [ ${#hasc} = 0 ]; then
+				:
+			else
+				fatal abbreviated flag cannot contain b and c
+			fi
+			while read -r char; do
+				case "$char" in
+					r) read=true ;;
+					c)
+						cmd="$2"
+						shift
+						;;
+					C) cont=true ;;
+					d)
+						dir="$2"
+						shift
+						;;
+					b) based=true ;;
+					h) help_text 0 ;;
+					*)
+						error unsupported flag: "'$char'" in "'$1'"
+						help_text 1
+						;;
+				esac
+			done <<-EOF
+				$(printf '%s' "$1" | sed 's:^-::;s:.:&\n:g')
+			EOF
 			;;
 		*)
 			args="$args$SEP$1"
 			shift
 			;;
 	esac
+	[ $# -gt 0 ] && shift
 done
 
-[ "${#args}" = 0 ] && echo "$self: no args received. use '-' to read from clipboard" >&2 && exit 1
+[ "${#args}" = 0 ] && fatal "no args received. use '-' to read from clipboard"
+
+curl() {
+	if [ $cont = true ]; then
+		command curl -LC - "$@"
+	else
+		command curl "$@"
+	fi
+}
 
 get() {
 	arg="$1"
 	name="$2"
 	if [ -z "$cmd" ]; then
-		curl -L "$arg" -o "$name"
+		curl "$arg" -o "$name" >&2
 	else
 		eval "$cmd \"\$arg\"" >"$name"
 	fi
@@ -102,10 +145,14 @@ get() {
 
 load() {
 	for link in "$@"; do
-		name="$dir/$(echo "$link" | sed -E 's|^\w+://||g;s|[/:]|-|g;s:-+:-:g;s:-$::g')"
+		if [ $based = false ]; then
+			name="$dir/$(echo "$link" | sed -E 's|^\w+://||g;s|[/:]|-|g;s:-+:-:g;s:-$::g')"
+		else
+			name="$dir/$(basename "$link" | sed 's:\?.+$::')"
+		fi
 		[ $testing = true ] && {
-			echo "arg: '$link'" >&2
-			echo "name: '$name'" >&2
+			error "arg: '$link'"
+			error "name: '$name'"
 		}
 
 		if [ -e "$name" ]; then
@@ -115,7 +162,7 @@ load() {
 				continue
 			}
 			if [ $read = false ]; then
-				echo "already have '$link'" >&2
+				error "already have '$link'"
 			fi
 		else
 			get "$link" "$name"
@@ -129,7 +176,7 @@ load() {
 	done
 }
 
-[ $testing = true ] && echo "$args" >&2
+[ $testing = true ] && error "$args"
 
 echo "$args" | sed "s:^$SEP::g;s:$SEP:\n:g" | while read -r link; do
 	load "$link"

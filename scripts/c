@@ -1,11 +1,95 @@
 #!/bin/env zsh
 
-if [ -n "$(command -v xclip)" ]; then
-	exec xclip -i -selection clipboard >/dev/null 2>&1
-elif [ -n "$(command -v termux-clipboard-set)" ]; then
-	exec termux-clipboard-set
-else
-	echo no clipboard setter found >&2
+# write to the system's clipboard via stdin and/or commandline
+
+set -euo pipefail
+
+alias grep='grep -E'
+alias sed='sed -E'
+
+local self="$(basename "$ZSH_ARGZERO")"
+local desc="$(cat "$ZSH_ARGZERO" | head -3 | tail -1 | sed 's:^#\s*::')"
+
+local append=false
+local sep='\n'
+local isep=' '
+local input=''
+local dry_run=false
+
+error() {
+	printf '%s:' "$self" >&2
+	printf ' %s' $@ >&2
+	printf '\n' >&2
+}
+
+fatal() {
+	error "$@"
 	exit 1
-fi
+}
+
+command -v bat &>/dev/null || bat() { less; }
+
+help_text() {
+	cat <<-EOF | bat -lmd
+		usage: $self [FLAG]... [ARG]...
+
+		$desc
+
+		flags:
+		  -a, --append            append input to current clipboard
+		  -d, --dry-run           don't commit changes to clipboard
+		  -h, --help              print this message
+		  -i, --isep              separator for comandline input
+		  -s, --sep               separator for concatenating current clipboard and commandline input string
+	EOF
+	[ $# -gt 0 ] || exit 1
+	exit $1
+}
+
+while (($#)); do
+	case "$1" in
+		-a | --append) append=true ;;
+		-s | --sep)
+			sep="$2"
+			shift
+			;;
+		-i | --isep)
+			isep="$2"
+			shift
+			;;
+		-h | --help) help_text 0 ;;
+		-d | --dry-run) dry_run=true ;;
+		-*) fatal unrecognized flag: "'$1'" ;;
+		*) if [ ${#input} = 0 ]; then
+			input="$1"
+		else
+			input="$input$isep$1"
+		fi ;;
+	esac
+	shift
+done
+
+input() {
+	if [ $append = true ] && [ ${#input} -gt 0 ]; then
+		printf "%s$sep%s" "$(p)" "$input"
+		[[ $input == *$'\n' ]] || echo
+	elif [ ${#input} -gt 0 ]; then
+		printf "%s" "$input"
+		[[ $input == *$'\n' ]] || echo
+	else
+		cat
+	fi
+}
+
+input |
+	if [ $dry_run = true ]; then
+		cat
+	elif [ -n "$(command -v xclip)" ]; then
+		exec xclip -i -selection clipboard >/dev/null 2>&1
+	elif [ -n "$(command -v termux-clipboard-set)" ]; then
+		exec termux-clipboard-set
+	else
+		fatal no clipboard setter found
+	fi
+
 exit $?

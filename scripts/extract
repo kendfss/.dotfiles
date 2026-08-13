@@ -81,7 +81,7 @@ else
 
 		*.rar)
 			#TODO Dir
-			local cmd="unrar x \"$file\" \"$dir\""
+			local cmd="rar x \"$file\" \"$dir\""
 			echo $cmd
 			eval ${cmd}
 			;;

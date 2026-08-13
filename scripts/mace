@@ -1,0 +1,122 @@
+#!/usr/bin/env zsh
+
+# aka, memory trace; run a periodic scan for the memory (private + shared) usage of a given set of programs
+
+set -eo pipefail
+
+self="$(basename "$ZSH_ARGZERO")"
+desc="$(cat "$ZSH_ARGZERO" | head -3 | tail -1)"
+test=false
+
+error() {
+	printf '%s' "$self" >&2
+	printf ' %s' $@ >&2
+	printf '\n' >&2
+}
+
+fatal() {
+	error "$@"
+	exit 1
+}
+
+command -v ps_mem &>/dev/null || fatal ps_mem not found
+
+minimize=false
+period="10s"
+names=()
+typeset -A lines=()
+
+command -v bat &>/dev/null || bat() { less; }
+
+helpText() {
+	cat <<-eof | bat
+		usage: $self
+
+		$desc
+
+		flags:
+		  -h, --help          print this message and exit
+		  -p, --period        duration between scans (default: $period)
+		  -m, --minimize      minimize output by only printing when results change
+	eof
+	(($#)) || fatal no exit code given for $0
+	exit $1
+}
+
+while (($#)); do
+	case "$1" in
+		-m | --minimize) minimize=true ;;
+		-m*)
+			minimize=true
+			argv[1]="-${1#-m*}"
+			continue
+			;;
+		-p | --period) period="$2" && shift ;;
+		-p*) period="${1#-p*}" ;;
+		--help | -h*) helpText 0 ;;
+		*) names+=("$1") && lines[$1]='' ;;
+	esac
+	shift
+done
+
+[ "$(id -u)" = 0 ] || fatal must be run as root. use sudo
+
+$test && {
+	error "minimize $minimize"
+	error "period   $period"
+	error "names    $names"
+}
+
+((${#names})) || while read -r name; do
+	names+=("$name")
+done < <(ps aux | awk '{print $11}' | sed 1d | rg -v '[\[:\]]|^-' | egrep -v '^\s*$' | to basename | sort -ur)
+
+filter=''
+case ${#names} in
+	0) fatal no programs to check for ;;
+	1) filter="\b${names[1]}\b" ;;
+	*) filter="\b(${names[1]}$(printf '|%s' ${names[2,-1]}))\b" ;;
+esac
+
+prev=''
+stamps() {
+	local time="$(date)"
+	local blob="$(ps_mem)"
+	printf '%s\n' "$time"
+	echo "$blob" | egrep -i "$filter" | while read -r line; do
+		printf '\t%s\n' "$line"
+	done
+}
+
+stamps() {
+	local time="$(date)"
+	# local blob="$(ps_mem | egrep -v '\s*Private.+Shared.+RAM.+used.+Program' | awk '{print $7, " ", $8  "\t", $9, " ", $10}' | sort -hk1,3)"
+	local blob="$(ps_mem | egrep -v '\s*Private.+Shared.+RAM.+used.+Program' | awk '{print $7, " ", $8  "\t", $9, " ", $10}')"
+	$minimize || {
+		printf '%s\n' "$time"
+		echo "$blob" | egrep -i "$filter" | while read -r line; do
+			printf '\t%s\n' "$line"
+		done
+		return
+	}
+	local matches=()
+	for name in "${names[@]}"; do
+		local line="$(printf '%s' "$blob" | egrep -i "\b$name\s")"
+		[ "${lines[$name]}" = "$line" ] && continue
+		matches+=("$line")
+		lines[$name]="$line"
+	done
+	((${#matches})) || return 0
+	printf '%s\n' "$time"
+	for match in "${matches[@]}"; do
+		# printf '\t%s\n' "$match"
+		read -r size unit name extra <<<"$match"
+		printf '\t%s%s\t%s %s\n' "$size" "$unit[1]" "$name" "$extra"
+	done | sort -fbh
+}
+
+stamps
+while true; do
+	sleep $period
+	stamps
+done

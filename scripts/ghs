@@ -4,62 +4,75 @@
 
 set -euo pipefail
 
+self="$(basename "$ZSH_ARGZERO")"
+desc="$(cat "$ZSH_ARGZERO" | head -3 | tail -1)"
+
 local _testing=false
 [ $_testing = true ] && set -x
 
 local self=$(basename "$ZSH_ARGZERO")
 helpText() {
-	cat <<-EOF
-		usage: $self [QUERY TERM]...
-		     a script for peeking at github repo READMEs
+	cat <<-EOF | bat -lman
+		usage: $self [MODE] [QUERY TERM]...
 
-		     query terms will be concatenated into a single query
+		$desc
+
+		flags:
+		  -h, --help               print this message and exit
+
+		mode defaults to repo search if not recognized
 	EOF
+	(($#)) || fatal no exit code set for $0
+	exit "$1"
+}
+
+command -v bat &>/dev/null || bat() { less; }
+
+error() {
+	printf '%s:' "$self" >&2
+	printf ' %s' $@ >&2
+	printf '\n' >&2
+}
+
+fatal() {
+	error "$@"
+	exit 1
 }
 
 local args=()
+mode=''
 while (($#)); do
 	case "$1" in
 		-h | --help)
 			helpText
 			exit 0
 			;;
-		-*)
-			echo "unrecognized flag: $1" >&2
-			helpText >&2
-			exit 1
-			;;
-		*)
-			args+="$1"
-			shift
-			;;
+		-*) error "unrecognized flag: $1" && helpText 1 ;;
+		discussions? | issues? | commits? | prs? | repos?) mode="${1%*s}s" ;;
+		*) args+="$1" ;;
 	esac
+	shift
 done
 
-if rg -o '^(code|commits|issues|prs|repos)$' <(echo "${args[1]}") &>/dev/null; then
-	mode="${args[1]}"
-	shift args
-else
-	mode="repos"
-fi
+mode="${mode:-repos}"
 
 tmp="$(mktemp -d)"
 rm -rf "$tmp"
-DIR="$(dirname "$tmp")/$(basename "$ZSH_ARGZERO")"
+DIR="$(dirname "$tmp")/$(realpath "$ZSH_ARGZERO" | xargs -d '\n' basename)"
 [ "$mode" = "repos" -o "$mode" = "prs" -o "$mode" = issues ] && DIR="$DIR/$mode"
 
 [ $_testing = true ] && echo "$DIR"
 [ ! -e "$DIR" ] && mkdir -p "$DIR"
 
 viewer="$(command -v mdv)"
-[ ! -x "$viewer" ] && {
+[ -x "$viewer" ] || {
 	viewer="$(command -v bat) -lmd"
-	[ ! -x "$viewer" ] && {
+	[ -x "$viewer" ] || {
 		viewer="$(command -v cat)"
 	}
 }
 
 case "$mode" in
-	prs | issues | repos) gh search $mode "${args[@]}" | column -t -s $'\t' -H 2 | fzf --tabstop=4 --preview "fetch -r -d '$DIR' -c 'gh ${mode[1, -2]} view' {1} | GH_FORCE_TTY=1 $viewer" | awk '{print $1}' ;;
+	prs | issues | repos) gh search $mode "${args[@]}" | column -t -s $'\t' -H 2 | fzf --tabstop=4 --preview "fetch -r -d '$DIR' -c 'gh ${mode[1,-2]} view' {1} | GH_FORCE_TTY=1 $viewer" | awk '{print $1}' ;;
 	*) gh search $mode "${args[@]}" | column -t -s $'\t' -H 2 | fzf --tabstop=4 | awk '{print $1}' ;;
 esac

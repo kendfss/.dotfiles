@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# start up for user-level service configuration
+
+set -eu
+
+exec 2>&1
+
+root="$(realpath "$0" | xargs -d '\n' dirname)"
+[ ! -e "$root/conf" ] || . "$root/conf"
+
+exec chpst -u "$user:$groups" runsvdir -P "$svdir"

@@ -1,16 +1,18 @@
 #!/bin/env zsh
 
 # HISTORY
-setopt EXTENDED_HISTORY       # Include more information about when the command was executed, etc
-setopt APPEND_HISTORY         # Allow multiple terminal sessions to all append to one zsh command history
-setopt HIST_EXPIRE_DUPS_FIRST # When duplicates are entered, get rid of the duplicates first when we hit $HISTSIZE
-setopt HIST_FIND_NO_DUPS      # does not display duplicates when searching the history.
-setopt HIST_IGNORE_SPACE      # removes commands from the history that begin with a space.
-setopt HIST_IGNORE_DUPS       # does not enter immediate duplicates into the history.
-setopt HIST_REDUCE_BLANKS     # Remove extra blanks from each command line being added to history
-setopt HIST_VERIFY            # makes history substitution commands a bit nicer. I don't fully understand
-setopt INC_APPEND_HISTORY     # Add commands to history as they are typed, don't wait until shell exit
-setopt SHARE_HISTORY          # causes all terminals to share the same history 'session'.
+# this option is a liability # setopt HIST_EXPIRE_DUPS_FIRST # When duplicates are entered, get rid of the duplicates first when we hit $HISTSIZE
+unsetopt HIST_EXPIRE_DUPS_FIRST # When duplicates are entered, get rid of the duplicates first when we hit $HISTSIZE
+setopt EXTENDED_HISTORY         # Include more information about when the command was executed, etc
+setopt APPEND_HISTORY           # Allow multiple terminal sessions to all append to one zsh command history
+setopt HIST_FIND_NO_DUPS        # does not display duplicates when searching the history.
+setopt HIST_IGNORE_SPACE        # removes commands from the history that begin with a space.
+setopt HIST_IGNORE_DUPS         # does not enter immediate duplicates into the history.
+setopt HIST_REDUCE_BLANKS       # Remove extra blanks from each command line being added to history
+setopt HIST_VERIFY              # makes history substitution commands a bit nicer. I don't fully understand
+setopt INC_APPEND_HISTORY       # Add commands to history as they are typed, don't wait until shell exit
+setopt SHARE_HISTORY            # causes all terminals to share the same history 'session'.
+setopt HIST_FCNTL_LOCK
 
 # JOB CONTROL
 setopt LONG_LIST_JOBS # lists jobs in verbose format by default.
@@ -30,6 +32,7 @@ setopt PUSHD_IGNORE_DUPS # does not push multiple copies of the same directory t
 setopt PUSHD_SILENT      # does not print the directory stack after pushd or popd.
 setopt PUSHD_TO_HOME     # has pushd without arguments act like pushd ${HOME}.
 unsetopt CHASE_DOTS      # enables right-relative-paths
+setopt CHASE_LINKS       # on cd, if the destination is a symbolic link, follow it
 
 # SCRIPTS AND FUNCTIONS
 setopt C_BASES       # use c-style hexadecimal notation; 0xff not 0#ff
