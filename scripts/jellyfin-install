@@ -9,12 +9,12 @@ set -eu
 testing=false
 [ $testing = false ] || set -x
 
-[ -n "$DOTFILES" ] || DOTFILES=/home/$user/.dotfiles
-[ -n "$SUDO_USER" ] || SUDO_USER="${SUDO_USER:-$(logname 2>/dev/null || echo "$USER")}"
-[ -n "$JELLYFIN_ROOT" ] || JELLYFIN_ROOT=/opt/jellyfin
-[ -n "$JELLYFIN_LATEST_URL" ] || JELLYFIN_LATEST_URL=https://repo.jellyfin.org/files/server/linux/latest-stable/amd64
-[ -n "$JELLYFIN_SCRIPT_PATH" ] || JELLYFIN_SCRIPT_PATH=$DOTFILES/scripts/jellyfin
-[ -n "$JELLYFIN_SERVICE_ROOT" ] || JELLYFIN_SERVICE_ROOT=$DOTFILES/etc/sv/jellyfin
+DOTFILES=${DOTFILES:-/home/$user/.dotfiles}
+SUDO_USER=${SUDO_USER:-"${SUDO_USER:-$(logname 2>/dev/null || echo "$USER")}"}
+JELLYFIN_ROOT=${JELLYFIN_ROOT:-/opt/jellyfin}
+JELLYFIN_LATEST_URL=${JELLYFIN_LATEST_URL:-https://repo.jellyfin.org/files/server/linux/latest-stable/amd64}
+JELLYFIN_SCRIPT_PATH=${JELLYFIN_SCRIPT_PATH:-$DOTFILES/scripts/jellyfin}
+JELLYFIN_SERVICE_ROOT=${JELLYFIN_SERVICE_ROOT:-$DOTFILES/etc/sv/jellyfin}
 
 help_text() {
 	cat <<-EOF
