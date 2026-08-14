@@ -632,7 +632,9 @@ please() {
 		shift
 	done
 	if $sudo; then
-		local full=(pkexec env "${vars[@]}" "$cmd" "${args[@]}")
+		local guard=pkexec
+		command -v "$guard" &>/dev/null || guard=sudo
+		local full=("$guard" env "${vars[@]}" "$cmd" "${args[@]}")
 	else
 		local full=(env "${vars[@]}" "$cmd" "${args[@]}")
 	fi

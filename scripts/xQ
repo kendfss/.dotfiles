@@ -134,4 +134,6 @@ else
 fi
 
 echo installing: "${choices[@]}" >&2
-while ! pkexec xbps-install -Su $yes "${choices[@]}"; do :; done
+guard=pkexec
+command -v "$guard" &>/dev/null || guard=sudo
+while ! $guard xbps-install -Su $yes "${choices[@]}"; do :; done
