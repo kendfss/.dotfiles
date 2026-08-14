@@ -185,20 +185,15 @@ download=true
 	read -r resp
 	resp="$(echo "$resp" | tr '[:upper:]' '[:lower:]')"
 	case "$resp" in
-		d) {
-			rm -rf "$JELLYFIN_ROOT"
-			mkdir "$JELLYFIN_ROOT"
-		} || exit $? ;;
-		b) {
-			mv "$JELLYFIN_ROOT" "$JELLYFIN_ROOT.bak"
-			mkdir "$JELLYFIN_ROOT"
-		} || exit $? ;;
+		d) rm -rf "$JELLYFIN_ROOT" || exit $? ;;
+		b) mv "$JELLYFIN_ROOT" "$JELLYFIN_ROOT.bak" || exit $? ;;
 		o) ;;
 		s) download=false ;;
 		*) exit ;;
 	esac
 }
 
+mkdir "$JELLYFIN_ROOT"
 cd "$JELLYFIN_ROOT"
 
 ! $download || {
