@@ -9,8 +9,9 @@ set -eu
 testing=false
 [ $testing = false ] || set -x
 
+user=$(logname)
+group=$(id -gn "$user")
 DOTFILES=${DOTFILES:-/home/$user/.dotfiles}
-SUDO_USER=${SUDO_USER:-"${SUDO_USER:-$(logname 2>/dev/null || echo "$USER")}"}
 JELLYFIN_ROOT=${JELLYFIN_ROOT:-/opt/jellyfin}
 JELLYFIN_LATEST_URL=${JELLYFIN_LATEST_URL:-https://repo.jellyfin.org/files/server/linux/latest-stable/amd64}
 JELLYFIN_SCRIPT_PATH=${JELLYFIN_SCRIPT_PATH:-$DOTFILES/scripts/jellyfin}
@@ -26,14 +27,13 @@ help_text() {
 			-h, --help        print this message
 			-y, --yes         automatically accept all dependency installations
 			-d, --dotfiles    where you keep your dotfiles. should contain a 'scripts' directory unless you specify a script path (default: $DOTFILES)
-			-u, --user        final owner of the installation (default: $SUDO_USER)
+			-u, --user        final owner of the installation (default: $user)
 			-r, --root        installation directory for the server. shouldn't contain spaces (default: $JELLYFIN_ROOT)
 			--script-path     path where your starter script should be saved. no spaces. (default: $JELLYFIN_SCRIPT_PATH)
 			--service-root    path where you keep your services. we'll link to /etc/sv and /var/service. no spaces. (default: $JELLYFIN_SERVICE_ROOT)
 
 		environment variables:
 			DOTFILES                where you keep your dotfiles. should contain a 'scripts' directory unless you specify an irrelevant script path
-			SUDO_USER               the user who should own the final installation(s)
 			JELLYFIN_ROOT           where the installation should be kept
 			JELLYFIN_LATEST_URL     where to start browsing for tarballs
 			JELLYFIN_SCRIPT_PATH    where to keep the start script
@@ -127,8 +127,6 @@ need() {
 assure chpst runit tr coreutils || exit $?
 need pup ffmpeg fzf curl tar sed || exit $?
 
-user=$(id -un "$SUDO_USER")
-group=$(id -gn "$SUDO_USER")
 script="$(
 	cat <<-EOF
 		#!/bin/sh
@@ -166,7 +164,7 @@ mkservice() {
 	chmod u+x "$service_run_path"
 	chmod u+x "$service_finish_path"
 	chown -R "$user:$group" "$JELLYFIN_SERVICE_ROOT"
-	ln -fs "$JELLYFIN_SERVICE_ROOT" $service_etc
+	[ "$JELLYFIN_SERVICE_ROOT" = "$service_etc" ] || ln -fs "$JELLYFIN_SERVICE_ROOT" $service_etc
 	ln -fs $service_etc $service_var
 }
 

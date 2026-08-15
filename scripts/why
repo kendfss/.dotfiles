@@ -1,50 +1,80 @@
 #!/bin/env zsh
 
+# figure out why a package was installed by xbps
+
 set -euo pipefail
 
 self="$(basename "$ZSH_ARGZERO")"
 desc="$(realpath "$ZSH_ARGZERO" | xargs -d '\n' cat | head -3 | tail -1)"
 
-# Declare associative array OUTSIDE the loop
-typeset -A all_deps=()
-typeset -A pkg_deps=()
+manuals="$(xbps-query -m | sort -u)"
+installed="$(xbps-query -l | grep '^ii' | awk '{print $2}' | sort -u)"
 
-resolve_deps() {
-	local pkg="$1"
-	local out
-
-	# Check if already processed
-	if ((${+pkg_deps[$pkg]})); then
-		return
-	fi
-
-	# Mark as processed
-	pkg_deps[$pkg]=1
-
-	# Get dependencies
-	out="$(xbps-query -X "$pkg" 2>/dev/null | sed -E 's:-[0-9\-\._]+$::' || true)"
-	# echo "$pkg: $out" >&2
-	# Recursively resolve each dependency
-	while read -r dep; do
-		[[ -z $dep ]] && continue
-		resolve_deps "$dep"
-	done <<<"$out"
+info() {
+	printf '%s:' "$self" >&2
+	printf ' %s' $@ >&2
+	printf '\n' >&2
 }
 
-for arg in "$@"; do
-	# pkg_deps=()
-	resolve_deps "$arg"
+code=0
+error() {
+	code=1
+	info "$@"
+}
 
-	echo "Dependencies for $arg:"
-	for key in ${(k)pkg_deps[@]}; do
-		printf '\t%s\n' "$key"
-		count=0
-		if ((${+all_deps[$key]})); then
-			count=$all_deps[$key]
-		fi
-		all_deps[$key]=$((count + 1))
+fatal() {
+	error "$@"
+	exit 1
+}
+
+case $# in
+	0) fatal no args given ;;
+	1)
+		preface() { :; }
+		pad() { echo "$1" | sed -E "s:-[0-9\-\._]+$::"; }
+		;;
+	*)
+		preface() { echo "$arg:"; }
+		pad() { printf '\t%s\n' "$1" | sed -E "s:-[0-9\-\._]+$::"; }
+		;;
+esac
+
+for arg in "$@"; do
+	[ -z "$(printf '%s' "$manuals" | egrep "^$arg-[0-9\._\-]+")" ] || {
+		preface "$arg"
+		printf "\tinstalled yourself\n"
+		continue
+	}
+	[ -z "$(printf '%s' "$installed" | egrep "^$arg-[0-9\._\-]+")" ] || {
+		preface "$arg"
+		comm -12 <(printf '%s' "$manuals") <(xbps-query -X "$arg") | while read -r pkg; do
+			pad "$pkg"
+		done
+		continue
+	}
+	info no package named "'$arg'" was ever installed by xbps
+	command -v "$arg" &>/dev/null || {
+		error no executable named "'$arg'" was found
+		continue
+	}
+	read -rA matches <<<"$(comm -12 <(xlocate "$arg" | egrep "/$arg\s*$" | awk '{print $1}' | sort -u | egrep -v '^\s*$') <(printf '%s' "$installed"))"
+	((${#matches})) || continue
+	pkgs=()
+	for match in "${matches[@]}"; do
+		[ -n "$match" ] || continue
+		! grep -q "$match" <<<"$manuals" || {
+			pkgs+=("$match")
+			continue
+		}
+		comm -12 <(printf '%s' "$manuals") <(xbps-query -X "$match") | egrep -v '^\s*$' | while read -r pkg; do
+			[ -z "$pkg" ] || pkgs+=("$pkg")
+		done
 	done
-	echo "Total: ${#pkg_deps[@]} packages"
-	echo "pkg_deps: ${(kv)pkg_deps}"
+	((${#pkgs})) || continue
+	preface "$arg"
+	printf '%s\n' $pkgs | sort -u | while read -r pkg; do
+		pad "$pkg"
+	done
 done
-echo "all_deps: ${(kv)all_deps}"
+
+exit $code
