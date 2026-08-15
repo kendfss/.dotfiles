@@ -57,19 +57,50 @@ fatal() {
 
 xbps_flags=-Su
 
-while [ $# -gt 0 ]; do
-	case $1 in
-		-h | --help) help_text 0 ;;
+while :; do
+	case ${1:-} in
+		'') break ;;
+		-h | --help | -h*) help_text 0 ;;
 		-y | --yes) xbps_flags=-Syu ;;
-		-y*) ;;
-		-d | --dotfiles) ;;
-		-u | --user) ;;
-		-r | --root) ;;
-		--script-path) ;;
-		--service-root) ;;
+		-y*)
+			xbps_flags=-Syu
+			tmp="-${1#-y}"
+			shift
+			set -- "$tmp" "$@"
+			continue
+			;;
+		-d | --dotfiles)
+			[ -n "$2" ] || fatal "positional flag '$1' expected argument, got nothing"
+			DOTFILES="$2"
+			shift
+			;;
+		-d*) DOTFILES="${1#-d}" ;;
+		-u | --user)
+			[ -n "$2" ] || fatal "positional flag '$1' expected argument, got nothing"
+			user=$2
+			shift
+			;;
+		-u*) user="${1#-u}" ;;
+		-r | --root)
+			[ -n "$2" ] || fatal "positional flag '$1' expected argument, got nothing"
+			JELLYFIN_ROOT="$2"
+			shift
+			;;
+		-r*) JELLYFIN_ROOT="${1#-r}" ;;
+		--script-path)
+			[ -n "$2" ] || fatal "positional flag '$1' expected argument, got nothing"
+			JELLYFIN_SCRIPT_PATH="$2"
+			shift
+			;;
+		--service-root)
+			[ -n "$2" ] || fatal "positional flag '$1' expected argument, got nothing"
+			JELLYFIN_SERVICE_ROOT="$2"
+			shift
+			;;
 		-*) fatal unrecognized flag: "$1" ;;
 		*) fatal unexpected argument: "$1" ;;
 	esac
+	shift
 done
 
 [ "$(id -u)" = 0 ] || fatal "this script must be run as root. Use 'sudo $self'."
