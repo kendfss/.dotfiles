@@ -1,6 +1,15 @@
 #!/bin/env sh
 
 # jellyfin installation script for void linux
+# currently assumes you have the following packages installed:
+# runit
+#   chpst
+# coreutils
+#   tr
+#   logname
+# base-system
+#
+# the rest can be installed as needed
 
 self="$(basename "$0")"
 desc="$(cat "$0" | head -3 | tail -1)"
@@ -144,32 +153,38 @@ case "$resp" in
 	*) fatal configuration rejected ;;
 esac
 
-[ "$(id -u)" = 0 ] || fatal "this script must be run as root. use 'sudo $self'."
+test "$(id -u)" = 0 || fatal "this script must be run as root. use 'sudo $self'."
 
 assure() {
 	# Collect missing bins/pkgs into positional params as pairs: bin pkg bin pkg ...
 	missing=""
-	while [ $# -gt 0 ]; do
+	pkgs=""
+	while :; do
+		test $# -gt 0 || break
 		bin="$1"
 		pkg="$2"
 		[ -n "$pkg" ] || fatal "developer error: no package specified for '$bin' binary"
 		if ! command -v "$bin" >/dev/null 2>&1; then
 			error "need to install '$bin' from the '$pkg' package"
 			missing="$missing $bin $pkg"
+			pkgs="$pkgs $pkg"
 		fi
 		shift 2
 	done
 	[ -n "$missing" ] || return 0
-	# Re-set positional params to the missing pairs
+	# reset positional params to the missing pairs
+	# shellcheck disable=SC2086
+	set -- $pkgs # intentional word splitting
+	# shellcheck disable=SC2086
+	xbps-install $xbps_flags "$@" || return $?
 	# shellcheck disable=SC2086
 	set -- $missing # intentional word splitting
-	xbps-install $xbps_flags "$@" || return $?
 	code=0
-	while [ $# -gt 0 ]; do
+	while :; do
+		test $# -gt 0 || break
 		bin="$1" pkg="$2"
 		if ! command -v "$bin" >/dev/null 2>&1; then
-			echo "$self: '$bin' from '$pkg' not installed" >&2
-			code=1
+			fatal "$self: '$bin' from '$pkg' not installed"
 		fi
 		shift 2
 	done
@@ -178,13 +193,14 @@ assure() {
 
 need() {
 	missing=""
-	while [ $# -gt 0 ]; do
+	while true; do
+		test $# -gt 0 || break
 		[ -x "$(command -v "$1")" ] || {
 			missing="$missing $1 $1"
 		}
 		shift
 	done
-	[ ! "${#missing}" = 0 ] || return
+	test ! "${#missing}" = 0 || return 0
 	command -v assure || {
 		echo "$self: need and not sure how to get:"
 		# shellcheck disable=SC2086
@@ -192,12 +208,11 @@ need() {
 		return 1
 	}
 	# shellcheck disable=SC2086
-	assure $missing
+	assure $missing # intentional word split
 	return $?
 }
 
-assure chpst runit tr coreutils || exit $?
-need pup ffmpeg fzf curl tar sed || exit $?
+need pup ffmpeg fzf curl tar sed
 
 script="$(
 	cat <<-EOF
