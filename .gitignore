@@ -33,6 +33,7 @@ tst
 # ._.*
 *.gz
 *.old
+etc/sv/
 # test.*
 sketch.zsh
 *dump
