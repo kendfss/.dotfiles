@@ -9,13 +9,17 @@ set -eu
 testing=false
 [ $testing = false ] || set -x
 
-user=$(logname)
-group=$(id -gn "$user")
-DOTFILES=${DOTFILES:-/home/$user/.dotfiles}
-JELLYFIN_ROOT=${JELLYFIN_ROOT:-/opt/jellyfin}
-JELLYFIN_LATEST_URL=${JELLYFIN_LATEST_URL:-https://repo.jellyfin.org/files/server/linux/latest-stable/amd64}
-JELLYFIN_SCRIPT_PATH=${JELLYFIN_SCRIPT_PATH:-$DOTFILES/scripts/jellyfin}
-JELLYFIN_SERVICE_ROOT=${JELLYFIN_SERVICE_ROOT:-$DOTFILES/etc/sv/jellyfin}
+init() {
+	user="${user:-$(logname)}"
+	group="${group:-$(id -gn "$user")}"
+	DOTFILES=${DOTFILES:-/home/$user/.dotfiles}
+	JELLYFIN_ROOT=${JELLYFIN_ROOT:-/opt/jellyfin}
+	JELLYFIN_LATEST_URL=${JELLYFIN_LATEST_URL:-https://repo.jellyfin.org/files/server/linux/latest-stable/amd64}
+	JELLYFIN_SCRIPT_PATH=${JELLYFIN_SCRIPT_PATH:-$DOTFILES/scripts/jellyfin}
+	JELLYFIN_SERVICE_ROOT=${JELLYFIN_SERVICE_ROOT:-$DOTFILES/etc/sv/jellyfin}
+}
+
+init
 
 help_text() {
 	cat <<-EOF
@@ -102,6 +106,24 @@ while :; do
 	esac
 	shift
 done
+
+init
+echo installation configuration
+cat <<-eof | awk -F= '{print $1, "\t", $2}'
+	user=$user
+	group=$group
+	DOTFILES=$DOTFILES
+	JELLYFIN_ROOT=$JELLYFIN_ROOT
+	JELLYFIN_LATEST_URL=$JELLYFIN_LATEST_URL
+	JELLYFIN_SCRIPT_PATH=$JELLYFIN_SCRIPT_PATH
+	JELLYFIN_SERVICE_ROOT=$JELLYFIN_SERVICE_ROOT
+eof
+echo "confirm [Yn] "
+read -r resp
+case "$resp" in
+	y | yes | '') ;;
+	*) fatal configuration rejected ;;
+esac
 
 [ "$(id -u)" = 0 ] || fatal "this script must be run as root. Use 'sudo $self'."
 
