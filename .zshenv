@@ -80,7 +80,7 @@ export TF_FORCE_GPU_ALLOW_GROWTH=true
 # rust related
 [ -d "$HOME/.cargo" ] && {
 	export PATH="$PATH:$HOME/.cargo/bin"
-	. "$HOME/.cargo/env"
+	[ -e "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 }
 
 export PATH="$PATH:$HOME/.local/bin:$HOME/go/bin:$DOTFILES/scripts"
