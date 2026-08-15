@@ -2,50 +2,13 @@
 
 # jellyfin installation script for void linux
 
-self="$(basename "$ZSH_ARGZERO")"
+self="$(basename "$0")"
+desc="$(cat "$0" | head -3 | tail -1)"
 
 set -eu
 
 testing=false
 [ $testing = false ] || set -x
-
-init() {
-	user="${user:-$(logname)}"
-	group="${group:-$(id -gn "$user")}"
-	DOTFILES=${DOTFILES:-/home/$user/.dotfiles}
-	JELLYFIN_ROOT=${JELLYFIN_ROOT:-/opt/jellyfin}
-	JELLYFIN_LATEST_URL=${JELLYFIN_LATEST_URL:-https://repo.jellyfin.org/files/server/linux/latest-stable/amd64}
-	JELLYFIN_SCRIPT_PATH=${JELLYFIN_SCRIPT_PATH:-$DOTFILES/scripts/jellyfin}
-	JELLYFIN_SERVICE_ROOT=${JELLYFIN_SERVICE_ROOT:-$DOTFILES/etc/sv/jellyfin}
-}
-
-init
-
-help_text() {
-	cat <<-EOF
-		usage: $self [FLAGS] [URL]
-
-		install a local jellyfin server
-
-		supported flags:
-			-h, --help        print this message
-			-y, --yes         automatically accept all dependency installations
-			-d, --dotfiles    where you keep your dotfiles. should contain a 'scripts' directory unless you specify a script path (default: $DOTFILES)
-			-u, --user        final owner of the installation (default: $user)
-			-r, --root        installation directory for the server. shouldn't contain spaces (default: $JELLYFIN_ROOT)
-			--script-path     path where your starter script should be saved. no spaces. (default: $JELLYFIN_SCRIPT_PATH)
-			--service-root    path where you keep your services. we'll link to /etc/sv and /var/service. no spaces. (default: $JELLYFIN_SERVICE_ROOT)
-
-		environment variables:
-			DOTFILES                where you keep your dotfiles. should contain a 'scripts' directory unless you specify an irrelevant script path
-			JELLYFIN_ROOT           where the installation should be kept
-			JELLYFIN_LATEST_URL     where to start browsing for tarballs
-			JELLYFIN_SCRIPT_PATH    where to keep the start script
-			JELLYFIN_SERVICE_ROOT   where to link the services from
-
-	EOF
-	return "$1"
-}
 
 error() {
 	printf '%s:' "$self"
@@ -59,7 +22,58 @@ fatal() {
 	exit 1
 }
 
+plat() {
+	[ -n "${plat:-}" ] ||
+		case "$(uname -m)" in
+			'aarch64') plat='arm64' ;;
+			'x86_64') plat='amd64' ;;
+			*) fatal unsupported platform "'$(uname -m)'" ;;
+		esac
+	echo "$plat"
+}
+
+init() {
+	user="${user:-$(logname)}"
+	group="${group:-$(id -gn "$user")}"
+	DOTFILES=${DOTFILES:-/home/$user/.dotfiles}
+	JELLYFIN_ROOT=${JELLYFIN_ROOT:-/opt/jellyfin}
+	JELLYFIN_LATEST_URL=${JELLYFIN_LATEST_URL:-https://repo.jellyfin.org/files/server/linux/latest-stable/$(plat)}
+	JELLYFIN_SCRIPT_PATH=${JELLYFIN_SCRIPT_PATH:-$DOTFILES/scripts/jellyfin}
+	JELLYFIN_SERVICE_ROOT=${JELLYFIN_SERVICE_ROOT:-$DOTFILES/etc/sv/jellyfin}
+}
+
+init
+
+command -v bat >/dev/null 2>/dev/null || bat() { less; }
+help_text() {
+	cat <<-EOF | bat -lmd
+		usage: $self [FLAG]... [URL]
+
+		$desc
+
+		flags:
+		    -h, --help              print this message
+		    -y, --yes               automatically accept all dependency installations
+		    -d, --dotfiles          where you keep your dotfiles. should contain a 'scripts' directory unless you specify a script path (default: $DOTFILES)
+		    -u, --user              final owner of the installation (default: $user)
+		    -r, --root              installation directory for the server. shouldn't contain spaces (default: $JELLYFIN_ROOT)
+		    --script-path           path where your starter script should be saved. no spaces. (default: $JELLYFIN_SCRIPT_PATH)
+		    --service-root          path where you keep your services. we'll link to /etc/sv and /var/service. no spaces. (default: $JELLYFIN_SERVICE_ROOT)
+
+		environment variables:
+		    DOTFILES                where you keep your dotfiles. should contain a 'scripts' directory unless you specify an irrelevant script path
+		    JELLYFIN_ROOT           where the installation should be kept
+		    JELLYFIN_LATEST_URL     where to start browsing for tarballs
+		    JELLYFIN_SCRIPT_PATH    where to keep the start script
+		    JELLYFIN_SERVICE_ROOT   where to link the services from
+
+	EOF
+	[ $# -gt 0 ] || fatal dev error: help invoked without exit code
+	exit "$1"
+}
+
 xbps_flags=-Su
+url_set=false
 
 while :; do
 	case ${1:-} in
@@ -102,14 +116,19 @@ while :; do
 			shift
 			;;
 		-*) fatal unrecognized flag: "$1" ;;
-		*) fatal unexpected argument: "$1" ;;
+		*)
+			{ $url_set || printf '%s\n' "$1" | grep -Eq '^https?://'; } ||
+				fatal unexpected argument: "$1"
+			JELLYFIN_LATEST_URL="$1"
+			url_set=true
+			;;
 	esac
 	shift
 done
 
 init
 echo installation configuration
-cat <<-eof | awk -F= '{print $1, "\t", $2}'
+cat <<-eof | column -ts= | xargs -d '\n' printf '\t%s\n'
 	user=$user
 	group=$group
 	DOTFILES=$DOTFILES
@@ -118,14 +137,14 @@ cat <<-eof | awk -F= '{print $1, "\t", $2}'
 	JELLYFIN_SCRIPT_PATH=$JELLYFIN_SCRIPT_PATH
 	JELLYFIN_SERVICE_ROOT=$JELLYFIN_SERVICE_ROOT
 eof
-echo "confirm [Yn] "
+printf "confirm [Yn] "
 read -r resp
 case "$resp" in
 	y | yes | '') ;;
 	*) fatal configuration rejected ;;
 esac
 
-[ "$(id -u)" = 0 ] || fatal "this script must be run as root. Use 'sudo $self'."
+[ "$(id -u)" = 0 ] || fatal "this script must be run as root. use 'sudo $self'."
 
 assure() {
 	# Collect missing bins/pkgs into positional params as pairs: bin pkg bin pkg ...
