@@ -5,6 +5,8 @@ blob*.json
 schema*.json
 .config/helix/grammars/
 scripts/jellyfin
+jellyfin/
+jellyfin
 .autoenv.zsh
 .uignore
 response

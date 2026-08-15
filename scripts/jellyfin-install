@@ -11,6 +11,11 @@
 #
 # the rest can be installed as needed
 
+# TODO
+# support distinction between user and system services
+#   - man useradd
+#   - etc.
+
 self="$(basename "$0")"
 desc="$(cat "$0" | head -3 | tail -1)"
 
@@ -41,14 +46,22 @@ plat() {
 	echo "$plat"
 }
 
+dotfiles() {
+	[ ! -e "/home/$1/dotfiles" ] || {
+		echo "/home/$1/dotfiles"
+		return 0
+	}
+	echo "/home/$1/.dotfiles"
+}
+
 init() {
 	user="${user:-$(logname)}"
 	group="${group:-$(id -gn "$user")}"
-	DOTFILES=${DOTFILES:-/home/$user/.dotfiles}
+	DOTFILES=${DOTFILES:-$(dotfiles "$user")}
 	JELLYFIN_ROOT=${JELLYFIN_ROOT:-/opt/jellyfin}
 	JELLYFIN_LATEST_URL=${JELLYFIN_LATEST_URL:-https://repo.jellyfin.org/files/server/linux/latest-stable/$(plat)}
 	JELLYFIN_SCRIPT_PATH=${JELLYFIN_SCRIPT_PATH:-$DOTFILES/scripts/jellyfin}
-	JELLYFIN_SERVICE_ROOT=${JELLYFIN_SERVICE_ROOT:-$DOTFILES/etc/sv/jellyfin}
+	JELLYFIN_SERVICE_ROOT=${JELLYFIN_SERVICE_ROOT:-$DOTFILES/runit/sys/jellyfin}
 }
 
 init
