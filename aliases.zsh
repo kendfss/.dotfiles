@@ -1,8 +1,12 @@
-if [[ $SHELL == *"zsh" ]]; then
-	[[ "$(type run-help)" == *"alias"* ]] && unalias run-help
-	autoload run-help
-	alias help=run-help
-fi
+case "$SHELL" in
+	bash) alias exit='exit &>/dev/null' ;;
+	zsh)
+		alias -g G="| grep" && alias -g L="| less"
+		[[ "$(type run-help)" == *"alias"* ]] && unalias run-help
+		autoload run-help
+		alias help=run-help
+		;;
+esac
 
 alias nansi="command sed -E 's/\x1B\[([0-9]{1,3}(;[0-9]{1,2})*)?[mGK]//g'"
 alias nansi="command sed -E 's/\x1B\[[0-9;]*[a-zA-Z]//g'"
@@ -28,12 +32,37 @@ command -v jellyfin >/dev/null 2>&1 && alias jellyfin="exec $(command -v jellyfi
 command -v fastfetch >/dev/null 2>&1 && alias about="echo a reduced fastfetch; fastfetch | grep -Eo '\s+([A-Z]([A-Z]|[a-z])+)+[\s:].+' | sed -E 's:^\s+::' | tac | sed 1d | tac | column -ts:"
 
 if [ -d "$TERMUX__HOME" ]; then
+	case "$(/system/bin/getprop ro.product.device 2>/dev/null)" in
+		a7)
+			alias a12="ssh a12"
+			alias a12t="ssh a12t"
+			;;
+		a12)
+			alias a7="ssh a7"
+			alias a7t="ssh a7t"
+			;;
+	esac
 	alias cpv="rsync -poghb --backup-dir=$TERMUX__PREFIX/tmp/rsync -e /dev/null --progress --"
 	alias hp17="ssh hp17"
 	alias hp17t="ssh hp17t"
+	alias rpi400="ssh rpi400"
+	alias rpi400t="ssh rpi400t"
 else
+	case "$(hostname)" in
+		hp17)
+			alias rpi400="ssh rpi400"
+			alias rpi400t="ssh rpi400t"
+			;;
+		rpi400)
+			alias hp17="ssh hp17"
+			alias hp17t="ssh hp17t"
+			;;
+	esac
+	alias cpv="rsync -poghb --backup-dir=/tmp/rsync -e /dev/null --progress --"
 	alias pt="trans en:pt"
 	alias en="trans pt:en"
+	alias a7="ssh a7"
+	alias a7t="ssh a7t"
 	alias a12="ssh a12"
 	alias a12t="ssh a12t"
 fi
@@ -53,13 +82,11 @@ fi
 if ! command -v rg &>/dev/null; then
 	echo "ripgrep not found. setting alias rg='grep -E'. good luck!"
 	alias rg="grep -E"
+else
+	alias rg="rg -g '!.git/'"
 fi
-[ "$0" = "bash" ] && alias exit='exit &>/dev/null'
-alias rg="rg -g '!.git/'"
-[ "$0" = "zsh" ] && alias -g G="| grep" && alias -g L="| less"
-alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of compact=p=0:nk=1"
 
-[ -x "$(which bat)" ]
+[ -x "$(command -v ffprobe)" ] && alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of compact=p=0:nk=1"
 
 [ -x "$(command -v s)" ] && {
 	alias reddit="s -p reddit"
@@ -67,7 +94,7 @@ alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of com
 
 [ -x "$(command -v git)" ] && {
 	alias glog="git log --graph --decorate --oneline"
-	alias pull='git pull'
+	alias pull="git pull"
 	alias gfm="git fetch && git merge"
 	alias gv="gh repo view"
 	alias status="git status"
@@ -94,7 +121,7 @@ alias br="ffprobe -v 0 -select_streams a:0 -show_entries stream=bit_rate -of com
 
 alias lst="ls --time=ctime"
 alias md="mkdir -p"
-alias pcd='cd "$(p)"'
+alias pcd="cd \"$(p)\""
 alias ccd="pwd | c"
 alias intip="ifconfig | grep \"inet \" | grep -v 127.0.0.1"
 alias extip="curl ifconfig.me"
@@ -108,3 +135,4 @@ alias ll="ls -l"
 alias la="ls -la"
 alias md="mkdir -p"
 alias d="dirs -v | head -10" # List the last ten directories we've been to this session, no duplicates
+alias preto="printf '\033]11;#000000\007'"
