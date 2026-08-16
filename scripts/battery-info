@@ -9,6 +9,8 @@ else
 	state="$(cat /sys/class/power_supply/BAT0/status)" # || exit 1
 fi
 
+[ -n "$percentage" ] || exit 1
+
 state=$(echo "$state" | tr '[:upper:]' '[:lower:]' | sed 's/discharging/▮/;s/charging/↯/;s/full/✔/;s/"//g')
 
 printf "%s(%s%%)\n" "$state" "$percentage"
