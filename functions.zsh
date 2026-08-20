@@ -842,7 +842,7 @@ distro() {
 }
 
 plumb() {
-	wine "/home/kendfss/.wine/drive_c/Program Files/Image-Line/FL Studio 2025/System/Tools/Plugin Manager/PluginManager.exe" &>/dev/null &
+	wine "$WINEPREFIX/drive_c/Program Files/Image-Line/FL Studio 2025/System/Tools/Plugin Manager/PluginManager.exe" &>/dev/null &
 }
 
 upyet() {
