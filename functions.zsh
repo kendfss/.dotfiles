@@ -165,7 +165,8 @@ gallery-dl() {
 			ctr=$((ctr + 1))
 			printf "%d/%d: " "$ctr" "$count"
 			printf "%s\n" "$1"
-			if ! command gallery-dl "${browser[@]}" "${flags[@]}" "$1"; then
+			# if ! command gallery-dl "${browser[@]}" "${flags[@]}" "$1"; then
+			if ! command gallery-dl "${flags[@]}" "$1"; then
 				fails+=("$1")
 			fi
 			shift

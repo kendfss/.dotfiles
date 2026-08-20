@@ -4,7 +4,7 @@
 set -eu
 
 self="$(basename "$0")"
-description="$(cat "$0" /dev/null </dev/null | sed '1d;2d' | head -1 | sed -E 's/^#\s*//')"
+description="$(head -3 <"$0" | tail -1 | sed -E 's/^#\s*//')"
 
 error() {
 	echo "$self: $*" >&2
@@ -97,7 +97,7 @@ id "$user" 2>/dev/null >/dev/null || while true; do
 	break
 done
 
-[ '#' = "$({ cat /etc/sudoers || exit 1; } | { grep '%wheel' || exit 1; } | { head -1 || exit 1; } | { sed -E 's/./&\n/' || exit 1; } | { head - || exit 1; })" ] && {
+[ '#' = "$({ grep '%wheel' </etc/sudoers || exit 1; } | { head -1 || exit 1; } | { sed -E 's/./&\n/' || exit 1; } | { head - || exit 1; })" ] && {
 	error "you need to enable the %wheel group members to use sudo. press enter to continue"
 	read -r null
 	echo "$null" >/dev/null
@@ -105,7 +105,7 @@ done
 	fatal run this script again
 }
 
-userhome="$({ cat /etc/passwd || exit 1; } | { grep "$user" || exit 1; } | { awk -F: '{print $6}' || exit 1; })"
+userhome="$({ grep "$user" </etc/passwd || exit 1; } | { awk -F: '{print $6}' || exit 1; })"
 mkdir -p "$userhome/.ssh" && {
 	echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGA7kpOkhqeoMp+MIkw/GshtGPWKuc5C7/apNjxNWC6h" >>"$userhome/.ssh/authorized_keys" # desktop
 	echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEXBhkv+CXgD0/a9taeOlf+Q6APZD9gPwQrntUjot+C4" >>"$userhome/.ssh/authorized_keys" # phone
@@ -119,7 +119,7 @@ if [ ! -f "/etc/sudoers.d/$user" ] && [ ! -n "$(id "$user" | grep wheel)" ]; the
 	chmod 440 "/etc/sudoers.d/$user"
 fi
 
-ping -c 1 google.com || {
+ping -c 1 example.com || {
 	mkdir -p "/var/service" || fatal
 	[ ! -e "/var/service/wpa_supplicant" ] && {
 		ln -fs /etc/sv/wpa_supplicant /var/service/wpa_supplicant || fatal "couldn't setup wpa_supplicant for wifi. link {/etc/sv,/var/service}/wpa_supplicant"
@@ -131,8 +131,8 @@ ping -c 1 google.com || {
 	}
 }
 
-# [ 0 = "$(cat /etc/doas.conf | wc -l)" ] && {
-# 	cat <<-EOF
+# [ 0 = "$(wc -l </etc/doas.conf)" ] && {
+# 	tee /etc/doas.conf <<-EOF
 # 		permit persist :root
 # 		permit persist setenv {PATH=$PATH} :wheel
 # 	EOF
@@ -152,7 +152,7 @@ symlinkDialogue() { HOME="$userhome" USER="$user" command symlinkDialogue "$@"; 
 gochain() { HOME="$userhome" USER="$user" command gochain "$@"; }
 
 helpText() {
-	cat <<-EOF | bat -lman >&2
+	bat -lman >&2 <<-EOF
 		usage:
 			sudo $self [FLAGS]
 
@@ -230,10 +230,14 @@ if [ -x "$(command -v xbps-install)" ]; then
 	echo man-pages-posix zsh acl-progs rsync tmux helix git git-filter-repo github-cli go shfmt flac direnv ripgrep jq clang clang-analyzer fzf clang-tools-extra lldb shellcheck wget htop tree glow typst tinymist pandoc psmisc lf coreutils lua-language-server StyLua taplo base-devel bat gcc make llvm opendoas samba-libs \
 		delta gallery-dl lsof ntfs-3g uv pup alsa-utils tree-sitter tree-sitter-cli rustup rust-analyzer mdBook | sed -E 's/\s+/\n/g' | while read -r package; do
 		# zenity clipnotify kitty zathura zathura-pdf-mupdf tabbed mpv mpv-mpris playerctl nicotine+ xkill xfce4-screenshooter \
+		# shellcheck disable=SC2086
 		command -v $package >/dev/null 2>&1 || {
+			# shellcheck disable=SC2030
 			packages="${packages:+${packages} }$package"
 		}
 	done
+	# shellcheck disable=SC2086
+	# shellcheck disable=SC2031
 	[ ${#packages} -gt 0 ] && { xbps-install -Syu $packages || exit $?; }
 	# su - "$user" <<-EOF
 	# 	chsh -s "$(which zsh)" "$user"
@@ -263,6 +267,7 @@ if [ -x "$(command -v xbps-install)" ]; then
 	done
 	[ ! -e "$ZSH_PLUGINS/zsh-sweep" ] && { git clone https://github.com/psprint/zsh-sweep "$ZSH_PLUGINS/zsh-sweep" || exit $?; }
 	[ ! -e "$ZSH_PLUGINS/zsh-autoenv" ] && {
+		# shellcheck disable=SC2086
 		git clone https://github.com/Tarrasch/zsh-autoenv $ZSH_PLUGINS/zsh-autoenv || exit $?
 	}
 	symlinkDialogue "$ZSH_PLUGINS" "/usr/share/zsh/plugins" || exit $?

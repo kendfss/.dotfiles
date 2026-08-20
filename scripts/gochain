@@ -26,7 +26,7 @@ install() {
 		{
 			[ -f "$name" ] && {
 				bin_name=$(basename "$name")
-				target="/usr/bin/$bin_name"
+				target="/usr/local/bin/$bin_name"
 				# Check if symlink already exists and points to the correct target
 				if [ -L "$target" ]; then
 					current_target=$(readlink "$target")
