@@ -27,6 +27,16 @@ deep=false
 # echo "\$(pwd): $(pwd)" >>/tmp/clone.debug
 # echo "\$clone_dir: $clone_dir" >>/tmp/clone.debug
 
+typeset -A alias_table=(
+	[cb]=codeberg
+	[d]=darcs
+	[fd]=freedesktop
+	[gh]=github
+	[gl]=gitlab
+	[sh]=sr
+	[\~]=tildegit
+)
+
 typeset -A host_commands=(
 	[darcs]=darcs
 	[github]=git
@@ -38,13 +48,13 @@ typeset -A host_commands=(
 )
 
 typeset -A host_urls=(
-	[darcs]=https://hub.darcs.net
-	[github]=https://github.com
-	[tilde]=https://tildegit.com
-	[srht]=https://sr.ht
-	[gitlab]=https://gitlab.com
 	[codeberg]=https://codeberg.org
+	[darcs]=https://hub.darcs.net
 	[freedesktop]=https://gitlab.freedesktop.org
+	[github]=https://github.com
+	[gitlab]=https://gitlab.com
+	[srht]=https://sr.ht
+	[tilde]=https://tildegit.com
 )
 
 typeset -A depths=(
@@ -147,8 +157,18 @@ take() {
 # 	owner="$USER"
 # }
 
+if [ -n "${host_commands[$host]:-''}" ]; then
+	:
+else
+	if [ -n "${alias_table[$host]:-''}" ]; then
+		fatal unrecognized host: $host
+	else
+		host="${alias_table[$host]}"
+	fi
+fi
+
 depth='' # due to strictness
-$deep || depth="$depths[$host_commands[$host]]"
+$deep || depth="${depths[${host_commands[$host]}]}"
 
 cmd=$host_commands[$host]
 url=$host_urls[$host]

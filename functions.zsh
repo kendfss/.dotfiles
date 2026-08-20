@@ -7,6 +7,10 @@ autoload -Uz add-zsh-hook
 # 	command tmux "$@"
 # }
 
+pcd() {
+	cd "$(p)"
+}
+
 mkhx() {
 	clone helix-editor/helix
 	git pull
@@ -481,7 +485,7 @@ notes() {
 }
 
 cnotes() {
-	cat ~/self.notes/notes | fzf
+	cat ~/self.notes/notes | fzf --preview 'printf "%s\n" {}'
 }
 
 etch() {

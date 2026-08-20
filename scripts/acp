@@ -1,20 +1,31 @@
 #!/bin/env zsh
 
-## git add, commit, and push in one tiny interface
+# git add, commit, and push in one tiny interface
 
 set -euo pipefail
 
-fail() {
-	[ $# = 0 ] && echo "failed" && exit 1
-	echo "failed: $?" && exit 1
+full_self="$(realpath "$ZSH_ARGZERO")"
+self="$(basename "$ZSH_ARGZERO")"
+desc="$(cat "$full_self" | head -3 | tail -1)"
+
+error() {
+	printf '%s:' "$self" >&2
+	printf ' %s' $@ >&2
+	printf '\n' >&2
+}
+
+fatal() {
+	error "$@"
+	exit 1
 }
 
 case $1 in
-	'-m') {add && commit "$2" && push && exit; } || fail ;;
-	'-')		{ add && commit "$(p)" && push && exit; } || fail		;;
+	'-m') { add && commit "$2" && push && exit; } || fatal ;;
+	'-') { add && commit "$(p)" && push && exit; } || fatal ;;
 	'first')
-		{ add -hv && commit first\; && gh repo create -s. --private --push -d "$(awk 'NR>=3 && !NF {exit} NR>=3 {gsub(/[][]/, ""); gsub(/\]\[[^]]*\]/, ""); printf "%s%s", $0, (NF ? " " : "")} END {print ""}' README.md)" && exit; } || fail
+		{ add -hv && commit first\; && gh repo create -s. --private --push -d "$(awk 'NR>=3 && !NF {exit} NR>=3 {gsub(/[][]/, ""); gsub(/\]\[[^]]*\]/, ""); printf "%s%s", $0, (NF ? " " : "")} END {print ""}' README.md)" && exit; } || fatal
 		;;
+	'soz') { add && commmit "$1" && push && exit; } || fatal ;;
 esac
 
 if [[ -z $1 ]]; then

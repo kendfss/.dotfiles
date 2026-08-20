@@ -81,15 +81,16 @@ input() {
 	fi
 }
 
-input |
-	if [ $dry_run = true ]; then
-		cat
-	elif [ -n "$(command -v xclip)" ]; then
-		exec xclip -i -selection clipboard >/dev/null 2>&1
-	elif [ -n "$(command -v termux-clipboard-set)" ]; then
-		exec termux-clipboard-set
-	else
-		fatal no clipboard setter found
-	fi
+if [ $dry_run = true ]; then
+	cat
+	# elif [ -x "$(command -v gclip)" ]; then
+	# 	gclip -copy -f <(input)
+elif [ -n "$(command -v xclip)" ]; then
+	exec xclip -i -selection clipboard >/dev/null 2>&1
+elif [ -n "$(command -v termux-clipboard-set)" ]; then
+	exec termux-clipboard-set
+else
+	fatal no clipboard setter found
+fi < <(input)
 
 exit $?

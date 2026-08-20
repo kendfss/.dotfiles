@@ -82,6 +82,7 @@ install \
 	golang.org/x/tools/cmd/goimports@latest \
 	github.com/nametake/golangci-lint-langserver@latest \
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest \
-	golang.org/x/mobile/cmd/gomobile@latest
+	golang.org/x/mobile/cmd/gomobile@latest \
+	golang.design/x/clipboard/cmd/gclip@latest
 
 echo "$self: All Go tools installed and linked successfully!" >&2

@@ -105,6 +105,7 @@ S-w         = ':write --no-format'
 
 [keys.normal.w]
 t     = 'transpose_view'
+n     = ':write --no-format'
 w     = ':write'
 x     = ':wqa'
 q     = { q = ':quit', a = ':quit-all' }

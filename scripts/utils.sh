@@ -9,6 +9,8 @@ error() {
 }
 
 fatal() {
-	error "$@"
+	[ $# = 0 ] || error "$@"
 	exit 1
 }
+
+[ -x "$(command -v bat 2>/dev/null)" ] || bat() { less; }

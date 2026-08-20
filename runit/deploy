@@ -3,6 +3,7 @@
 # link the services where they need to go. user services sit in home. system services go to var and etc
 
 set -euo pipefail
+set -x
 
 full_self="$(realpath "$0")"
 self="$(basename "$0")"

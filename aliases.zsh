@@ -121,7 +121,6 @@ fi
 
 alias lst="ls --time=ctime"
 alias md="mkdir -p"
-alias pcd="cd \"$(p)\""
 alias ccd="pwd | c"
 alias intip="ifconfig | grep \"inet \" | grep -v 127.0.0.1"
 alias extip="curl ifconfig.me"

@@ -1,29 +1,86 @@
 #!/bin/env zsh
 
-## create spare copies of file and directories before introducing critical changes
+# create spare copies of file and directories before introducing critical changes
 
 set -euo pipefail
 
-local self="$(basename "$ZSH_ARGZERO")"
-local force=false
+full_self="$(realpath "$ZSH_ARGZERO")"
+utils="$(dirname "$full_self")/utils.sh"
+self="$(basename "$ZSH_ARGZERO")"
+desc="$(cat "$full_self" | head -3 | tail -1)"
 
-[ "$1" = "-f" -o "$1" = "--force" ] && force=true && shift
+source "$utils" || {
+	echo "$self: unable to read $utils" >&2
+	exit 1
+}
 
-local origin=$(pwd)
-local old=$1
+force=false
+move=false
+args=()
 
-if [[ -z $old ]]; then
+help() {
+	cat <<-eof | bat -lmd
+		usage: $self [FLAG]... FILE/DIR
+
+		$desc
+
+		flags:
+		    -h, --help                  print this message and exit
+		    -f, --force                 force replacement of any existing backups
+		    -m, --move                  move instead of copying
+	eof
+	(($#)) || fatal dev error: no exit code for "'$0'"
+	exit $1
+}
+
+clear() {
+	# check if the target name already exists and handle removal if warranted
+	[ -e "$1" ] || [ -L "$1" ] || return 0 # no files, no problems
+	$force || fatal already exists
+	rm -rf "$1"
+	return $?
+}
+
+bckp() {
+	# gracefully handle the backup creation
+	clear "$2" || fatal
+	if $move; then
+		mv -f "$1" "$2"
+	else
+		cp -rf "$1" "$2"
+	fi
+	code=$?
+	[ $code = 0 ] || return $code
+	echo backed up "$1" to "$2"
+}
+
+while (($#)); do
+	case "$1" in
+		--help | -h*) help 0 ;;
+		-f | --force) force=true ;;
+		-m | --move) move=true ;;
+		-f*) argv[1]="-${1#-f}" && force=true && continue ;;
+		-m*) argv[1]="-${1#-m}" && move=true && continue ;;
+		*) args+=("$1") ;;
+	esac
+	shift
+done
+
+set -- "${args[@]}"
+
+case $# in
+	0) fatal no files specified ;;
+	1) ;;
+	*) fatal one file only ;;
+esac
+
+origin="$(pwd)"
+old="$1"
+
+if [ -z "$old" ]; then
 	old="../$(basename "$(pwd)")"
 fi
 
-local new="$old-$self"
+new="$old-$self"
 
-if [ $force = false ]; then
-	[ -e "$new" ] && echo "already exists" >&2 && exit 1
-else
-	[ -f "$new" ] && rm -f "$new"
-	[ -d "$new" ] && rm -rf "$new"
-fi
-
-[[ -d $old ]] && cp -rf "$old/" "$new" && cd "$origin" && echo "backed up $old to $new"
-[[ -f $old ]] && cp "$old" "$new" && cd "$origin" && echo "backed up $old to $new"
+bckp "$old" "$new" || fatal
