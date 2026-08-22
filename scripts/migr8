@@ -1,0 +1,39 @@
+#!/bin/env zsh
+
+# move files between devices with rsync and checksums
+
+[ $# = 0 ] || {
+	echo not ready for generic use >&2
+	exit 1
+}
+
+set -euopipefail
+
+count="$(fd -Iutf . /mnt/elements/{drive,music,nicotine,samples} | wc -l)"
+[ $count -gt 0 ] || {
+	echo no files found
+	exit 1
+}
+
+sums="$(fd -Iutf . /mnt/elements/{drive,music,nicotine,samples} | to shasum)"
+tee /home/tmp/sums >/dev/null <<<"$sums"
+
+rsync -av --info=progress2 --info=name0 /mnt/elements/{drive,music,nicotine,samples} /home/tmp
+new_count="$(fd -Iutf . /home/tmp/{drive,music,nicotine,samples} | wc -l)"
+[ "$count" = "$new_count" ] || {
+	echo pre and post counts disagree >&2
+	exit 1
+}
+
+sed 's:/mnt/elements:/home/tmp:' </home/tmp/sums | tee /home/tmp/sums2 >/dev/null
+fails="$(shasum --check /home/tmp/sums2 | {
+	rg -v ': OK\s*$'
+	[ $? -ne 0 ] || exit 1
+})" || true
+
+[ -z "$fails" ] || {
+	echo missing/failing checksums >&2
+	exit 1
+}
+
+rm -rf /mnt/elements/{drive,music,nicotine,samples}

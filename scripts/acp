@@ -15,17 +15,20 @@ error() {
 }
 
 fatal() {
-	error "$@"
+	[ $# = 0 ] || error "$@"
 	exit 1
 }
 
 case $1 in
-	'-m') { add && commit "$2" && push && exit; } || fatal ;;
-	'-') { add && commit "$(p)" && push && exit; } || fatal ;;
+	'-m') { add && git commit -m "$2" && git push && exit; } || fatal ;;
+	'-') { add && git commit -m "$(p)" && git push && exit; } || fatal ;;
 	'first')
-		{ add -hv && commit first\; && gh repo create -s. --private --push -d "$(awk 'NR>=3 && !NF {exit} NR>=3 {gsub(/[][]/, ""); gsub(/\]\[[^]]*\]/, ""); printf "%s%s", $0, (NF ? " " : "")} END {print ""}' README.md)" && exit; } || fatal
+		{ add -hv && git commit -m first\; && gh repo create -s. --private --push -d "$(awk 'NR>=3 && !NF {exit} NR>=3 {gsub(/[][]/, ""); gsub(/\]\[[^]]*\]/, ""); printf "%s%s", $0, (NF ? " " : "")} END {print ""}' README.md)" && exit; } || fatal
 		;;
-	'soz') { add && commmit "$1" && push && exit; } || fatal ;;
+	'cf')
+		{ add && git commit -m first\; && gh repo create -s. --private --push -d "$(awk 'NR>=3 && !NF {exit} NR>=3 {gsub(/[][]/, ""); gsub(/\]\[[^]]*\]/, ""); printf "%s%s", $0, (NF ? " " : "")} END {print ""}' README.md)" && exit; } || fatal
+		;;
+	'soz') { add && git commmit -m "$1" && git push && exit; } || fatal ;;
 esac
 
 if [[ -z $1 ]]; then
@@ -37,4 +40,4 @@ fi
 if [[ -z $3 ]]; then
 	argv[3]=origin
 fi
-add $1 && commit $2 && push $3
+add $1 && git commit -m $2 && git push $3
