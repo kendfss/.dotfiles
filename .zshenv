@@ -56,6 +56,7 @@ export MTPTAB="$DOTFILES/mtptab.toml"
 export SCRIPTS="$DOTFILES/scripts"
 export PYTHONSTARTUP="$DOTFILES/.pythonrc"
 
+[ -d "$HOME/.venv" ] && source "$HOME/.venv/bin/activate"
 [ -x "$(command -v hx 2>/dev/null)" ] && export HELIX="$HOME/.config/helix"
 [ -x "$(command -v bat 2>/dev/null)" ] && export MANPAGER="$HOME/.dotfiles/scripts/manpager"
 [ -d "$DOTFILES/zsh-plugins" ] && export ZSH_PLUGINS="$DOTFILES/zsh-plugins"
