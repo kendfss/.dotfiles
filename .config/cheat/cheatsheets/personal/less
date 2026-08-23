@@ -1,0 +1,30 @@
+# bindings
+
+| key | function                                                             |
+| :-: | -------------------------------------------------------------------- |
+|  G  | Go to end of file                                                    |
+|  g  | Go to start of file                                                  |
+|  v  | To edit the current file in $EDITOR                                  |
+|  /  | Search in file                                                       |
+|  &  | Filter content                                                       |
+|  n  | Next result                                                          |
+|  N  | Previous result                                                      |
+|  A  | Toggle search highlighting                                           |
+|  F  | Follow (tail -f) a file after opening it                             |
+|  l  | To start less in follow-mode                                         |
+|  l  | To disable the terminal refresh when exiting                         |
+|  :  | Move to next file (if multiple files opened, eg. `less file1 file2`) |
+|  :  | Move to previous file                                                |
+|  l  | Don't wrap long lines                                                |
+|  -  | or if already in less                                                |
+
+# To save the contents to a file:
+
+# Method 1 - Only works when the input is a pipe
+
+s <filename>
+
+# Method 2 - This should work whether input is a pipe or an ordinary file:
+
+Type g or < (g or less-than) | $ (pipe then dollar) then cat > <filename> and
+Enter.

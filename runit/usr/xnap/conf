@@ -6,7 +6,7 @@ user="$(basename "$home")"
 
 export USER="$user"
 export HOME="$home"
-export DISPLAY=:0.0
+# export DISPLAY=:0.0
 export XAUTHORITY="/run/user/$(id -u "$user")/lyxauth"
 export XDG_CONFIG_HOME="$HOME/.config"
 

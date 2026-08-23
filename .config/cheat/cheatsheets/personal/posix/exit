@@ -1,0 +1,43 @@
+### Error Code 1
+
+- Description: Catchall for general errors
+- Example: let "var1 = 1/0"
+- Meaning: Miscellaneous errors, such as "divide by zero" and other
+  impermissible operations
+
+### Error Code 2
+
+- Description: Misuse of shell builtins (according to Bash documentation)
+- Example: empty_function() {}
+- Meaning: Missing keyword or command, or permission problem (and diff return
+  code on a failed binary file comparison).
+
+### Error Code 126
+
+- Description: Command invoked cannot execute
+- Example: /dev/null
+- Meaning: Permission problem or command is not an executable
+
+### Error Code 127
+
+- Description: "command not found"
+- Example: illegal_command
+- Meaning: Possible problem with $PATH or a typo
+
+### Error Code 128+n
+
+- Description: Fatal error signal "n"
+- Example: kill -9 $PPID of script
+- Meaning: $? returns 137 (128 + 9)
+
+### Error Code 130
+
+- Description: Script terminated by Control-C
+- Example: Ctl-C
+- Meaning: Control-C is fatal error signal 2, (130 = 128 + 2, see above)
+
+### Error Code 255*
+
+- Description: Exit status out of range
+- Example: exit -1
+- Meaning: exit takes only integer args in the range 0 - 255"

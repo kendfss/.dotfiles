@@ -1,0 +1,4 @@
+# delete the line you've been building
+	^u
+# paste it back
+	^y

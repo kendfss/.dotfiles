@@ -2,7 +2,7 @@
 
 . "$(dirname "$0")/utils.sh"
 
-export DISPLAY="${DISPLAY:-:0}"
+# export DISPLAY="${DISPLAY:-:0}"
 XAUTHORITY="$(find /tmp -name '.Xauthority' -user kendfss 2>/dev/null | head -1)"
 export XAUTHORITY="${XAUTHORITY:-/home/kendfss/.Xauthority}"
 

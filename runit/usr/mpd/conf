@@ -6,7 +6,7 @@ USER="$(basename "$HOME")"
 
 export USER="$USER"
 export HOME="$HOME"
-export DISPLAY=:0
+# export DISPLAY=:0
 export XAUTHORITY="$HOME/.Xauthority"
 export XDG_CONFIG_HOME="$HOME/.config"
 

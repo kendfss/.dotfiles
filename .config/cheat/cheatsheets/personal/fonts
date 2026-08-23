@@ -1,0 +1,5 @@
+# x11
+after you put a font in `~/.fonts`, you need to run:
+    fc-cache -f -v 
+
+if you have a woff2 font, you should use `woff2_decompress` from the `woff2` package to generate ttf encoded fonts that are supported by gtk.

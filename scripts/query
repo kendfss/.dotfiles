@@ -79,6 +79,11 @@ while (($#)); do
 	shift
 done
 
+case "$browser" in
+	userapp-*-*) browser="$(awk -F- '{print $2}' <<<"$browser" | tr '[:upper:]' '[:lower:]')" ;;
+	*) ;;
+esac
+
 # TODO engine validation: skipping for now in the interest of flexibility
 # [ -n "${engineTable[$engine]}" ] || [ -n "${engineTable[${aliasTable[$engine]}]}" ] || fatal unsupported engine: "$engine"
 if [ -n "${engineTable[$engine]}" ]; then

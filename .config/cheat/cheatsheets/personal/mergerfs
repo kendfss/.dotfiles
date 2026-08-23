@@ -1,0 +1,148 @@
+`mergerfs` is a great tool for logically merging multiple directories into one unified view, which perfectly fits your goal of making scripts and builds findable without manual symlinks.
+
+Here’s how you can use it:
+
+### The Basic Command Structure
+
+```sh
+mergerfs [options] <branches> <mountpoint>
+```
+
+```sh
+mergerfs -o minfreespace=4G,category.create=ff /usr/local/bin:$DOTFILES/scripts:$HOME/bin:$HOME/.local/bin /usr/local/bin
+```
+
+- **`-o minfreespace=4G,category.create=ff`**:
+  - category.create=ff` sets the policy for where new files are created to "first found," which is often a good default for a simple merge.
+- **`$HOME/bin:$HOME/ghostty/zig-out/bin:/usr/local/bin`**: This is your list of branches. The order determines priority. The leftmost branch has the highest priority when the system looks for a file. Your personal directories are listed first, ensuring they take precedence over the system's `/usr/local/bin`.
+- **`/usr/local/bin`**: This is the mount point where the merged filesystem will be available.
+
+### Making It Permanent
+
+If you want this setup to persist across reboots, you should add an entry to your `/etc/fstab` file. Here’s an example:
+
+```sh
+# <file system>        <mount point>  <type>    <options>             <dump>  <pass>
+$HOME/bin:$HOME/ghostty/zig-out/bin:/usr/local/bin /usr/local/bin          mergerfs  defaults,minfreespace=4G,category.create=ff 0 0
+```
+
+This automatically mounts your union at boot, so your merged `bin` directory is always ready.
+
+### Branch Control
+
+`mergerfs` gives you fine-grained control over how each branch is used. You can tag branches with special options to control their behavior:
+
+```sh
+$HOME/bin=RW:$HOME/ghostty/zig-out/bin=RW:/usr/local/bin=RO
+```
+
+- **`NC` (No-Create)**: Files can be read, modified, and deleted on this branch, but new files cannot be created there. This could be useful if you want to prevent a specific directory from being used for new project builds.
+- **`RW` (Read/Write)**: The default behavior. Files can be created, modified, and deleted on this branch.
+- **`RO` (Read-Only)**: The branch is treated as read-only. It will be excluded from policies that create, modify, or delete files. This is perfect for your system `/usr/local/bin` to protect it from accidental changes.
+
+Here are clear answers to your questions about using `mergerfs`:
+
+### 1. How to Turn It Off / Roll Back
+
+**If you mounted manually with the `mergerfs` command:**
+
+- Simply unmount it using `fusermount` or `umount`:
+  ```sh
+  fusermount -u /usr/local/bin
+  # OR
+  sudo umount /usr/local/bin
+  ```
+- This immediately removes the merged view and restores `/usr/local/bin` to its original contents.
+
+**If you added it to `/etc/fstab`:**
+
+1. Unmount it as above.
+2. Comment out or remove the line you added in `/etc/fstab`.
+3. This prevents it from being remounted at boot.
+
+**If you want to keep the mount but make it inactive temporarily:**
+
+```sh
+sudo mount -o remount,ro /usr/local/bin  # Makes it read-only
+# OR
+sudo mount -o remount,rw /usr/local/bin  # Makes it writable again
+```
+
+### 2. How to Extend an Existing Mount
+
+You have a few options to add more directories to your union:
+
+**Option A: Remount with new branch list**
+
+```sh
+# First, unmount
+fusermount -u /usr/local/bin
+
+# Then remount with the extended branch list
+mergerfs -o minfreespace=4G,category.create=ff $HOME/bin:$HOME/ghostty/zig-out/bin:$HOME/new-folder:/usr/local/bin /usr/local/bin
+```
+
+**Option B: Use the `-o addbranch` option (if available)**
+Some versions support adding a branch at runtime:
+
+```sh
+mount -o remount,addbranch=$HOME/new-folder /usr/local/bin
+```
+
+**Option C: Create a wrapper script**
+Create a script that builds the command dynamically:
+
+```sh
+#!/bin/sh
+# ~/bin/update-mergerfs.sh
+BRANCHES="$HOME/bin:$HOME/ghostty/zig-out/bin"
+for dir in $HOME/projects/*/bin; do
+    [ -d "$dir" ] && BRANCHES="$BRANCHES:$dir"
+done
+BRANCHES="$BRANCHES:/usr/local/bin"
+
+fusermount -u /usr/local/bin 2>/dev/null
+mergerfs -o minfreespace=4G,category.create=ff "$BRANCHES" /usr/local/bin
+```
+
+### 3. Would Void Be Able to Write Packages if `/usr/local/bin` Is Read-Only?
+
+**The short answer: Yes, absolutely.**
+
+Here's why it works:
+
+**Void's package manager (`xbps`) does NOT use `/usr/local/bin`**. It writes to `/usr/bin` and other system directories, but not `/usr/local`.
+
+**The `/usr/local/` hierarchy is specifically reserved for:**
+
+- Locally compiled software
+- System administrator-installed programs
+- Things not managed by the package manager
+
+**So if you make `/usr/local/bin` read-only:**
+
+- `xbps` continues working normally (it doesn't care)
+- **BUT** you won't be able to manually install or compile programs directly into `/usr/local/bin`
+- When you create the `mergerfs` union, your personal writable directories (like `~/bin`) become the place where new files appear, keeping the system directories safe
+
+**The actual behavior:**
+Since you'll likely set `/usr/local/bin` as **read-only** (`RO`) and your personal directories as **read-write** (`RW`), this creates a nice separation:
+
+```
+/usr/local/bin (merged view)
+├── system-managed files → from /usr/local/bin (RO)
+├── your scripts → from ~/bin (RW)  
+└── builds → from ~/ghostty/zig-out/bin (RW)
+```
+
+Void can't write to `/usr/local/bin` because it doesn't need to, and your builds don't affect the real `/usr/local/bin`—they just appear in the merged view!
+
+**One important note:** If you ever want to manually install something to `/usr/local/bin` and the mount is active, new files will go to the **first writable branch** (likely `~/bin`). This is great for keeping your system clean.
+
+**To be completely safe:** If you want to install something truly system-wide later:
+
+1. Unmount the `mergerfs`: `fusermount -u /usr/local/bin`
+2. Install your program normally
+3. Remount `mergerfs` again
+
+This keeps your system organized and your builds separate from system files.

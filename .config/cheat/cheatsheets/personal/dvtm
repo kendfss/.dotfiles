@@ -1,0 +1,40 @@
+# dvtm for tmux junkies
+
+# basic
+
+```sh
+dvtm -m '^[' [FLAG]... [COMMAND]...
+```
+
+run each command in a separate window
+
+## bindings
+
+the default prefix for dvtm is `ctrl+g`. to set it to `escape` we invoke dvtm as
+`dvtm -m '^['` or change its source
+
+|  key   | action                                      |
+| :----: | ------------------------------------------- |
+|   c    | new pane                                    |
+|   j    | move to pane below                          |
+|   k    | move to pane above                          |
+| enter  | toggle pane zoom (move to/from master area) |
+| space  | cycle through tiling layouts                |
+|   f    | change to vertical stack layout             |
+|   g    | change to grid layout                       |
+|   m    | maximize current pane                       |
+| ctrl+x | close pane                                  |
+|   d    | detach window                               |
+
+## flags
+
+| flag | use                                                                            |
+| :--: | ------------------------------------------------------------------------------ |
+|  -v  | version info                                                                   |
+|  -M  | toggle default mouse grabbing                                                  |
+|  -m  | set prefix                                                                     |
+|  -d  | time (in secs) before ncurses decides a char is not part of an escape sequence |
+|  -h  | scrollback buffer size (lines)                                                 |
+|  -t  | set immutable title                                                            |
+|  -s  | listen to named pipe and display in status bar                                 |
+|  -c  | listen to named pipe and execute incident commands                             |

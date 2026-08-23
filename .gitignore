@@ -77,7 +77,7 @@ services/brightness/.brightness
 !.config/helix/runtime/queries/go/**
 !.config/helix/runtime/queries/python/**
 !.config/helix/runtime/queries/markdown/**
-.config/cheat/
+.config/cheat/cheatsheets/community
 !.config/cheat/cheatsheets/personal/**
 !.config/cheat/conf.yml
 !.config/cheat/README.md
