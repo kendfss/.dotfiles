@@ -33,7 +33,7 @@ choices="$(xbps-install -nSu | cut -f1 -d' ' | sed 's/-[^-]*$//g' | $finder | tr
 
 [ -n "$choices" ] || exit
 
-guard=pkexec
+guard=augh
 command -v "$guard" >/dev/null 2>/dev/null || guard=sudo
 
 # shellcheck disable=SC2086

@@ -1,8 +1,6 @@
-#!/bin/sh
+#!/bin/env sh
 
-root="$(realpath "$0" | xargs -d '\n' dirname | xargs -d '\n' dirname)"
-[ -e "$root/conf" ] && . "$root/conf"
+self="$(realpath "$0")"
+owner="$(stat -c %U "$self")"
 
-mkdir -p /tmp/mpd
-
-exec svlogd -tt /tmp/mpd
+exec chpst -u "$owner" svlogd -tt /var/log

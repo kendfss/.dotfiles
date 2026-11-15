@@ -4,11 +4,28 @@
 # https://github-wiki-see.page/m/helix-editor/helix/wiki/Formatter-Configurations
 # https://docs.deno.com/runtime/getting_started/setup_your_environment/#helix
 
+[language-server.lean]
+command = "lake"
+args    = [ "serve" ]
+
+[[language]]
+name             = "lean"
+language-servers = [ "lean" ]
+
+
 # [[language]]
 # name       = 'elvish'
 # scope      = 'source.elvish'
 # file-types = ['conf', 'lfrc']
 # formatter  = { command = 'shfmt', args = ['-s', '-ci'] }
+
+[[language]]
+name          = "scfg"
+scope         = "source.scfg"
+comment-token = "#"
+indent        = { tab-width = 2, unit = '  ' }
+file-types    = [ { glob = "kanshi/config" }, { glob = 'croffle/wm.conf' }, { glob = 'croffle/im.conf' }, { glob = 'doc/im.conf' }, { glob = 'doc/wm.conf' } ]
+
 
 [[language]]
 name                 = 'typst'
@@ -27,20 +44,21 @@ name             = 'go'
 scope            = 'source.go'
 auto-format      = true
 file-types       = [ 'go', 'kage' ]
-language-servers = [ 'gopls' ]
+language-servers = [ 'gopls', 'golangci-lint-lsp' ]
 formatter        = { command = 'fmtgo' }
-# language-servers = [ 'gopls', 'golangci-lint-lsp' ]
 
-[language-server.golangci-lint-lsp]
-command = 'golangci-lint-langserver'
+# language-servers = [ 'gopls' ]
+# formatter   = { command = 'golangci-lint', args = [ 'fmt', '--stdin', '-c', '%sh{echo $HOME}/.golangci.toml' ] }
 
-[language-server.golangci-lint-lsp.config]
-command = [ 'golangci-lint', 'run', '--output.json.path=stdout', '--show-stats=true' ]
-# command = [ 'golangci-lint', 'run', '--output.json.path=stdout', '--show-stats=false', '--issues-exit-code=1' ]
+# [language-server.golangci-lint-lsp]
+# command = 'golangci-lint-langserver'
+# args    = [ 'run', '--output.json.path=stdout', '--show-stats=false', '--issues-exit-code=0', '-c', '%sh{echo $HOME}/.golangci.toml' ]
 
-[language-server.lsp-ai]
-command = 'lsp-ai'
-args    = [ '--stdio', '--config', '~/.config/lsp-ai/config.json' ]
+# [language-server.golangci-lint-lsp.config]
+# command = [ 'golangci-lint', 'run', '--output.json.path=stdout', '--show-stats=false', '--issues-exit-code=1', '-c', '%sh{echo $HOME}/.golangci.toml' ]
+# # [language-server.golangci-lint-lsp.config]
+# # command = [ 'golangci-lint', 'run', '--output.json.path=stdout', '--show-stats=true', '--issues-exit-code=1', '-c', '%sh{echo $HOME}/.golangci.toml' ]
+# # command = [ 'golangci-lint', 'run', '--output.json.path=stdout', '--show-stats=false', '--issues-exit-code=1' ]
 
 [language-server.gopls.config]
 diagnosticsTrigger          = 'Save'
@@ -183,33 +201,12 @@ auto-format = true
 
 [[language]]
 name        = 'c'
-auto-format = true
+auto-format = false
 
 [[language]]
 name        = 'bash'
 auto-format = true
-formatter   = { command = 'shfmt', args = [ '-s', '-ci' ] }
-# indent      = { tab-width = 2, unit = ' ' }
-# file-types  = [ 'zsh', { glob = '.envrc' }, { glob = '.zprofile' }, { glob = '.zshrc' }, { glob = '.zshenv' } ]
-# formatter   = { command = 'shfmt', args = ['-s', '-ci'] }
-
-# [[language]]
-# name             = 'sh'
-# scope            = 'source.sh'
-# injection-regex  = '(shell|sh)'
-# shebangs         = [ 'sh', 'dash', 'ash' ]
-# indent           = { tab-width = 2, unit = ' ' }
-# comment-token    = '#'
-# language-servers = [ 'bash-language-server' ]
-# grammar          = 'bash'
-# auto-format      = true
-# formatter        = { command = 'shfmt', args = [ '-p', '-s', '-ci' ] }
-# file-types       = [ 'sh', 'ash', 'dash', { glob = '.sh_history' } ]
-
-# [[grammar]]
-# name   = 'bash'
-# source = { git = 'https://github.com/tree-sitter/tree-sitter-bash', rev = '487734f87fd87118028a65a4599352fa99c9cde8' }
-
+formatter   = { command = 'shfmt', args = [ '-s', '-ci', '--filename', '%{buffer_name}' ] }
 
 [[language]]
 name          = 'numbat'
@@ -227,3 +224,6 @@ source = { git = 'https://github.com/irevoire/tree-sitter-numbat', rev = '4d9ce5
 [[grammar]]
 name   = "idris"
 source = { git = "http://github.com/kayhide/tree-sitter-idris", rev = "c56a25cf57c68ff929356db25505c1cc4c7820f6" }
+
+[language-server.rust-analyzer.config]
+cargo.targetDir = true

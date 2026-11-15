@@ -1,19 +1,19 @@
 # compatibility (silent failure) with bash
-[ $0 = "bash" ] && {
-	function zle() {
-		true
-	}
-	alias bindkey=bind
-}
+# [ $0 = "bash" ] && {
+# 	function zle() {
+# 		true
+# 	}
+# 	alias bindkey=bind
+# }
 
-command -v setxkbmap &>/dev/null && setxkbmap -option caps:none
+# command -v setxkbmap &>/dev/null && setxkbmap -option caps:none
 
 expand-or-complete-with-dots() {
 	# Show dots while waiting for tab-completion
 	# toggle line-wrapping off and back on again
-	[[ -n "$terminfo[rmam]" && -n "$terminfo[smam]" ]] && echoti rmam
+	[[ -n $terminfo[rmam] && -n $terminfo[smam] ]] && echoti rmam
 	print -Pn "%{%F{red}......%f%}"
-	[[ -n "$terminfo[rmam]" && -n "$terminfo[smam]" ]] && echoti smam
+	[[ -n $terminfo[rmam] && -n $terminfo[smam] ]] && echoti smam
 
 	zle expand-or-complete
 	zle redisplay

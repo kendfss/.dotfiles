@@ -11,6 +11,6 @@ fi
 
 [ -n "$percentage" ] || exit 1
 
-state=$(echo "$state" | tr '[:upper:]' '[:lower:]' | sed 's/discharging/▮/;s/charging/↯/;s/full/✔/;s/"//g')
+state=$(echo "$state" | tr '[:upper:]' '[:lower:]' | sed 's/not charging/✘/;s/discharging/▮/;s/charging/↯/;s/full/✔/;s/"//g')
 
 printf "%s(%s%%)\n" "$state" "$percentage"

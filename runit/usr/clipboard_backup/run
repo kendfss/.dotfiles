@@ -1,10 +1,16 @@
 #!/bin/sh
 
-. "$(dirname "$0")/utils.sh"
+set -e
 
-# export DISPLAY="${DISPLAY:-:0}"
-XAUTHORITY="$(find /tmp -name '.Xauthority' -user kendfss 2>/dev/null | head -1)"
-export XAUTHORITY="${XAUTHORITY:-/home/kendfss/.Xauthority}"
+exec 2>&1
+
+self="$(realpath "$0")"
+owner="$(stat -c %U "$self")"
+
+. "$(dirname "$self")/utils.sh"
+
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-/run/user/$(id -u "$owner")/lyxauth}"
 
 mkdir -p "$CLIPBOARD_BACKUP_FOLDER"
 

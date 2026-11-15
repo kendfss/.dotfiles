@@ -85,6 +85,8 @@ if [ $dry_run = true ]; then
 	cat
 	# elif [ -x "$(command -v gclip)" ]; then
 	# 	gclip -copy -f <(input)
+elif [ -n $(command -v wl-paste) ]; then
+	exec wl-copy
 elif [ -n "$(command -v xclip)" ]; then
 	exec xclip -i -selection clipboard >/dev/null 2>&1
 elif [ -n "$(command -v termux-clipboard-set)" ]; then

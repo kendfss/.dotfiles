@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# sudo wrapper with graphical prompt
+
+if [ -n "$__AUGH_ASKPASS" ]; then
+	exec gnome-ssh-askpass "sudo: ${__AUGH_ASKPASS}"
+fi
+
+export DISPLAY="${DISPLAY:-:0.0}"
+export __AUGH_ASKPASS="$*"
+export SUDO_ASKPASS="$0"
+exec sudo -A "$@"

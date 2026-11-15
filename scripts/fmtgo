@@ -1,29 +1,37 @@
 #!/bin/sh
 
-
 modpath="$REPO_HOST/$USER/$(basename "$PWD")"
 
-
 if [ $# = 0 ]; then
-    input=$(cat) # Capture all stdin
+	input=$(cat) # Capture all stdin
 
-    output=$(printf '%s' "$input" | gofumpt -e)
-    code=$?
-    [ $code = 0 ] || { printf '%s' "$input" && echo gofumpt failed >&2 && exit $code; }
+	output=$(printf '%s' "$input" | gofumpt -e)
+	code=$?
+	[ $code = 0 ] || { printf '%s' "$input" && echo gofumpt failed >&2 && exit $code; }
 
-    final=$(printf '%s' "$output" | goimports -e -local "$modpath")
-    code=$?
-    [ $code = 0 ] || { printf '%s' "$output" && echo goimports failed >&2 && exit $code; }
+	final=$(printf '%s' "$output" | goimports -e -local "$modpath")
+	code=$?
+	[ $code = 0 ] || { printf '%s' "$output" && echo goimports failed >&2 && exit $code; }
 
-    printf '%s\n' "$final"
+	command -v parfit >/dev/null 2>&1 && {
+		folded="$(printf '%s' "$final" | parfit -lgo --skip '^\s+([a-zA-Z]+|_|\.)?"\w+' --skip '^(//)?\s+(defer|go)\s' --skip '^//\s*//' --skip '"[^\s].+[^\s]"|""' --skip "'.'" --skip '``|`[^\s].+[^\s]`' --skip '//\s*([-#]|type|func) ')"
+		[ -z "$folded" ] || final="$folded"
+	}
+
+	printf '%s\n' "$final"
 else
-    output=$(gofumpt -e "$@")
-    code=$?
-    [ $code = 0 ] || { echo gofumpt failed >&2 && exit $code; }
+	output=$(gofumpt -e "$@")
+	code=$?
+	[ $code = 0 ] || { echo gofumpt failed >&2 && exit $code; }
 
-    final=$(printf '%s' "$output" | goimports -e -local "$modpath")
-    code=$?
-    [ $code = 0 ] || { echo goimports failed >&2 && exit $code; }
+	final=$(printf '%s' "$output" | goimports -e -local "$modpath")
+	code=$?
+	[ $code = 0 ] || { echo goimports failed >&2 && exit $code; }
 
-    printf '%s\n' "$final"
+	command -v parfit >/dev/null 2>&1 && {
+		folded="$(printf '%s' "$final" | parfit -lgo --skip '^\s+([a-zA-Z]+|_|\.)?"\w+' --skip '^(//)?\s+(defer|go)\s' --skip '^//\s*//' --skip '"[^\s].+[^\s]"|""' --skip "'.'" --skip '``|`[^\s].+[^\s]`' --skip '//\s*[-#]')"
+		[ -z "$folded" ] || final="$folded"
+	}
+
+	printf '%s\n' "$final"
 fi

@@ -1,7 +1,9 @@
-#!/bin/sh
-
-root="$(realpath "$0" | xargs -d '\n' dirname)"
-[ -e "$root/conf" ] && . "$root/conf"
+#!/bin/env sh
 
 exec 2>&1
-exec xnap
+
+self="$(realpath "$0")"
+owner="$(stat -c %U "$self")"
+
+# shellcheck disable=SC2086
+exec sudo -u "$owner" xnap

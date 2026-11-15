@@ -42,7 +42,7 @@ esac
 for arg in "$@"; do
 	[ -z "$(printf '%s' "$manuals" | egrep "^$arg-[0-9\._\-]+")" ] || {
 		preface "$arg"
-		printf "\tinstalled yourself\n"
+		printf '$USER\n'
 		continue
 	}
 	[ -z "$(printf '%s' "$installed" | egrep "^$arg-[0-9\._\-]+")" ] || {

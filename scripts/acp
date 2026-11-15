@@ -5,30 +5,114 @@
 set -euo pipefail
 
 full_self="$(realpath "$ZSH_ARGZERO")"
+dir="$(dirname "$full_self")"
 self="$(basename "$ZSH_ARGZERO")"
 desc="$(cat "$full_self" | head -3 | tail -1)"
 
-error() {
-	printf '%s:' "$self" >&2
-	printf ' %s' $@ >&2
-	printf '\n' >&2
+source "$dir/utils.sh"
+
+# error() {
+# 	printf '%s:' "$self" >&2
+# 	printf ' %s' $@ >&2
+# 	printf '\n' >&2
+# }
+
+# fatal() {
+# 	[ $# = 0 ] || error "$@"
+# 	exit 1
+# }
+
+help() {
+	cat <<-eof
+		usage: $self [flags] [args]
+		       $self "space separated files" "commit message" "push commands"
+
+		$desc
+
+		flags:
+		    -h, --help              print this message and exit
+		    -, -a, --all            add all changes (no unstaged), commit with message from clipboard, and push
+		    -b, --berg, --codeberg  use codeberg instead of github
+		    -c, --committed, cf     push committed files to new remote
+		    -f, --first, first      add all files (even unstaged), commit, initialize a new remote, push
+		    -m, --message           add tracked files, commit with given message, and push
+		    -s, --sorry, soz        add+commit+push changes (no unstaged) with an apology message
+		    -D, --debug             set -x
+	eof
+	(($#)) || fatal dev error: no exit code for help func
+	exit $1
 }
 
-fatal() {
-	[ $# = 0 ] || error "$@"
-	exit 1
+readme-line() {
+	awk 'NR>=3 && !NF {exit} NR>=3 {gsub(/[][]/, ""); gsub(/\]\[[^]]*\]/, ""); printf "%s%s", $0, (NF ? " " : "")} END {print ""}' README.md
 }
 
-case $1 in
-	'-m') { add && git commit -m "$2" && git push && exit; } || fatal ;;
-	'-') { add && git commit -m "$(p)" && git push && exit; } || fatal ;;
-	'first')
-		{ add -hv && git commit -m first\; && gh repo create -s. --private --push -d "$(awk 'NR>=3 && !NF {exit} NR>=3 {gsub(/[][]/, ""); gsub(/\]\[[^]]*\]/, ""); printf "%s%s", $0, (NF ? " " : "")} END {print ""}' README.md)" && exit; } || fatal
-		;;
-	'cf')
-		{ add && git commit -m first\; && gh repo create -s. --private --push -d "$(awk 'NR>=3 && !NF {exit} NR>=3 {gsub(/[][]/, ""); gsub(/\]\[[^]]*\]/, ""); printf "%s%s", $0, (NF ? " " : "")} END {print ""}' README.md)" && exit; } || fatal
-		;;
-	'soz') { add && git commmit -m "$1" && git push && exit; } || fatal ;;
+codeberg=false
+all=false
+msg=''
+first=false
+committed=false
+sorry=false
+debug=false
+public=false
+
+# case $1 in
+# 	--help | -h*) help 0 ;;
+# 	'-m') { add && git commit -m "$2" && git push && exit; } || fatal ;;
+# 	'-') { add && git commit -m "$(p)" && git push && exit; } || fatal ;;
+# 	'first')
+# 		{ add -hv && git commit -m first\; && gh repo create -s. --private --push -d "$(awk 'NR>=3 && !NF {exit} NR>=3 {gsub(/[][]/, ""); gsub(/\]\[[^]]*\]/, ""); printf "%s%s", $0, (NF ? " " : "")} END {print ""}' README.md)" && exit; } || fatal
+# 		;;
+# 	'cf')
+# 		{ add && git commit -m first\; && gh repo create -s. --private --push -d "$(awk 'NR>=3 && !NF {exit} NR>=3 {gsub(/[][]/, ""); gsub(/\]\[[^]]*\]/, ""); printf "%s%s", $0, (NF ? " " : "")} END {print ""}' README.md)" && exit; } || fatal
+# 		;;
+# 	'soz') { add && git commmit -m "$1" && git push && exit; } || fatal ;;
+# esac
+
+while (($#)); do
+	case "$1" in
+		--help | help | -h*) help 0 ;;
+		'-' | -a | --all) all=true ;;
+		-D | --debug) debug=true ;;
+		-b | --berg | --codeberg) codeberg=true ;;
+		-c | --committed | cf) committed=true ;;
+		-f | --first | first) first=true ;;
+		-m | --message) msg="$2" ;;
+		-s | --sorry | soz | sorry) sorry=true ;;
+		-a*) all=true && argv[1]="-${1#-a}" && continue ;;
+		-b*) codeberg=true && argv[1]="-${1#-b}" && continue ;;
+		-c*) committed=true && argv[1]="-${1#-c}" && continue ;;
+		-D*) debug=true && argv[1]="-${1#-D}" && continue ;;
+		-f*) first=true && argv[1]="-${1#-f}" && continue ;;
+		-m*) msg="${1#-m}" ;;
+		-p*) public=true && argv[1]="-${1#-p}" && continue ;;
+		-s*) sorry=true && argv[1]="-${1#-s}" && continue ;;
+		-*) fatal "unrecognized flag: $1" ;;
+		*) ;;
+	esac
+	shift
+done
+
+! $debug || set -x
+
+! $codeberg ||
+	{ command -v cb &>/dev/null || fatal "command not found: cb (for codeberg)"; } &&
+	gh() {
+		cb repo create -n "$(basename "$PWD")" -d "$(readme-line)" "$($public || echo --private)"
+	}
+
+# [ -z "$msg" ] || {
+# 	add && git commit -m "$2" && git push && exit
+# } || fatal
+
+description="$(readme-line || fatal)"
+[ $? = 0 ] || fatal
+
+case "true" in
+	$all) { add -hv && git commit -m "$({ [ -z "$msg" ] || printf '%s' "$msg"; } || p)" && git push && exit; } || fatal ;;
+	$first) { add -hv && git commit -m first\; && gh repo create -s. "$($public || echo --private)" --push -d "$(readme-line)" && exit; } || fatal ;;
+	$committed) { gh repo create $($codeberg || echo -s.) "$($public || echo --private)" --push -d "$(readme-line)" && exit; } || fatal ;;
+	$sorry) { add && git commmit -m "$1" && git push && exit; } || fatal ;;
 esac
 
 if [[ -z $1 ]]; then

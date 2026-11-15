@@ -76,7 +76,7 @@ done
 
 if $sudo; then
 	guard=pkexec
-	command -v "$guard" &>/dev/null || guard=sudo
+	command -v "$guard" &>/dev/null #|| guard=sudo
 	full=("$guard" env "${vars[@]}" "$cmd" "${args[@]}")
 else
 	full=(env "${vars[@]}" "$cmd" "${args[@]}")

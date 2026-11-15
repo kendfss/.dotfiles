@@ -9,7 +9,7 @@ mergerfs [options] <branches> <mountpoint>
 ```
 
 ```sh
-mergerfs -o minfreespace=4G,category.create=ff /usr/local/bin:$DOTFILES/scripts:$HOME/bin:$HOME/.local/bin /usr/local/bin
+mergerfs -o minfreespace=4G,category.create=ff /usr/local/bin:$DOTFILES/scripts:$HOME/bin:$HOME/.local/bin /usr/local/sbin
 ```
 
 - **`-o minfreespace=4G,category.create=ff`**:

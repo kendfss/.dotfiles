@@ -1,9 +1,13 @@
-preexec() {
-	set-window-title "$(derive-window-title "$@")"
-}
+autoload -Uz chpwd_recent_dirs cdr add-zsh-hook
+add-zsh-hook chpwd chpwd_recent_dirs
+zstyle ':chpwd:*' recent-dirs-max 5
 
-precmd() {
-	set-window-title "${1:-${BY:-$TERM}($(pexp '%(3C.%-1d:%1~.%1~)'))}"
+[ -x "$(command -v direnv)" ] && eval "$(direnv hook zsh)"
+
+! exe zoxide || {
+	eval "$(zoxide init --cmd zx zsh)"
+	alias z=zoxide
+	alias cd=zx
 }
 
 set-window-title() {
@@ -11,19 +15,8 @@ set-window-title() {
 	case "${BY:-$TERM}" in
 		screen*) print -Pn "\033k$*\033\\" ;;
 		tmux*) print -n "\ePtmux;\e\e]0;$*\a\e\\" ;;
-		xterm* | rxvt* | *ghostty* | *wezterm* | *kitty*) print -Pn "\033]0;$*\007" ;;
-		dvtm*) echo -ne "\033]0;$*\007" ;;
-		*) print -Pn "\033k$*\033\\" ;;
-	esac
-}
-
-set-tab-title() {
-	while true; do echo todo; done
-	# set the title of a terminal's window
-	case "${BY:-$TERM}" in
-		screen*) print -Pn "\033k$*\033\\" ;;
-		tmux*) print -n "\ePtmux;\e\e]0;$*\a\e\\" ;;
-		xterm* | rxvt* | *ghostty* | *wezterm* | *kitty*) print -Pn "\033]0;$*\007" ;;
+		xterm* | rxvt* | *wezterm* | *kitty*) print -Pn "\033]0;$*\007" ;;
+		*ghostty*) print -Pn "\e]2;$*\e\\" ;;
 		dvtm*) echo -ne "\033]0;$*\007" ;;
 		*) print -Pn "\033k$*\033\\" ;;
 	esac
@@ -55,7 +48,7 @@ expand-vars() {
 					case "$part" in
 						'$('*) printf '%s\n' "$(printf '%s' "$part" | sed 's:^\$\(::;s:\)$::')" ;;
 						'${'*) printf '%s\n' "$(printf '%s' "$part" | sed 's:^\$\{::;s/(:.+|\})$//')" ;;
-						'$'*) eval "echo \"$part\"" ;;
+						'$'*) printf '%s\n' "${(e)part}" ;;
 						*) printf '%s\n' "$part" ;;
 					esac
 				done | tr '\n' '/' | sed 's:/$::'
@@ -82,7 +75,7 @@ cmd-words() {
 				;;
 		esac
 	done
-	echo "${words[@]}"
+	print -l "${words[@]}"
 }
 
 derive-window-title() {
@@ -93,17 +86,30 @@ derive-window-title() {
 	local words
 	[ "$PWD" = "$HOME" ] || dir="$(pexp '%(3C.%-1d:%1~.%1~)')"
 	cmd-words $rgs | while read -r term; do
+		[ -n "$term" ] || continue
 		words+=("$term")
 	done
+	# echo "${words[@]}"
+	# echo "${rgs}"
 	case "$cmd" in
 		'LANG=C.UTF-8') exp="$rgs" ;;
 		tmux | herdr | jellyfin | gallery-dl | yt-dlp) exp="$cmd" ;;
-		sudo | exec | preexec | precmd | time | timeout) exp="${cmd}(${words[1]})" ;;
-		watch) exp="${cmd}(${words[2]})" ;;
 		hx | mpv) exp="$cmd($(cmd-words $rgs | sed 's/\s+/:/g'))" ;;
+		sudo | exec | preexec | precmd | time | timeout) exp="${cmd}($(awk '{print $1}' <<<"${words[@]}" | head -1))" ;;
+		watch) exp="${cmd}(${words[2]})" ;;
 		yes) exp="$(printf '%s\n' "$(printf '%s' "$part" | sed 's:^.+\|\s*::')")" ;;
 		*) ;;
 	esac
 	local title="$exp${dir:+ :: $dir}"
 	echo "$title"
 }
+
+window-title-preexec() {
+	set-window-title "$(derive-window-title "$@")"
+}
+add-zsh-hook preexec window-title-preexec
+
+window-title-precmd() {
+	set-window-title "${1:-${BY:-$TERM}($(pexp '%(3C.%-1d:%1~.%1~)'))}"
+}
+add-zsh-hook precmd window-title-precmd

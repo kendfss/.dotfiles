@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# set +x
+
+# Add this near the top of your wrapper script, after the shebang
+LOG_FILE="$HOME/.cache/lf-wrapper.log"
+{
+	echo "--- $(date) ---"
+	echo "Args: $*"
+	echo "TERM: '$TERM'"
+	echo "TERM_PROGRAM: '$TERM_PROGRAM'"
+	echo "PATH: $PATH"
+	echo "Ghostty path: $(command -v ghostty 2>/dev/null || echo 'not found')"
+} >>"$LOG_FILE" 2>&1
+
+# Not attached to any terminal? Hand off to ghostty and re-run ourselves.
+if ! [ -t 1 ] && [ -z "$TERM_PROGRAM" ]; then
+	exec ghostty -e "$0" "$@"
+fi
+
+if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+	exec command lf "$@"
+fi
+
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/lf"
+[ -d "$CACHE_DIR" ] || mkdir -p "$CACHE_DIR" || exit 1
+
+export FIFO_UEBERZUG="$CACHE_DIR/ueberzug-$$"
+
+cleanup() {
+	exec 3>&-
+	rm -f "$FIFO_UEBERZUG"
+}
+trap cleanup EXIT
+
+mkfifo "$FIFO_UEBERZUG" || exit 1
+
+# Ghostty sets TERM=xterm-ghostty, so this now resolves correctly *inside* ghostty
+case "${TERM_PROGRAM:-}|${TERM:-}" in
+	*WezTerm* | *kitty* | *ghostty* | *xterm-ghostty*) UB_OUTPUT=kitty ;;
+	*foot*) UB_OUTPUT=sixel ;;
+	*) UB_OUTPUT=x11 ;;
+esac
+
+ueberzugpp layer -s -o "$UB_OUTPUT" <"$FIFO_UEBERZUG" &
+exec 3>"$FIFO_UEBERZUG"
+
+# lf runs in the foreground; when it exits, cleanup closes fd 3,
+# the daemon EOFs and exits, and the FIFO is removed.
+command lf "$@" 3>&-

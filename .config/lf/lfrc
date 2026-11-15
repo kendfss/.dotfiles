@@ -1,6 +1,7 @@
 set shell zsh
 set shellopts '-euopipefail'
 set previewer ~/.dotfiles/scripts/lf-preview
+set cleaner ~/.dotfiles/scripts/lf-cleaner
 # set drawbox # borders around columns
 # set info size:time
 
@@ -61,3 +62,27 @@ cmd fzf_jump ${{
 }}
 
 # map <c-o> :fzf_jump
+
+
+map am ${{
+    mntdir="$f.mnt"
+    mkdir -p -- "$mntdir"
+    archivemount "$f" "$mntdir"
+    lf -remote "send $id cd \"$(printf '%s' "$mntdir" | sed 's/\\/\\\\/g;s/"/\\"/g')\""
+}}
+
+map p :paste; clear
+
+
+cmd extract ${{
+    set -f
+    atool -x $fx
+}}
+
+map X extract
+
+
+cmd copy-path ${{
+    echo -n "$f" | c
+}}
+map Y copy-path

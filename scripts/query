@@ -4,6 +4,8 @@
 
 set -euopipefail
 
+# exec &>$HOME/query_kb.log
+
 self="$(basename "$ZSH_ARGZERO")"
 desc="$(cat "$ZSH_ARGZERO" | head -3 | tail -1 | sed 's:^#\s*::')"
 
@@ -11,8 +13,43 @@ testing=false
 $testing && set -x
 
 typeset -A engineTable=(
-	[duckduckgo]=https://duckduckgo.com
-	[claude]=https://claude.ai/new
+	[pb]=https://pixabay.com/sound-effects/search/%/
+	[aa]='https://annas-archive.gd/search?ext=pdf&q=%s'
+	[ddg]='https://duckduckgo.com?q=%s'
+	[aw]='https://wiki.archlinux.org/index.php?search=%s'
+	[d]='https://freedict.com/word/%s'
+	[t]='https://freedict.com/synonyms/%s'
+	[e]='https://freedict.com/etymology/%s'
+	[claude]='https://claude.ai/new?q=%s'
+	[xiv]='https://arxiv.org/search/advanced?advanced=&terms-0-operator=AND&terms-0-term=%s&terms-0-field=title&classification-physics_archives=all&classification-include_cross_list=include&date-filter_by=all_dates&date-year=&date-from_date=&date-to_date=&date-date_type=submitted_date&abstracts=show&size=50&order='
+	[cb]='https://codeberg.org/explore/repos?q=%s&only_show_relevant=true&sort=recentupdate'
+	[img]='https://duckduckgo.com/?t=ffab&iax=images&ia=images&q=%s'
+	[ar]='https://archive.org/search?query=%s'
+	[at]='https://alternativeto.net/browse/search/?q=%s'
+	[bc]='https://bandcamp.com/search?q=%s'
+	[bio]='https://chambers.co.uk/search/?query=%s&title=biog'
+	[dc]='https://www.discogs.com/search?q=%s&btn=&type=all'
+	[dict]='https://chambers.co.uk/search/?query=%s&title=21st'
+	[eo]='https://www.etymonline.com/search?q=%s'
+	[gh]='https://github.com/search?utf8=%E2%9C%93&q=%s'
+	[go]='https://pkg.go.dev/search?q=%s'
+	[oeis]='https://oeis.org/search?q=%s'
+	[pdf]='https://duckduckgo.com/?t=ffab&q=filetype%3Apdf+%s&ia=web'
+	[pip]='https://pypi.org/search/?q=%s'
+	[pt]='https://www.powerthesaurus.org/_search?q=%s'
+	[py]='https://docs.python.org/3/search.html?q=%s'
+	[rc]='https://rosettacode.org/w/index.php?search=%s'
+	[thes]='https://chambers.co.uk/search/?query=%s&title=thes'
+	[typ]='https://typst.app/docs/reference/text/%s/'
+	[w]='https://www.wikipedia.org/w/index.php?title=Special:Search&search=%s'
+	[ws]='https://www.whosampled.com/search/?q=%s'
+
+	[rt]='https://rutracker.org/forum/tracker.php?nm=%s'
+	[tpb]='https://thepiratebay.org/search.php?all=on&search=Pirate+Search&page=0&q=%s'
+	[13]='https://1337x.to/search/%s/1/'
+	[ext]='https://ext.to/browse/?q=%s'
+	[kat]='https://katcr.to/usearch/%s/'
+	[4s]='https://4shared.com/web/q?query=%s'
 )
 
 typeset -A aliasTable=(
@@ -20,11 +57,16 @@ typeset -A aliasTable=(
 	[c]=claude
 )
 
-browser="$(xdg-settings get default-web-browser | awk -F. '{print $1}')"
-engine=duckduckgo
+export DISPLAY="${DISPLAY:-:0.0}"
+export XAUTHORITY="${XAUTHORITY:-/run/user/1000/lyxauth}"
+
+default_browser="$(xdg-settings get default-web-browser | awk -F. '{print $1}')"
+browser="$default_browser"
+engine=ddg
 selection="primary"
 query=()
 prompt=false
+echo=false
 
 command -v bat &>/dev/null || bat() { less; }
 
@@ -39,7 +81,7 @@ fatal() {
 	exit 1
 }
 
-help_text() {
+help() {
 	cat <<-eof | bat -lman
 		usage: $self [FLAG]... [SEARCH_TERM]...
 
@@ -48,9 +90,10 @@ help_text() {
 		flags:
 		  -h, --help          print this message and exit
 		  -b, --browser       set the name of the executable to invoke for the browser (default: $browser)
-		  -e, --engine        set the name of the executable to invoke for the browser (default: $browser)
-		  -s, --source        xclip source to read input from (default: $selection)
+		  -d, --dry-run       perform all the logic and print the query string to stdout instead of sending to a browser
+		  -e, --engine        set the name of the executable to invoke for the browser (default: $engine)
 		  -p, --prompt        create a popup that prompts for input
+		  -s, --source        xclip source to read input from (default: $selection)
 	eof
 	(($#)) || fatal no exit code specified for help text
 	exit $1
@@ -58,23 +101,19 @@ help_text() {
 
 while (($#)); do
 	case "$1" in
-		-h | --help) help_text 0 ;;
+		-h* | --help) help 0 ;;
 		-p | --prompt) prompt=true ;;
 		-p*) prompt=true && argv[1]="-${1#-f}" && continue ;;
-		-s | --sel | --selection)
-			selection="$2"
-			shift
-			;;
+		-s | --sel | --selection) selection="$2" && shift ;;
 		-s*) selection="${1#-s}" ;;
-		-b | --browser)
-			browser="$2"
-			shift
-			;;
+		-b | --browser) browser="$2" && shift ;;
 		-b*) browser="${1#-b}" ;;
 		-e | --engine) engine="$2" && shift ;;
 		-e*) engine="${1#-e}" ;;
+		-d | --dry-run) echo=true ;;
+		-d*) echo=true && argv[1]="-${1#-d}" && continue ;;
 		-*) fatal unexpected arg: "'$1'" ;;
-		*) query+=("$1") ;;
+		*) query+=("$(sed -E 's:^\s*::;s:\s*$::' <<<"$1")") ;;
 	esac
 	shift
 done
@@ -83,6 +122,7 @@ case "$browser" in
 	userapp-*-*) browser="$(awk -F- '{print $2}' <<<"$browser" | tr '[:upper:]' '[:lower:]')" ;;
 	*) ;;
 esac
+! $echo || browser=echo
 
 # TODO engine validation: skipping for now in the interest of flexibility
 # [ -n "${engineTable[$engine]}" ] || [ -n "${engineTable[${aliasTable[$engine]}]}" ] || fatal unsupported engine: "$engine"
@@ -93,6 +133,18 @@ elif [ -n "${engineTable[${aliasTable[$engine]}]}" ]; then
 elif [ -z "$engine" ]; then
 	fatal no engine specified
 fi
+
+command -v xclip 2>/dev/null || xclip() {
+	local flag=''
+	while (($#)); do
+		case "$1" in
+			primary) flag="--$1" ;;
+			*) ;;
+		esac
+		shift
+	done
+	wl-paste $flag
+}
 
 fn() {
 	local search=''
@@ -106,10 +158,14 @@ fn() {
 	case "$search" in
 		http://* | https://* | file://*) ;;
 		*)
-			search="$(printf '%s?q=%s' "$engine" "$search" | sed -E 's/\s+/%20/g')"
+			search="$(printf "$engine" "$search" | sed -E 's/\s+/%20/g')"
 			;;
 	esac
 	echo "$search"
+	case "$browser" in
+		$default_browser) browser=xdg-open ;;
+		*) ;;
+	esac
 	$browser "$search"
 }
 

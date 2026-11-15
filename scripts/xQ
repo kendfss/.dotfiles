@@ -35,6 +35,7 @@ need() {
 need awk || { need gawk && alias awk=gawk; }
 need sed grep fzf
 
+desc=false
 raw=false
 yes=false
 tmp=()
@@ -60,10 +61,16 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 		-h* | --help) help_info 0 ;;
 		-r | --raw) raw=true ;;
+		-d | --desc) desc=true ;;
 		-y | --yes) yes=true ;;
 		-y*)
 			yes=true
 			argv[1]="${1##-y}"
+			continue
+			;;
+		-d*)
+			desc=true
+			argv[1]="${1##-r}"
 			continue
 			;;
 		-r*)
@@ -82,7 +89,12 @@ set -- "${tmp[@]}"
 
 # error "$@"
 search() {
-	{ xbps-query -Rs "$1" | grep -E "$(printf '] (\w+(-)?)*%s((-)?\w+)*-' "$1")" | grep -E "$1"; } || true
+	if $desc; then
+		xbps-query -Rs matrix -pshort_desc | sed 's:\(https?\://.+\)\s*$::' | column -ts:
+		# xbps-query -Rs "$1" -pshort_desc | column -t | grep -E "$(printf '] (\w+(-)?)*%s((-)?\w+)*-' "$1")" | grep -E "$1"
+	else
+		xbps-query -Rs "$1" | grep -E "$(printf '] (\w+(-)?)*%s((-)?\w+)*-' "$1")" | grep -E "$1"
+	fi || true
 }
 
 cleanup() {
@@ -134,6 +146,6 @@ else
 fi
 
 echo installing: "${choices[@]}" >&2
-guard=pkexec
+guard='augh'
 command -v "$guard" &>/dev/null || guard=sudo
 while ! $guard xbps-install -Su $yes "${choices[@]}"; do :; done

@@ -1,0 +1,19 @@
+#!/bin/env zsh
+
+# run a command for helix
+
+exec >/dev/null
+
+source "$(realpath "$ZSH_ARGZERO" | xargs -d '\n' dirname)/utils.sh"
+
+args=()
+case "$1" in
+	go) cmd=(go run "$2") ;;
+	python) cmd=(python "$2") ;;
+	rust) cmd=(cargo run "$2") ;;
+	bash) cmd=(sh -c "'$2'") ;;
+	*) fatal language "'$1'" unsupported 2>&1 ;;
+esac
+
+# echo "${cmd[@]}"
+"${cmd[@]}"

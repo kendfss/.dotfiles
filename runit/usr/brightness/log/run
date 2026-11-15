@@ -1,0 +1,9 @@
+#!/bin/env sh
+
+self="$(realpath "$0")"
+owner="$(stat -c %U "$self")"
+
+# exec chpst -u "$owner" svlogd -tt /var/log
+echo brightness log
+# exec chpst -u root svlogd -tt /var/log
+exec svlogd -tt main

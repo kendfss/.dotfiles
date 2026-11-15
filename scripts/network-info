@@ -1,0 +1,25 @@
+#!/bin/env bash
+
+full="$(realpath "$0")"
+dir="$(dirname "$full")"
+self="$(basename "$0")"
+
+source "$dir/utils.sh"
+# wpa_cli status
+# wpa_cli status | grep '^\(wpa_state\|ssid\)'
+wpa_cli status | grep '^\(wpa_state\|ssid\)' | awk -F= '{print $2}' | tr '\n' ' ' | read -r ssid state
+command -v wpa_cli &>/dev/null || fatal
+cmd() {
+	# output="$(wpa_cli status | grep '^\(wpa_state\|ssid\)')"
+	wpa_cli status | grep '^\(wpa_state\|ssid\)' | awk -F= '{print $2}' | tr '\n' ' '
+	# echo "$output"
+	# state="$(grep -E 'wpa_state' <<<"$output")"
+	# ssid="$(grep -E 'ssid' <<<"$output" | tail -1)"
+}
+read -r ssid state < <(wpa_cli status | grep '^\(wpa_state\|ssid\)' | awk -F= '{print $2}' | tr '\n' ' ')
+
+case "$state" in
+	COMPLETED) echo "🛜($ssid)" ;;
+	SCANNING) echo "🔍" ;;
+	*) echo "🛑" ;;
+esac

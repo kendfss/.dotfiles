@@ -1,0 +1,13 @@
+#!/bin/sh
+# sed -eux
+
+# Prompt for a Unicode codepoint (hex)
+codepoint=$(printf '' | bemenu -p "Unicode: " --fn "monospace 12")
+
+# Exit if the user canceled or the input is empty
+[ -z "$codepoint" ] && exit 0
+
+# Clean the input (remove leading "U+" or "0x" if present) and inject via wtype
+clean_cp=$(printf '%s' "$codepoint" | sed 's/^[Uu]+\?//; s/^0[xX]//')
+char=$(perl -CS -e "print chr(0x$clean_cp)")
+wtype "$char"

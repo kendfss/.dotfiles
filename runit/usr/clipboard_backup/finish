@@ -1,10 +1,12 @@
 #!/bin/sh
 
+set -e
+
+exec 2>&1
+
 . "$(dirname "$0")/utils.sh"
 
 [ -d "$CLIPBOARD_BACKUP_FOLDER" ] && {
-	for file in "$CLIPBOARD_BACKUP_FOLDER"/*; do
-		shred -uz "$file"
-	done
+	find "$CLIPBOARD_BACKUP_FOLDER" -type f -exec shred -uz {} \;
 	rm -rf "$CLIPBOARD_BACKUP_FOLDER"
 }

@@ -7,6 +7,7 @@ set -euo pipefail
 self="$(basename "$ZSH_ARGZERO")"
 desc="$(cat "$ZSH_ARGZERO" | head -3 | tail -1)"
 
+local count
 local play=false
 local yes=false
 local sort=false
@@ -57,40 +58,33 @@ shuf() {
 	command shuf
 }
 
+head() {
+	[ -n "$count" ] || {
+		cat
+		return
+	}
+	command head $1
+}
+
 while (($#)); do
 	case "$1" in
-		-p | --play) play=true ;;
-		-p*)
-			play=true
-			argv[1]="-${1##-p}"
-			continue
-			;;
-		-y | --yes) yes=true ;;
-		-y*)
-			yes=true
-			argv[1]="-${1##-y}"
-			continue
-			;;
 		-S | --shuffle) shuffle=true ;;
+		-c | --count) count="${2}" ;;
+		-p | --play) play=true ;;
 		-s | --sort) sort=true ;;
-		-S*)
-			sort=true
-			argv[1]="-${1##-S}"
-			continue
-			;;
-		-s*)
-			sort=true
-			argv[1]="-${1##-s}"
-			continue
-			;;
+		-y | --yes) yes=true ;;
 		--help | -h*) helpText 0 ;;
-		-*)
-			fatal "unrecognized flag: $1"
-			;;
+		-S*) shuffle=true && argv[1]="-${1#-S}" && continue ;;
+		-c*) count="${1#-c}" ;;
+		-p*) play=true && argv[1]="-${1#-p}" && continue ;;
+		-s*) sort=true && argv[1]="-${1#-s}" && continue ;;
+		-y*) yes=true && argv[1]="-${1#-y}" && continue ;;
+		-*) fatal "unrecognized flag: $1" ;;
 		*) items+=("$1") ;;
 	esac
 	shift
 done
+
 ((${#items})) || items=("$(pwd)")
 
 $sort && $shuffle && fatal why sort and shuffle?
@@ -100,11 +94,12 @@ if $yes; then
 else
 	_fn() { printf '%s\n' $@; }
 fi
+
 _fn "$(
 	local i=${#items}
 	local dirs=()
 	while ((i)); do
-		local item="$items[$i]"
+		local item="${items[$i]}"
 		i=$((i - 1))
 		[ -L "$item" ] && item="$(realpath "$item")"
 		[ -f "$item" ] && [[ $item =~ "\.(${MUSIC_FORMATS})" ]] && {
@@ -122,7 +117,7 @@ _fn "$(
 	# 	# fd --type f "\.($MUSIC_FORMATS)" | sort | to -d '\s+' echo | while read -r line; do mpv --no-video "$line"; done
 	# done
 	fd --type f "\.($MUSIC_FORMATS)" "${dirs[@]}" | sort | shuf
-)" | {
+)" | head -$count | {
 	if $play; then
 		xargs -d '\n' mpv --no-video
 	else

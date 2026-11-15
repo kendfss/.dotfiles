@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/env sh
 
-root="$(realpath "$0" | xargs -d '\n' dirname | xargs -d '\n' dirname)"
-[ -e "$root/conf" ] && . "$root/conf"
+self="$(realpath "$0")"
+owner="$(stat -c %U "$self")"
 
-mkdir -p /tmp/log/xnap
-
-exec svlogd -tt /tmp/log/xnap
+exec 2>&1
+# exec chpst -u "$owner" svlogd -tt /var/log/xnap
+exec sudo -u "$owner" svlogd -tt /var/log/xnap

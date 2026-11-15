@@ -1,0 +1,123 @@
+# ANSI Theme for Helix
+# Ported from the bat/Sublime Text template.
+# This theme relies on your terminal's 16-color palette.
+inherits = 'wolf-alabaster-dark'
+
+'ui.background'            = {}
+'ui.bufferline'            = { fg = 'fg', bg = {}, modifiers = [ 'bold' ] }
+'ui.bufferline.active'     = { fg = 'fg', bg = 'panel', modifiers = [ 'bold' ] }
+'ui.bufferline.background' = { bg = {} }
+'ui.gutter'                = {}
+'ui.gutter.selected'       = { bg = 'panel', modifiers = [ 'underlined' ] }
+
+# 'ui.text' = 'default'
+# 'ui.gutter' = { bg = 'default' }
+# 'ui.linenr' = 'default'
+
+# Comments (ANSI 2 - Green)
+'comment' = 'yellow'
+
+# Keywords (ANSI 5 - Magenta)
+'keyword'          = 'magenta'
+'keyword.operator' = 'magenta'
+
+# Functions (ANSI 4 - Blue)
+'function'        = 'blue'
+'function.method' = 'blue'
+
+# Labels / Parameters (ANSI 6 - Cyan)
+'label'              = 'cyan'
+'variable.parameter' = 'white'
+
+# Classes / Types (ANSI 3 - Yellow)
+'type'       = 'yellow'
+'type.class' = 'yellow'
+'type.enum'  = 'yellow'
+
+# Storage (ANSI 5 - Magenta)
+'keyword.storage' = 'magenta'
+
+# Support / Built-ins (ANSI 6 - Cyan)
+'function.builtin' = 'cyan'
+'type.builtin'     = 'cyan'
+
+# Strings (ANSI 2 - Green)
+'string'             = 'green'
+'constant.character' = 'green'
+
+# Numbers / Constants (ANSI 3 - Yellow)
+'constant.numeric' = 'yellow'
+'constant'         = 'yellow'
+'constant.builtin' = 'yellow'
+
+# Tags (ANSI 1 - Red)
+'tag' = 'red'
+
+# Attributes (ANSI 3 - Yellow)
+'attribute' = 'yellow'
+
+# Headings (ANSI 4 - Blue, Bold)
+'markup.heading' = { fg = 'blue', modifiers = [ 'bold' ] }
+
+# Units (ANSI 3 - Yellow)
+'keyword.control'   = 'yellow' # Note: mapped to control as units are rare
+'keyword.directive' = 'yellow'
+
+# Bold / Italic Markup
+'markup.bold'   = { modifiers = [ 'bold' ] }
+'markup.italic' = { modifiers = [ 'italic' ] }
+
+# Code / Inline (ANSI 2 - Green)
+'markup.raw.inline' = 'green'
+'markup.raw'        = 'green'
+
+# Links (ANSI 1 - Red for text, ANSI 3 - Yellow for URL)
+'markup.link.text' = 'red'
+'markup.link.url'  = 'yellow'
+
+# Quotes (ANSI 3 - Yellow)
+'markup.quote' = 'yellow'
+
+# Inserted / Deleted (ANSI 2 - Green / ANSI 1 - Red)
+'diff.plus'  = 'green'
+'diff.minus' = 'red'
+
+# Changed (ANSI 5 - Magenta)
+'diff.delta' = 'yellow'
+
+# Colors / Regex / Escapes (ANSI 6 - Cyan)
+'constant.other.color'      = 'cyan'
+'string.regexp'             = 'cyan'
+'constant.character.escape' = 'green'
+
+# Embedded / Interpolation (ANSI 5 - Magenta)
+'punctuation.special' = 'magenta'
+'variable'            = 'white'   # Interpolation fallback
+
+# Diagnostics (using background colors as per original)
+'diagnostic.deprecated' = { bg = 'black', underline = { color = 'light-blue', style = 'double_line' }, modifiers = [ 'italic', 'bold' ] }
+'diagnostic.error'      = { bg = 'black', underline = { color = 'light-red', style = 'curl' }, modifiers = [ 'crossed_out', 'italic', 'bold' ] }
+'diagnostic.info'       = { bg = 'black', underline = { color = 'light-green', style = 'dotted' }, modifiers = [ 'italic', 'bold' ] }
+'diagnostic.warning'    = { bg = 'black', underline = { color = 'light-yellow', style = 'curl' }, modifiers = [ 'italic', 'bold' ] }
+'diagnostic.hint'       = { bg = 'green', underline = { color = 'light-yellow', style = 'curl' }, modifiers = [ 'italic', 'bold' ] }
+
+# GENERAL - Diagnostics (LSP errors/warnings)
+diagnostic = { underline = { style = "curl" } }
+error      = { fg = "red", modifiers = [ "bold" ] }
+hint       = { fg = "cyan" }
+info       = { fg = "green" }
+warning    = { fg = "yellow" }
+
+
+[palette]
+# panel = '#888888'
+panel    = '#452859'
+orange_2 = '#FFA348'
+control  = '#FFA348'
+orange_3 = '#2fA348'
+orange_4 = '#77A348'
+blue_2   = '#62A0EA'
+purple_2 = '#C061CB'
+red_4    = '#C01C28'
+yellow_2 = '#F8E45C'
+hilite   = '#ffffbf'

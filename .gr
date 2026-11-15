@@ -1,0 +1,22 @@
+Inf=+Inf
+NaN=NaN
+abs=x=>if x<0{-x}else{x}
+bits=n=>coeffs(n,2)
+coeffs=(n,b)=>{if n==0{return [0]}out=[]for n>0{m=n/b out=out+[n-m*b]n=m}return out}
+filter=(pred,buf)=>{out=[]for e=buf{if pred(e){out+=[e]}}out}
+func str(x){sprintf("%v",[x])}
+interactive=true
+keys=m=>{if len(m)==0{return []}return [first(m).key]+self(rest(m))}
+log2=x=>ln(x)/ln(2)
+map=(fn,buf)=>{out=[]for e=buf{out=out+[fn(e)]}return out}
+mat=(buf,w)=>{i=0 for i<len(buf){println(buf[i:i+w])i+=w}}
+nil=nil
+null=nil
+num=(buf,base)=>{b=1 out=0 for i=len(buf){out=out+buf[i]*b b=b*base}return out}
+printf=(fmtstr,..)=>print(sprintf(fmtstr,..))
+prod=(a,b)=>{out=[]for y=b{for x=a{out+=[[x,y]]}}out}
+range=n=>if n<=0{return []}else{return self(n-1)+[n-1]}
+send=(fn,buf)=>for e=buf{fn(e)}
+show=buf=>{send(x=>{println(x)},buf)return}
+trot=(fn,buf)=>{if len(buf)<2{return []}out=[]for i=len(buf)-1{out=out+[fn(buf[i],buf[i+1])]}return out}
+uniq=buf=>{buf=sort(buf) out=[]for i=len(buf){if len(out)==0||out[len(out)-1]!=buf[i]{out+=[buf[i]]}}out}

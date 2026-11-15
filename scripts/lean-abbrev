@@ -1,0 +1,14 @@
+#!/bin/env sh
+
+# read abbreviation, prints symbol
+
+set -eu
+
+blob="$HOME/.local/share/lean-abbreviations.json"
+[ -f "$blob" ] ||
+	curl -sSL https://raw.githubusercontent.com/Julian/lean.nvim/refs/heads/main/vscode-lean/abbreviations.json >"$blob"
+abbrev=$(cat)
+perl -CS -MJSON::PP -e '
+  my $t = decode_json(do { local $/; open my $f, "<", $ARGV[0]; <$f> });
+  print $t->{$ARGV[1]} // $ARGV[1]
+' "$blob" "$abbrev" | sed -E 's:.+:&\n:'

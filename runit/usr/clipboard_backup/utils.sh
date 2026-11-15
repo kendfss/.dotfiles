@@ -1,6 +1,11 @@
 #!/bin/sh
 
-CLIPBOARD_BACKUP_FOLDER="$HOME/.clipboard_backup"
+set -e
+
+self="$(realpath "$0")"
+owner="$(stat -c %U "$self")"
+
+CLIPBOARD_BACKUP_FOLDER="$(dirname "$self")/.clipboard_backups"
 CLIPBOARD_BACKUP_COUNT_LIMIT=50
 CLIPBOARD_BACKUP_COUNT=0
 PRIMARY_BACKUP_COUNT=0

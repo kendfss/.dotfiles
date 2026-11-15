@@ -1,9 +1,11 @@
 #!/bin/env zsh
 
-if [ -n "$(command -v gclip)" ]; then
-	gclip -paste
-elif [ -n "$(command -v xclip)" ]; then
+if [ -n "$(command -v xclip)" ]; then
 	xclip -o -selection clipboard
+elif [ -n "$(command -v wl-wl-paste)" ]; then
+	wl-paste -n
+elif [ -n "$(command -v gclip)" ]; then
+	gclip -paste
 elif [ -n "$(command -v termux-clipboard-get)" ]; then
 	termux-clipboard-get
 else

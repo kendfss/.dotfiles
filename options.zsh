@@ -1,5 +1,7 @@
 #!/bin/env zsh
 
+setopt prompt_subst # allow arithmetic and command substitutions in prompt
+
 # HISTORY
 # this option is a liability # setopt HIST_EXPIRE_DUPS_FIRST # When duplicates are entered, get rid of the duplicates first when we hit $HISTSIZE
 unsetopt HIST_EXPIRE_DUPS_FIRST # When duplicates are entered, get rid of the duplicates first when we hit $HISTSIZE

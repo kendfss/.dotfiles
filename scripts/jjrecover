@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# rebuild a jj workspace whose working-copy tree object is missing,
+# keeping on-disk files and moving the store into the new dir.
+# usage: $0 <dir> [rev]      env: WS=default
+set -euo pipefail
+
+dir=$(realpath -- "${1:?usage: jj-rehome <dir> [rev]}")
+ws=${WS:-default}
+new="$dir.new"
+stale="$dir.stale"
+bak="$dir.bak-$(date +%Y%m%d-%H%M%S)"
+
+[[ -d $dir/.jj/repo ]] || {
+	echo "$dir/.jj/repo isn't a directory (not the store-owning workspace)" >&2
+	exit 1
+}
+[[ ! -e $new && ! -e $stale ]] || {
+	echo "$new or $stale already exists" >&2
+	exit 1
+}
+
+# refuse to run if anything has the dir open (editors, LSPs, shells cd'd into it)
+if command -v lsof >/dev/null; then
+	if busy=$(lsof +D "$dir" 2>/dev/null | awk 'NR>1 {print $1" (pid "$2")"}' | sort -u) && [[ -n $busy ]]; then
+		echo "$dir is in use by:" >&2
+		echo "$busy" | sed 's/^/  /' >&2
+		echo "close these (or set FORCE=1 to skip this check) and retry" >&2
+		[[ ${FORCE:-} == 1 ]] || exit 1
+	fi
+else
+	echo "lsof not found, cannot check if directory is in in-use by jj or an editor" >&2
+	exit 1
+fi
+
+# last commit the stale workspace recorded, unless given explicitly
+rev=${2:-$(jj -R "$dir" --ignore-working-copy log --no-graph -r "$ws@" -T 'commit_id.short(12)')}
+echo "workspace=$ws rev=$rev"
+
+cp -a "$dir" "$bak"
+echo "backup: $bak"
+
+# these can exit nonzero after succeeding on a stale wc, so verify by state instead
+jj -R "$dir" --ignore-working-copy workspace forget "$ws" || true
+jj -R "$dir" --ignore-working-copy workspace add --name "$ws" "$new" -r "$rev" || true
+jj -R "$new" workspace list | grep -q "^$ws:" ||
+	{
+		echo "workspace add failed; backup at $bak" >&2
+		exit 1
+	}
+
+cd "$new"
+jj edit "$rev"
+rsync -a --delete --exclude=/.jj --exclude=/.git "$dir"/ "$new"/
+jj st # snapshot on-disk state
+
+# move the store (and git dir, if colocated) into the new workspace
+rm "$new/.jj/repo"
+mv "$dir/.jj/repo" "$new/.jj/repo"
+if [[ -d $dir/.git ]]; then
+	rm -f "$new/.git"
+	mv "$dir/.git" "$new/.git"
+	rm -rf "$new/.git/worktrees"
+fi
+
+jj st >/dev/null || {
+	echo "verify failed; restore from $bak" >&2
+	exit 1
+}
+
+# swap into place
+cd "$(dirname "$dir")"
+mv "$dir" "$stale"
+mv "$new" "$dir"
+cd "$dir"
+jj workspace list
+jj st
+[[ -d .git ]] && git status -s
+
+echo
+echo "done. after a real commit/push works, clean up:"
+echo "  rm -rf '$stale' '$bak'"

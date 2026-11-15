@@ -1,12 +1,16 @@
-case "$SHELL" in
+case "$(basename "$SHELL")" in
 	bash) alias exit='exit &>/dev/null' ;;
 	zsh)
 		alias -g G="| grep" && alias -g L="| less"
 		[[ "$(type run-help)" == *"alias"* ]] && unalias run-help
 		autoload run-help
+		export HELPDIR=/usr/share/zsh/"${ZSH_VERSION}"/help
 		alias help=run-help
 		;;
 esac
+
+# alias wine=/home/kendfss/.local/share/wine-11.20-amd64/bin/wine
+# alias wineboot=/home/kendfss/.local/share/wine-11.20-amd64/bin/wineboot
 
 alias nansi="command sed -E 's/\x1B\[([0-9]{1,3}(;[0-9]{1,2})*)?[mGK]//g'"
 alias nansi="command sed -E 's/\x1B\[[0-9;]*[a-zA-Z]//g'"
@@ -113,10 +117,6 @@ fi
 [ -n "$EDITOR" ] && alias editor="$EDITOR"
 [ -x "$(command -v v)" ] && alias voc="v doc -comments"
 [ -x "$(command -v mysql)" ] && alias sqin="mysql -u root -p"
-[ -x "$(command -v go)" ] && {
-	alias gtidy="go mod tidy -v"
-	alias gup="git init && joe g go > .gitignore && license gpl > LICENSE && go mod init github.com/$USER/$(basename $PWD) && go mod tidy -v"
-}
 [ -x "$(command -v pack)" ] && alias idr="pack repl"
 
 alias lst="ls --time=ctime"

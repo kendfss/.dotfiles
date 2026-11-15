@@ -3,6 +3,7 @@
 # search github repos, check them each out, and print your choices
 
 set -euo pipefail
+# set -x
 
 self="$(basename "$ZSH_ARGZERO")"
 desc="$(cat "$ZSH_ARGZERO" | head -3 | tail -1)"

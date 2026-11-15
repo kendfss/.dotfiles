@@ -1,3 +1,51 @@
-inherits = "adwaita-dark"
-# inherits = "darcula-solid"
-"ui.background" = {}
+# inherits = 'adwaita-dark'
+# inherits = 'darcula-solid'
+inherits             = 'wolf-alabaster-dark'
+'ui.background'      = {}
+tabstop              = { modifiers = [ 'italic' ], bg = '#452859' }
+'ui.linenr'          = { fg = 'fg' }
+'ui.linenr.selected' = { fg = 'fg', bg = 'panel', modifiers = [ 'bold' ] }
+'ui.highlight'       = { bg = 'panel' }
+'ui.gutter'          = {}
+'ui.gutter.selected' = { bg = 'panel', modifiers = [ 'underlined' ] }
+'ui.cursorline'      = { bg = 'panel', modifiers = [  ] }
+
+'ui.bufferline'            = { fg = 'fg', bg = {}, modifiers = [ 'bold' ] }
+'ui.bufferline.active'     = { fg = 'fg', bg = 'panel', modifiers = [ 'bold' ] }
+'ui.bufferline.background' = { bg = {} }
+
+'ui.virtual.ruler' = { bg = 'panel' }
+keyword            = { fg = 'orange_2' }
+'keyword.control'  = { fg = 'control' }
+# 'keyword.operator'         = { fg = 'orange_2', modifiers = [ 'bold' ] }
+'keyword.directive' = { fg = 'orange_2', modifiers = [ 'bold' ] }
+# 'keyword.storage'  = { fg = 'orange_2', modifiers = [ 'bold' ] }
+'variable.builtin' = { fg = 'orange_3' }
+variable           = { fg = 'fg' }
+type               = { fg = 'orange_4' }
+# 'ui.text.focus'            = { bg = 'panel', modifiers = [ 'underline' ] }
+
+'warning' = 'yellow_2'
+'error'   = 'red_4'
+'info'    = 'purple_2'
+'hint'    = 'blue_2'
+
+'diagnostic.hint'        = { fg = 'blue_2', modifiers = [ 'dim' ] }
+'diagnostic.info'        = { fg = 'purple_2', modifiers = [ 'dim' ] }
+'diagnostic.error'       = { fg = 'red_4', modifiers = [ 'underlined' ] }
+'diagnostic.warning'     = { fg = 'yellow_2', modifiers = [ 'underlined' ] }
+'diagnostic.unnecessary' = { modifiers = [ 'dim' ] }
+'diagnostic.deprecated'  = { modifiers = [ 'crossed_out' ] }
+
+
+[palette]
+# panel = '#888888'
+panel    = '#452859'
+orange_2 = '#FFA348'
+control  = '#FFA348'
+orange_3 = '#2fA348'
+orange_4 = '#77A348'
+blue_2   = '#62A0EA'
+purple_2 = '#C061CB'
+red_4    = '#C01C28'
+yellow_2 = '#F8E45C'

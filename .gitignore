@@ -1,4 +1,7 @@
+.jj/
 *.squares
+path/
+path/to/output.*
 squares.txt
 .ignore
 blob*.json

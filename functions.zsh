@@ -1,21 +1,120 @@
 # https://zsh.sourceforge.io/Doc/Release/Conditional-Expressions.html
 autoload -Uz add-zsh-hook
 
-# [ -x "$(command -v tmux 2>/dev/null)" ] && tmux() {
-# 	(($#)) || exec command tmux
-# 	[ "$1" = "@" ] || exec command tmux
-# 	command tmux "$@"
-# }
+source_if() {
+	while (($#)); do
+		[ ! -e "$1" ] || source "$1"
+		shift
+	done
+}
+
+exe() {
+	[ -x "$(command -v "$1")" ] || return 1
+}
+
+zfunc_add() {
+	local local_dir="$HOME/.zfunc"
+	[ -d "$local_dir" ] || {
+		mkdir -p "$local_dir" || return 1
+		fpath+=("$local_dir")
+	}
+	! exe "$1" || {
+		local pth="$local_dir/_$1"
+		[ -e "$pth" ] || {
+			"$@" >"$pth"
+		}
+	}
+}
+
+lfcd() {
+	local dir
+	dir="$(lfwrapper -print-last-dir "$@")"
+	while ! cd "$dir" 2>/dev/null; do
+		dir="$(dirname -- "$dir")"
+	done
+}
+
+command -v lf &>/dev/null && {
+	lfwrapper() {
+		command lf-run "$@"
+		awk '$1 == "archivemount" { print $2 }' /etc/mtab | while read -r mntdir; do
+			umount "$(printf "$mntdir")"
+			rmdir "$(printf "$mntdir")"
+		done
+	}
+	alias lf=lfwrapper
+}
+
+alarm() {
+	local tune="$(tunes -S /home/tmp/nicotine/downloads | head -1)"
+	echo "$tune" >&2
+	mpv "$tune"
+}
+
+ap() {
+	sed 's:\n+:\n:g' | while read -r line; do
+		$* "$line"
+	done
+}
+
+raise() {
+	while (($#)); do
+		local w=$(tr '\0' '\n' </proc/$1/environ | sed -n 's/^WINDOWID=//p')
+		[[ -n $w ]] && xdotool windowactivate $w
+		shift
+	done
+}
+
+session() {
+	local flags=()
+	local file="$HOME/.work_session"
+	[ $# -gt 0 ] || {
+		lsof -c hx | awk '$5 == "DIR"' | rg "($HOME|$CLONES|$DOTFILES|$CONFIG)"
+		return
+	}
+	while (($#)); do
+		case "$1" in
+			-r | --restore)
+				[ -f $FILE ] || $0 >$file
+				pgrep -x ghostty | to -c kill
+				sort -u <$file | rev | awk '{print $1}' | rev | to -o ghostty +new-window --working-directory={}
+				return
+				;;
+			-*) echo "unrecognized flag: '$1'" >&2 ;;
+			*) flags+=(-c "$1") ;;
+		esac
+		shift
+	done
+}
+
+command -v typst &>/dev/null && typ() {
+	case "$1" in
+		w | watch) typst watch --input mode=watch main.typ ;;
+		b | build | c | compile) typst compile main.typ ;;
+		*) typst "$@" ;;
+	esac
+}
+
+all() {
+	where "$1" | xargs -d '\n' realpath | sort -u
+}
 
 pcd() {
 	cd "$(p)"
+}
+
+tmpf() {
+	local f="$(mktemp)"
+	$EDITOR "$f"
+	chmod +x "$f"
+	"$f"
 }
 
 mkhx() {
 	clone helix-editor/helix
 	git pull
 	cargo build --locked
-	sudo mv target/release/hx /usr/local/bin
+	mv {target/release,$HOME/.cargo/bin}/hx
 }
 
 wpax() {
@@ -79,9 +178,12 @@ tabulate() {
 
 [ -x "$(command -v tmux 2>/dev/null)" ] && tmux() {
 	(($#)) || exec command tmux
-	[ "$1" = "@" ] || exec command tmux "$@"
+	[ "$1" = "@" ] || {
+		command tmux "$@"
+		return
+	}
 	shift
-	command tmux "$@"
+	exec command tmux "$@"
 }
 
 [ -x "$(command -v herdr 2>/dev/null)" ] && herdr() {
@@ -89,9 +191,9 @@ tabulate() {
 		[ -n "$(ps aux | grep '[h]erdr')" ] || exec command herdr --no-session
 		exec command herdr
 	}
-	[ "$1" = "@" ] || exec command herdr "$@"
+	[ "$1" = "@" ] || command herdr "$@"
 	shift
-	command herdr "$@"
+	exec command herdr "$@"
 }
 
 command -v namespacer &>/dev/null || namespacer() { echo "$@_2"; }
@@ -165,8 +267,8 @@ gallery-dl() {
 			ctr=$((ctr + 1))
 			printf "%d/%d: " "$ctr" "$count"
 			printf "%s\n" "$1"
-			# if ! command gallery-dl "${browser[@]}" "${flags[@]}" "$1"; then
-			if ! command gallery-dl "${flags[@]}" "$1"; then
+			if ! command gallery-dl "${browser[@]}" "${flags[@]}" "$1"; then
+				# if ! command gallery-dl "${flags[@]}" "$1"; then
 				fails+=("$1")
 			fi
 			shift
@@ -219,17 +321,6 @@ smpl() {
 			printf " %s" "${name[2,-1]}"
 		} | to fopa | rev | awk '{print $1}' | rev
 	)"
-}
-
-source_if() {
-	while (($#)); do
-		[ -e "$1" ] && source "$1"
-		shift
-	done
-}
-
-lfcd() {
-	cd "$(command lf -print-last-dir "$@")"
 }
 
 poc() {
@@ -328,9 +419,18 @@ surl() {
 clone() {
 	# local lines="$(ENV="" command clone "$@")"
 	local lines="$(command clone "$@")"
+	[ -n "$lines" ] || {
+		mcd "$CLONES/$USER/$1"
+		return
+	}
 	local dir="$(echo "$lines" | tail -n1)"
 	[ $(echo "$lines" | wc -l) -gt 1 ] && echo "$lines"
 	[ -d "$dir" ] && cd "$dir"
+	[ -d ".helix" ] && {
+		echo .helix/ found
+		return 1
+	}
+	return 0
 }
 
 padd() {
@@ -637,7 +737,7 @@ please() {
 		shift
 	done
 	if $sudo; then
-		local guard=pkexec
+		local guard=augh
 		command -v "$guard" &>/dev/null || guard=sudo
 		local full=("$guard" env "${vars[@]}" "$cmd" "${args[@]}")
 	else
@@ -663,7 +763,7 @@ map() {
 }
 
 gofiles() {
-	local args="$@"
+	local args=("$@")
 	[ "${#args}" = 0 ] && args+="."
 	for arg in "${args[@]}"; do
 		find "$arg" -name "*.go" ! -name "*_string.go" ! -name "*_templ.go"
@@ -818,18 +918,30 @@ gg() {
 	echo "$lines"
 }
 
-goclean() {
-	# Clean go's caches and re-fetch dependencies
-	local origin="$(pwd)"
-	([ "$1" = "l" ] || [ "$1" = "-l" ] || [ "$1" = "log" ] || [ "$1" = "--log" ]) && du -sh "$HOME/(.|)*" 2>/dev/null | sort -h
-	go clean -x -{test,fuzz,mod}cache
-	for name in $CLONES/$USER/**/go.mod; do
-		local dir="$(dirname "$name")"
-		echo "$dir" && cd "$dir" && go mod tidy
-		echo
-	done
-	([ "$1" = "l" ] || [ "$1" = "-l" ] || [ "$1" = "log" ] || [ "$1" = "--log" ]) && du -sh "$HOME/(.|)*" 2>/dev/null | sort -h
-	cd "$origin"
+command -v go &>/dev/null && {
+	gup() {
+		git init && joe g go >.gitignore && license gpl >LICENSE && go mod init github.com/$USER/$(basename $(pwd)) && go mod tidy -v
+	}
+	gmt() {
+		go mod tidy -v
+	}
+
+	gmi() {
+		go mod init "$REPO_HOST/$USER/$(basename "$(pwd)")"
+	}
+	goclean() {
+		# Clean go's caches and re-fetch dependencies
+		local origin="$(pwd)"
+		([ "$1" = "l" ] || [ "$1" = "-l" ] || [ "$1" = "log" ] || [ "$1" = "--log" ]) && du -sh "$HOME/(.|)*" 2>/dev/null | sort -h
+		go clean -x -{test,fuzz,mod}cache
+		for name in $CLONES/$USER/**/go.mod; do
+			local dir="$(dirname "$name")"
+			echo "$dir" && cd "$dir" && go mod tidy
+			echo
+		done
+		([ "$1" = "l" ] || [ "$1" = "-l" ] || [ "$1" = "log" ] || [ "$1" = "--log" ]) && du -sh "$HOME/(.|)*" 2>/dev/null | sort -h
+		cd "$origin"
+	}
 }
 
 myip() {
@@ -903,14 +1015,6 @@ xr() {
 		sudo xbps-remove $*
 	fi
 	return $?
-}
-
-gmt() {
-	go mod tidy
-}
-
-gmi() {
-	go mod init "$REPO_HOST/$USER/$(basename "$(pwd)")"
 }
 
 clean() {

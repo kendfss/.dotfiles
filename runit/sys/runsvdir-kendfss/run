@@ -7,6 +7,13 @@ set -eu
 exec 2>&1
 
 root="$(realpath "$0" | xargs -d '\n' dirname)"
+
 [ ! -e "$root/conf" ] || . "$root/conf"
+
+[ -d "$svdir" ] || {
+	mkdir -p "$svdir"
+	chown "$user:$user" "$svdir"
+	chmod 700 "$svdir"
+}
 
 exec chpst -u "$user:$groups" runsvdir -P "$svdir"

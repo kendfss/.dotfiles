@@ -20,14 +20,35 @@ command -v bat >/dev/null || bat() { cat "$@"; }
 # 	fi
 # }
 
+# image() {
+# 	if [ -n "$TMUX" ]; then
+# 		chafa -f symbols -s "${2}x$3" --animate off "$1"
+# 	elif [ -n "$KITTY_WINDOW_ID" ] || [ "$TERM" = 'xterm-kitty' ]; then
+# 		chafa -f kitty -s "${2}x$3" --animate off "$1"
+# 	elif [ "$TERM" = 'wezterm' ] || [ "$TERM_PROGRAM" = "WezTerm" ]; then
+# 		chafa -f iterm -s "${2}x$3" --animate off "$1"
+# 	else
+# 		chafa -f symbols -s "${2}x$3" --animate off "$1"
+# 	fi
+# }
+
 image() {
-	if [ -n "$TMUX" ]; then
-		chafa -f symbols -s "${2}x$3" --animate off "$1"
-	elif [ -n "$KITTY_WINDOW_ID" ] || [ "$TERM" = 'xterm-kitty' ]; then
-		chafa -f kitty -s "${2}x$3" --animate off "$1"
-	elif [ "$TERM" = 'wezterm' ] || [ "$TERM_PROGRAM" = "WezTerm" ]; then
-		chafa -f iterm -s "${2}x$3" --animate off "$1"
+	# Check if ueberzugpp is running and the FIFO exists
+	if [ -n "$FIFO_UEBERZUG" ] && [ -p "$FIFO_UEBERZUG" ]; then
+		# $1 = file path
+		# $2 = width (in chars)
+		# $3 = height (in chars)
+		# $4 = x position (column)
+		# $5 = y position (row)
+
+		# Escape path for JSON
+		safe_path=$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')
+
+		# Send add command
+		printf '{"action": "add", "identifier": "PREVIEW", "x": %d, "y": %d, "width": %d, "height": %d, "scaler": "contain", "path": "%s"}\n' \
+			"${4:-0}" "${5:-0}" "$2" "$3" "$safe_path" >"$FIFO_UEBERZUG"
 	else
+		# Fallback to chafa if ueberzugpp is not available
 		chafa -f symbols -s "${2}x$3" --animate off "$1"
 	fi
 }

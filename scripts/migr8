@@ -1,29 +1,110 @@
 #!/bin/env zsh
 
-# move files between devices with rsync and checksums
+# periodic (NOT FRESH) bacukp support: move files between devices with rsync and checksums
 
-[ $# = 0 ] || {
-	echo not ready for generic use >&2
-	exit 1
+# TODO fzf && comm check for stragglers
+
+set -euo pipefail
+
+self="$(basename "$ZSH_ARGZERO")"
+desc="$(realpath "$ZSH_ARGZERO" | xargs -d '\n' cat | head -3 | tail -1)"
+
+source "$(realpath "$ZSH_ARGZERO" | xargs -d '\n' dirname)/utils.sh"
+
+alias sed="sed -E"
+alias grep="grep -E"
+
+need numbat bat
+
+help() {
+	cat <<-eof | bat -lmd
+		usage $self:
+
+		$desc
+
+		flags:
+		    -h, --help                 print this message and exit
+	eof
+	(($#)) || fatal dev error: no exit code given to $0 func
+	exit $1
 }
 
-set -euopipefail
+files=()
+folders=()
+typeset -A sources=()
+destination=''
 
-count="$(fd -Iutf . /mnt/elements/{drive,music,nicotine,samples} | wc -l)"
-[ $count -gt 0 ] || {
-	echo no files found
-	exit 1
-}
+while (($#)); do
+	case "$1" in
+		--help | -h*) help 0 ;;
+		-*) fatal unsupported flag: "'$1'" ;;
+		*) if [ $# -gt 1 ]; then
+			if [ -f "$1" ]; then
+				files+=($1)
+			else
+				folders+=($1)
+			fi
+		else
+			destination="$1"
+		fi ;;
+	esac
+	shift
+done
 
-sums="$(fd -Iutf . /mnt/elements/{drive,music,nicotine,samples} | to shasum)"
-tee /home/tmp/sums >/dev/null <<<"$sums"
+destination="${destination%/}"
+((${#folders} + ${#files})) || fatal nothing to send
 
-rsync -av --info=progress2 --info=name0 /mnt/elements/{drive,music,nicotine,samples} /home/tmp
-new_count="$(fd -Iutf . /home/tmp/{drive,music,nicotine,samples} | wc -l)"
-[ "$count" = "$new_count" ] || {
-	echo pre and post counts disagree >&2
-	exit 1
-}
+presums='' # for the inverse process
+if [ -e "$destination" ]; then
+	[ -d "$destination" ] || fatal destination is file
+	[ -f "$destination/sums" ] && presums="$destination/sums"
+else
+	mkdir -p "$destination"
+fi
+
+echo sending:
+[ ${#folders} = 0 ] || printf '\t%s\n' ${folders[@]}
+[ ${#files} = 0 ] || printf '\t%s\n' ${files[@]}
+echo "to: $destination"
+
+# printf 'confirm [yN]: '
+# read -r resp
+# case "$(tr '[:upper:]' '[:lower:]' <<<"$resp")" in
+# 	y | yes) ;;
+# 	*) exit 0 ;;
+# esac
+
+src_volume="$(numbat -e "$(print -l "${files[@]}" "${folders[@]}" | xargs -d '\n' du -Pks | awk '{print $1}' | tr '\n' '+' | sed 's:\+$::')" | sed 's:_+::g')"
+dst_volume="$(df -Pk "$destination" | awk '{print $2}' | tail -1)"
+
+# echo "$src_volume <= $dst_volume"
+# numbat -e "$src_volume <= $dst_volume"
+
+[ "$(numbat -e "$src_volume <= $dst_volume")" = true ] ||
+	fatal target volume has $(numbat -e " $dst_volume KiB -> GB") but want to copy total of $(numbat -e "$src_volume KiB -> GB")
+
+all_files=("${files[@]}" "${(@0)$(fd -0Iutf . "${folders[@]}")}")
+[ ${#all_files} -gt 0 ] ||
+	fatal no files found
+echo "found ${#all_files} file(s)"
+
+all_files=(${(o)all_files})
+sums="$(print -l "${all_files[@]}" | to shasum)"
+tee "$destination/sums" >/dev/null <<<"$sums"
+echo "got checksums"
+
+rsync -av --info=progress2 --info=name0 "${files[@]}" "${folders[@]}" "$destination"
+new_count="$(
+	{
+		fd -Iutf . ${destination}/${^${(@f)$(print -l "${folders[@]}" | to basename)}}
+		print -l ${destination}/${^${(@f)$(print -l "${files[@]}" | to basename)}}
+	} | wc -l
+)"
+[ "${#all_files}" = "$new_count" ] ||
+	fatal pre and post counts disagree: want ${#all_files}, have $new_count
+
+exit
+fatal not ready for generic use
 
 sed 's:/mnt/elements:/home/tmp:' </home/tmp/sums | tee /home/tmp/sums2 >/dev/null
 fails="$(shasum --check /home/tmp/sums2 | {
@@ -31,9 +112,7 @@ fails="$(shasum --check /home/tmp/sums2 | {
 	[ $? -ne 0 ] || exit 1
 })" || true
 
-[ -z "$fails" ] || {
-	echo missing/failing checksums >&2
-	exit 1
-}
+[ -z "$fails" ] ||
+	fatal missing/failing checksums
 
-rm -rf /mnt/elements/{drive,music,nicotine,samples}
+# rm -rf /mnt/elements/{drive,music,nicotine,samples}

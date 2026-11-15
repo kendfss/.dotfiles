@@ -136,6 +136,7 @@ slashed() {
 take() {
 	command mkdir -p "$1"
 	cd "$1"
+	[ "$cmd" = git ] && [ ! -e .jj ] || jj git init .
 }
 
 # depth="--depth=1"
@@ -157,10 +158,10 @@ take() {
 # 	owner="$USER"
 # }
 
-if [ -n "${host_commands[$host]:-''}" ]; then
+if [ -n "${host_commands[$host]:-}" ]; then
 	:
 else
-	if [ -n "${alias_table[$host]:-''}" ]; then
+	if [ -z "${alias_table[$host]:-}" ]; then
 		fatal unrecognized host: $host
 	else
 		host="${alias_table[$host]}"
@@ -189,6 +190,7 @@ for repo in "$@"; do
 	else
 		error "fetching $dev/$repo" # using error instead of echo so that only directory names are printed to stdout which lets wrappers easily navigate into the right directory
 		take "$clone_dir/$dev" && $cmd clone $depth "$_url/$dev/$repo" "$repo" >&2
+		# [ "$cmd" = git ] && jj git init
 	fi
 	echo "$pth"
 done

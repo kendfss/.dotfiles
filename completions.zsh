@@ -1,37 +1,38 @@
-local local_dir="$HOME/.zfunc"
-mkdir -p "$local_dir" || exit 1
-fpath+=("$local_dir")
+case "$SHELL" in
+	*zsh)
+		[ -z "${_comps+x}" ] && {
+			autoload -U compinit
+			compinit
+			zstyle ':completion:*' menu select
+		}
+		;;
+	*bash)
+		[ -z "${_comps+x}" ] && {
+			autoload -U bashcompinit
+			bashcompinit
+		}
+		;;
+esac
 
-[ -z "${_comps+x}" ] && {
-	autoload -U compinit
-	compinit
-	autoload -U bashcompinit
-	bashcompinit
-}
-zstyle ':completion:*' menu select
+cnf="/usr/share/zsh/plugins/xbps-command-not-found/xbps-command-not-found.zsh"
+[ -e "$cnf" ] && source "$cnf"
 
-exe() {
-	[ -x "$(command -v "$1")" ] || return 1
-}
+! exe android || source <(android completion zsh)
+! exe rustup || source <(rustup completions zsh)
+! exe cheat || eval "$(cheat --completion zsh)"
+! exe dlv || source <(dlv completion zsh)
+! exe fzf || source <(fzf --zsh)
+! exe gh || source <(gh completion -s zsh)
+! exe glow || source <(glow completion zsh)
+! exe idris2 || eval "$(idris2 --bash-completion-script)"
+! exe sk || source <(sk --shell zsh)
+! exe wezterm || source <(wezterm shell-completion --shell zsh)
 
-# exe idris2 && eval "$(idris2 --bash-completion-script)"
-cnp="/usr/share/zsh/plugins/xbps-command-not-found/xbps-command-not-found.zsh" && [ -e "$cnf" ] && source "$cnf"
-exe glow && source <(glow completion zsh)
-exe gh && source <(gh completion -s zsh)
-exe fzf && source <(fzf --zsh)
-exe sk && source <(sk --shell zsh)
-exe wezterm && source <(wezterm shell-completion --shell zsh)
-exe zoxide && eval "$(zoxide init --cmd zx zsh)" && alias z=zoxide && alias cd=zx
-exe cheat && eval "$(cheat --completion zsh)"
-exe tailscale && {
-	local pth="$local_dir/_tailscale"
-	[ -e "$pth" ] && rm "$pth"
-	tailscale completion zsh >"$pth"
-}
-exe bat && {
-	local pth="$local_dir/_bat"
-	[ -e "$pth" ] && rm "$pth"
-	bat --completion zsh >"$pth"
-}
+zfunc_add tailscale completion zsh
+zfunc_add bat --completion zsh
+zfunc_add cb completions zsh
+zfunc_add bw completion --shell zsh
+zfunc_add jj util completion zsh
+zfunc_add mdbook completions zsh
 
-unfunction exe
+source_if "/home/kendfss/.local/share/zsh/site-functions/_soulseek-rs" # soulseek-rs completions
