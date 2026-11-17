@@ -53,15 +53,14 @@ setopt EXTENDED_GLOB # Allow the powerful zsh globbing features, see link:
 setopt NUMERIC_GLOB_SORT
 
 # MISC
-# setopt ZLE                                  # Enable the ZLE line editor, which is default behavior, but to be sure
-declare -U path                       # prevent duplicate entries in path
-eval $(dircolors $DOTFILES/dircolors) # Uses custom colors for LS, as outlined in dircolors
-LESSHISTFILE="/dev/null"              # Prevent the less hist file from being made, I don't want it
-umask 002                             # Default permissions for new files, subract from 777 to understand
-# setopt NO_BEEP                              # Disable beeps
-setopt MULTI_OS             # Can pipe to mulitple outputs
-setopt INTERACTIVE_COMMENTS # Allows comments in interactive shell.
-setopt RC_EXPAND_PARAM      # Abc{$cool}efg where $cool is an array surrounds all array variables individually
-unsetopt FLOW_CONTROL       # Ctrl+S and Ctrl+Q usually disable/enable tty input. This disables those inputs
-setopt BEEP                 # enable terminal beeping
+# setopt NO_BEEP                        # Disable beeps
+# setopt ZLE                            # Enable the ZLE line editor, which is default behavior, but to be sure
 # setopt vi
+LESSHISTFILE="/dev/null"    # Prevent the less hist file from being made, I don't want it
+declare -U path             # prevent duplicate entries in path
+setopt BEEP                 # enable terminal beeping
+setopt INTERACTIVE_COMMENTS # Allows comments in interactive shell.
+setopt MULTI_OS             # Can pipe to mulitple outputs
+setopt RC_EXPAND_PARAM      # Abc{$cool}efg where $cool is an array surrounds all array variables individually
+umask 002                   # Default permissions for new files, subract from 777 to understand
+unsetopt FLOW_CONTROL       # Ctrl+S and Ctrl+Q usually disable/enable tty input. This disables those inputs

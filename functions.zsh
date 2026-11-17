@@ -1,4 +1,6 @@
+#
 # https://zsh.sourceforge.io/Doc/Release/Conditional-Expressions.html
+
 autoload -Uz add-zsh-hook
 
 source_if() {

@@ -12,11 +12,11 @@ esac
 # alias wine=/home/kendfss/.local/share/wine-11.20-amd64/bin/wine
 # alias wineboot=/home/kendfss/.local/share/wine-11.20-amd64/bin/wineboot
 
+alias ls="command ls --color=auto"
 alias nansi="command sed -E 's/\x1B\[([0-9]{1,3}(;[0-9]{1,2})*)?[mGK]//g'"
 alias nansi="command sed -E 's/\x1B\[[0-9;]*[a-zA-Z]//g'"
 alias pd="cd -1"
 alias sudo="sudo -E"
-alias dvtm="dvtm -m '^['"
 alias .="cd $DOTFILES"
 alias ~="cd $HOME"
 alias ..="cd .."
@@ -30,20 +30,34 @@ alias freqs="sort | uniq -c | sort -n"
 alias mime="file -b --mime-type"
 alias when="ls -1ctr"
 
-command -v hx >/dev/null 2>&1 && alias hxg="hx --grammar fetch && hx --grammar build"
-command -v reload >/dev/null 2>&1 && alias reload="exec $(command -v reload)"
-command -v jellyfin >/dev/null 2>&1 && alias jellyfin="exec $(command -v jellyfin)"
-command -v fastfetch >/dev/null 2>&1 && alias about="echo a reduced fastfetch; fastfetch | grep -Eo '\s+([A-Z]([A-Z]|[a-z])+)+[\s:].+' | sed -E 's:^\s+::' | tac | sed 1d | tac | column -ts:"
+[ ! -x "$(command -v abduco 2>/dev/null)" ] || alias a=abduco
+[ ! -x "$(command -v dvtm 2>/dev/null)" ] || alias dvtm="dvtm -m '^['"
+[ ! -x "$(command -v fastfetch 2>/dev/null)" ] && alias about="echo a reduced fastfetch; fastfetch | grep -Eo '\s+([A-Z]([A-Z]|[a-z])+)+[\s:].+' | sed -E 's:^\s+::' | tac | sed 1d | tac | column -ts:"
+[ ! -x "$(command -v jellyfin 2>/dev/null)" ] && alias jellyfin="exec $(command -v jellyfin)"
+[ ! -x "$(command -v reload 2>/dev/null)" ] && alias reload="exec $(command -v reload)"
+[ ! -x "$(command -v hx)" ] || {
+	alias hxg="hx --grammar fetch && hx --grammar build"
+}
 
 if [ -d "$TERMUX__HOME" ]; then
 	case "$(/system/bin/getprop ro.product.device 2>/dev/null)" in
 		a7)
 			alias a12="ssh a12"
 			alias a12t="ssh a12t"
+			alias p37="ssh p37"
+			alias p37t="ssh p37t"
 			;;
 		a12)
 			alias a7="ssh a7"
 			alias a7t="ssh a7t"
+			alias p37="ssh p37"
+			alias p37t="ssh p37t"
+			;;
+		itel-651W)
+			alias a7="ssh a7"
+			alias a7t="ssh a7t"
+			alias a12="ssh a12"
+			alias a12t="ssh a12t"
 			;;
 	esac
 	alias cpv="rsync -poghb --backup-dir=$TERMUX__PREFIX/tmp/rsync -e /dev/null --progress --"
@@ -69,9 +83,9 @@ else
 	alias a7t="ssh a7t"
 	alias a12="ssh a12"
 	alias a12t="ssh a12t"
+	alias p37="ssh p37"
+	alias p37t="ssh p37t"
 fi
-
-command -v abduco &>/dev/null && alias a=abduco
 
 if [ -x "$(command -v sk)" ] && [ -x "$(command -v fzf)" ]; then
 	echo "WARNING both fzf and skim/sk installed!" >&2

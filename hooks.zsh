@@ -2,6 +2,8 @@ autoload -Uz chpwd_recent_dirs cdr add-zsh-hook
 add-zsh-hook chpwd chpwd_recent_dirs
 zstyle ':chpwd:*' recent-dirs-max 5
 
+eval $(dircolors $DOTFILES/dircolors) # Uses custom colors for LS, as outlined in dircolors
+
 [ -x "$(command -v direnv)" ] && eval "$(direnv hook zsh)"
 
 ! exe zoxide || {

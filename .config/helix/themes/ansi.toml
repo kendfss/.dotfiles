@@ -15,11 +15,7 @@ inherits = 'wolf-alabaster-dark'
 # 'ui.linenr' = 'default'
 
 # Comments (ANSI 2 - Green)
-'comment' = 'yellow'
-
-# Keywords (ANSI 5 - Magenta)
-'keyword'          = 'magenta'
-'keyword.operator' = 'magenta'
+'comment' = 'green'
 
 # Functions (ANSI 4 - Blue)
 'function'        = 'blue'
@@ -34,16 +30,13 @@ inherits = 'wolf-alabaster-dark'
 'type.class' = 'yellow'
 'type.enum'  = 'yellow'
 
-# Storage (ANSI 5 - Magenta)
-'keyword.storage' = 'magenta'
-
 # Support / Built-ins (ANSI 6 - Cyan)
 'function.builtin' = 'cyan'
 'type.builtin'     = 'cyan'
 
 # Strings (ANSI 2 - Green)
-'string'             = 'green'
-'constant.character' = 'green'
+'string'             = 'light-green'
+'constant.character' = 'blue'
 
 # Numbers / Constants (ANSI 3 - Yellow)
 'constant.numeric' = 'yellow'
@@ -59,9 +52,16 @@ inherits = 'wolf-alabaster-dark'
 # Headings (ANSI 4 - Blue, Bold)
 'markup.heading' = { fg = 'blue', modifiers = [ 'bold' ] }
 
+# Keywords (ANSI 5 - Magenta)
+'keyword'          = 'magenta'
+'keyword.operator' = 'magenta'
+
+# Storage (ANSI 5 - Magenta)
+'keyword.storage' = 'magenta'
+
 # Units (ANSI 3 - Yellow)
-'keyword.control'   = 'yellow' # Note: mapped to control as units are rare
-'keyword.directive' = 'yellow'
+'keyword.control'   = 'red' # Note: mapped to control as units are rare
+'keyword.directive' = 'red'
 
 # Bold / Italic Markup
 'markup.bold'   = { modifiers = [ 'bold' ] }
@@ -110,7 +110,6 @@ warning    = { fg = "yellow" }
 
 
 [palette]
-# panel = '#888888'
 panel    = '#452859'
 orange_2 = '#FFA348'
 control  = '#FFA348'

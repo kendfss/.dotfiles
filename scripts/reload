@@ -2,7 +2,7 @@
 
 local all=false
 { [ "$1" = '-a' ] || [ "$1" = '--all' ]; } && all=true
-if [ -n "$TMUX" ] && [ $all = true ]; then
+if [ -n "$TMUX" ] && $all; then
 	local session=$(tmux display-message -p '#S')
 	while IFS= read -r pane; do
 		local pid=$(tmux display-message -t "$pane" -p '#{pane_pid}')
@@ -15,4 +15,4 @@ if [ -n "$TMUX" ] && [ $all = true ]; then
 	done < <(tmux list-panes -t "$session" -a -F '#{session_name}:#{window_index}.#{pane_index}')
 	return
 fi
-exec $SHELL -l
+exec $SHELL #-l
